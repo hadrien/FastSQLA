@@ -1,5 +1,15 @@
 # CHANGELOG
 
+## v0.2.2 (2025-01-19)
+
+### Chore
+
+* chore: update year in LICENSE (#7) ([`47c6c07`](https://github.com/hadrien/fastapi-async-sqla/commit/47c6c07d302f60fc568a11b3ff9897ee74975685))
+
+### Fix
+
+* fix: update package metadata (#8) ([`4956bee`](https://github.com/hadrien/fastapi-async-sqla/commit/4956bee5b0a002bf20229026b8cb3701768ae72c))
+
 ## v0.2.1 (2025-01-19)
 
 ### Chore
