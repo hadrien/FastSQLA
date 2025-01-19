@@ -1,7 +1,7 @@
 from unittest.mock import patch
 
 from pytest import fixture
-from sqlalchemy.ext.asyncio import create_async_engine
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 
 
 @fixture
@@ -20,6 +20,12 @@ async def engine(environ):
     engine = create_async_engine(environ["SQLALCHEMY_URL"])
     yield engine
     await engine.dispose()
+
+
+@fixture
+async def session(engine):
+    async with engine.connect() as conn:
+        yield AsyncSession(bind=conn)
 
 
 @fixture(autouse=True)

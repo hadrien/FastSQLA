@@ -17,9 +17,20 @@ from sqlalchemy.ext.declarative import DeferredReflection
 from sqlalchemy.orm import DeclarativeBase
 from structlog import get_logger
 
-__all__ = ["Session", "lifespan", "open_session"]
+__all__ = [
+    "Base",
+    "Collection",
+    "Item",
+    "Page",
+    "Paginate",
+    "PaginateType",
+    "Session",
+    "lifespan",
+    "new_pagination",
+    "open_session",
+]
 
-SessionFactory = async_sessionmaker(class_=AsyncSession, expire_on_commit=False)
+SessionFactory = async_sessionmaker(expire_on_commit=False)
 
 logger = get_logger(__name__)
 
@@ -105,8 +116,11 @@ class Item(BaseModel, Generic[T]):
     data: T
 
 
-class Page(BaseModel, Generic[T]):
+class Collection(BaseModel, Generic[T]):
     data: list[T]
+
+
+class Page(Collection):
     meta: Meta
 
 
