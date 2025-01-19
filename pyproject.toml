@@ -12,8 +12,6 @@ classifiers = [
     "Framework :: FastAPI",
     "Framework :: Pydantic :: 2",
     "Framework :: Pydantic",
-    "Framework :: SQLAlchemy :: 2",
-    "Framework :: SQLAlchemy",
     "Intended Audience :: Developers",
     "Intended Audience :: Information Technology",
     "Intended Audience :: System Administrators",
