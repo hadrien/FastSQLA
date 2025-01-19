@@ -4,8 +4,12 @@ version = "0.2.0"
 description = "SQLAlchemy extension for FastAPI with support for asynchronous SQLAlchemy sessions and pagination."
 readme = "README.md"
 requires-python = ">=3.12"
-authors = [{ name = "Hadrien David", email = "hadrien@ectobal.com" }]
-dependencies = ["sqlalchemy[asyncio]>=2.0.34,<3", "structlog>=24.4.0"]
+authors = [{ name = "Hadrien David", email = "bonjour@hadriendavid.com" }]
+dependencies = [
+    "fastapi>=0.115.6",
+    "sqlalchemy[asyncio]>=2.0.34,<3",
+    "structlog>=24.4.0",
+]
 license = { text = "MIT License" }
 
 [tool.uv]
@@ -22,7 +26,6 @@ dev-dependencies = [
     "ruff>=0.6.4",
     "toml>=0.10.2",
     "aiosqlite>=0.20.0",
-    "fastapi>=0.114.0",
     "python-semantic-release>=9.8.8",
     "twine>=5.1.1",
 ]

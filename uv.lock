@@ -241,23 +241,24 @@ wheels = [
 
 [[package]]
 name = "fastapi"
-version = "0.114.0"
+version = "0.115.6"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "pydantic" },
     { name = "starlette" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/20/1b/fb621a3bab915ac1c9ad06943eb5a2b2aa01cd63228d524bd45261278787/fastapi-0.114.0.tar.gz", hash = "sha256:9908f2a5cc733004de6ca5e1412698f35085cefcbfd41d539245b9edf87b73c1", size = 295297 }
+sdist = { url = "https://files.pythonhosted.org/packages/93/72/d83b98cd106541e8f5e5bfab8ef2974ab45a62e8a6c5b5e6940f26d2ed4b/fastapi-0.115.6.tar.gz", hash = "sha256:9ec46f7addc14ea472958a96aae5b5de65f39721a46aaf5705c480d9a8b76654", size = 301336 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/d0/80/17037f322c280efbc623e341358d38d0299c6ee899d619a879b3593aa6da/fastapi-0.114.0-py3-none-any.whl", hash = "sha256:fee75aa1b1d3d73f79851c432497e4394e413e1dece6234f68d3ce250d12760a", size = 94013 },
+    { url = "https://files.pythonhosted.org/packages/52/b3/7e4df40e585df024fac2f80d1a2d579c854ac37109675db2b0cc22c0bb9e/fastapi-0.115.6-py3-none-any.whl", hash = "sha256:e9240b29e36fa8f4bb7290316988e90c381e5092e0cbe84e7818cc3713bcf305", size = 94843 },
 ]
 
 [[package]]
 name = "fastapi-async-sqla"
-version = "0.1.2"
+version = "0.2.0"
 source = { editable = "." }
 dependencies = [
+    { name = "fastapi" },
     { name = "sqlalchemy", extra = ["asyncio"] },
     { name = "structlog" },
 ]
@@ -268,7 +269,6 @@ dev = [
     { name = "asgi-lifespan" },
     { name = "coverage" },
     { name = "faker" },
-    { name = "fastapi" },
     { name = "httpx" },
     { name = "pytest" },
     { name = "pytest-asyncio" },
@@ -282,6 +282,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
+    { name = "fastapi", specifier = ">=0.115.6" },
     { name = "sqlalchemy", extras = ["asyncio"], specifier = ">=2.0.34,<3" },
     { name = "structlog", specifier = ">=24.4.0" },
 ]
@@ -292,7 +293,6 @@ dev = [
     { name = "asgi-lifespan", specifier = ">=2.1.0" },
     { name = "coverage", specifier = ">=7.6.1" },
     { name = "faker", specifier = ">=28.4.1" },
-    { name = "fastapi", specifier = ">=0.114.0" },
     { name = "httpx", specifier = ">=0.27.2" },
     { name = "pytest", specifier = ">=8.3.2" },
     { name = "pytest-asyncio", specifier = ">=0.24.0" },
@@ -932,14 +932,14 @@ asyncio = [
 
 [[package]]
 name = "starlette"
-version = "0.38.4"
+version = "0.41.3"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "anyio" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/b4/9c/d85721508122ae927aa7064e10a3f47f8dabcd4fd162222afcecd0d8d7b7/starlette-0.38.4.tar.gz", hash = "sha256:53a7439060304a208fea17ed407e998f46da5e5d9b1addfea3040094512a6379", size = 2571980 }
+sdist = { url = "https://files.pythonhosted.org/packages/1a/4c/9b5764bd22eec91c4039ef4c55334e9187085da2d8a2df7bd570869aae18/starlette-0.41.3.tar.gz", hash = "sha256:0e4ab3d16522a255be6b28260b938eae2482f98ce5cc934cb08dce8dc3ba5835", size = 2574159 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/69/13/fa916b69d7c21f80a9c5bde0445cbbbdb9542a9d8df73ea3d588aae55c26/starlette-0.38.4-py3-none-any.whl", hash = "sha256:526f53a77f0e43b85f583438aee1a940fd84f8fd610353e8b0c1a77ad8a87e76", size = 71427 },
+    { url = "https://files.pythonhosted.org/packages/96/00/2b325970b3060c7cecebab6d295afe763365822b1306a12eeab198f74323/starlette-0.41.3-py3-none-any.whl", hash = "sha256:44cedb2b7c77a9de33a8b74b2b90e9f50d11fcf25d8270ea525ad71a25374ff7", size = 73225 },
 ]
 
 [[package]]
