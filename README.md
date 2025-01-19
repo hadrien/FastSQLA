@@ -1,6 +1,6 @@
 # FastAPI-Async-SQLA
 
-[![PyPI - Version](https://img.shields.io/pypi/v/fastapi-async-sqla)](https://pypi.org/project/FastAPI-Async-SQLA/)
+[![PyPI - Version](https://img.shields.io/pypi/v/FastAPI-Async-SQLA?color=brightgreen)](https://pypi.org/project/FastAPI-Async-SQLA/)
 [![Conventional Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-brightgreen.svg)](https://conventionalcommits.org)
 [![codecov](https://codecov.io/gh/hadrien/fastapi-async-sqla/graph/badge.svg?token=XK3YT60MWK)](https://codecov.io/gh/hadrien/fastapi-async-sqla)
 
