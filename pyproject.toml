@@ -1,6 +1,6 @@
 [project]
 name = "FastAPI-Async-SQLA"
-version = "0.2.2"
+version = "0.2.3"
 description = "SQLAlchemy extension for FastAPI with support for asynchronous SQLAlchemy sessions and pagination."
 readme = "README.md"
 requires-python = ">=3.12"

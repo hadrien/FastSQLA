@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## v0.2.3 (2025-01-19)
+
+### Fix
+
+* fix: remove SQLAlchemy from project classifiers (#9) ([`264a29e`](https://github.com/hadrien/fastapi-async-sqla/commit/264a29e3843c2547716a3d670452bdf837911133))
+
 ## v0.2.2 (2025-01-19)
 
 ### Chore
