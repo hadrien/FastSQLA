@@ -11,7 +11,7 @@ def tablename(request):
 
 @fixture(autouse=True)
 async def setup_tear_down(engine, tablename):
-    from fastapi_async_sqla import SessionFactory
+    from fastsqla import SessionFactory
 
     async with engine.connect() as conn:
         await conn.execute(text(f"create table {tablename} (data text unique)"))
@@ -22,7 +22,7 @@ async def setup_tear_down(engine, tablename):
 
 
 async def test_it_commits_on_success(engine, tablename):
-    from fastapi_async_sqla import open_session
+    from fastsqla import open_session
 
     async with open_session() as session:
         await session.execute(text(f"insert into {tablename} values ('OK')"))
@@ -34,9 +34,9 @@ async def test_it_commits_on_success(engine, tablename):
 
 
 async def test_it_re_raises_when_committing_fails():
-    from fastapi_async_sqla import open_session
+    from fastsqla import open_session
 
-    with patch("fastapi_async_sqla.SessionFactory") as SessionFactory:
+    with patch("fastsqla.SessionFactory") as SessionFactory:
         session = AsyncMock()
         session.commit.side_effect = Exception("Simulating a failure.")
         SessionFactory.return_value = session
@@ -48,7 +48,7 @@ async def test_it_re_raises_when_committing_fails():
 
 
 async def test_it_rollback_on_failure(engine, tablename):
-    from fastapi_async_sqla import open_session
+    from fastsqla import open_session
 
     with raises(Exception):
         async with open_session() as session:

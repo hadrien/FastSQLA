@@ -17,7 +17,7 @@ async def setup_tear_down(engine):
 
 
 async def test_lifespan_reflects_user_table(environ):
-    from fastapi_async_sqla import Base, lifespan
+    from fastsqla import Base, lifespan
 
     class User(Base):
         __tablename__ = "user"

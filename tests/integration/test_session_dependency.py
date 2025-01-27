@@ -24,7 +24,7 @@ async def setup_tear_down(engine):
 
 @fixture
 def app(setup_tear_down, app):
-    from fastapi_async_sqla import Base, Item, Session
+    from fastsqla import Base, Item, Session
 
     class User(Base):
         __tablename__ = "user"

@@ -56,7 +56,7 @@ async def setup_tear_down(engine, faker):
 
 @fixture
 def app(app):
-    from fastapi_async_sqla import (
+    from fastsqla import (
         Base,
         Page,
         Paginate,
