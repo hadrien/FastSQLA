@@ -4,8 +4,26 @@
 [![Conventional Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-brightgreen.svg)](https://conventionalcommits.org)
 [![codecov](https://codecov.io/gh/hadrien/fastsqla/graph/badge.svg?token=XK3YT60MWK)](https://codecov.io/gh/hadrien/fastsqla)
 
-FastSQLA is an [SQLAlchemy] extension for [FastAPI]. It supports asynchronous
+**FastSQLA** is an [SQLAlchemy] extension for [FastAPI]. It supports asynchronous
 SQLAlchemy sessions using SQLAlchemy >= 2.0 and include built-in pagination.
+
+In a nutshell:
+<detail>
+    <summary>
+        **FastSQLA** configures SQLAlchemy when the app starts using the
+        [`lifespan` parameter of the `FastAPI` app](https://fastapi.tiangolo.com/advanced/events/#lifespan).
+    <summary>
+    ```python
+    from fastapi import FastAPI
+    from fastsqla import lifespan
+
+    app = FastAPI(lifespan=lifespan)
+    ```
+<detail>
+<detail><summary><summary>
+Provides an SQLAlchemy Session as a FastAPI dependency for use in endpoint functions.
+Includes a Paginate dependency to paginate query results in endpoint functions.
+Pagination can be customized using new_pagination.
 
 # Installing
 
