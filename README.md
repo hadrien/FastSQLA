@@ -21,8 +21,6 @@ pip install fastsqla
 
 # Quick Example
 
-## `example.py`
-
 Assuming it runs against a DB with a table `hero` with 3 columns `id`, `name` and
 `secret_identity`:
 
@@ -82,13 +80,12 @@ async def create_user(new_hero: HeroBase, session: Session):
     return {"data": hero}
 ```
 
-## `db.sqlite`
+<detail>
+<summary>Create an`sqlite3` db</summary>
 
 > [!NOTE]
-> The example uses an sqlite db, but FastSQLA is compatible with any async db supported
-> by SQLAlchemy
-
-Create an`sqlite3` db:
+> The example uses an sqlite db, but FastSQLA is compatible with any async db driver
+> supported by [SQLAlchemy]
 
 ```bash
 sqlite3 db.sqlite <<EOF
@@ -113,50 +110,49 @@ INSERT INTO hero (name, secret_identity) VALUES ('The Flash', 'Barry Allen');
 INSERT INTO hero (name, secret_identity) VALUES ('Green Lantern', 'Hal Jordan');
 EOF
 ```
+</detail>
 
-## Run
 
-1. Install the packages needed to run the example:
+1. Install the packages require by the example:
 ```bash
 pip install aiosqlite uvicorn fastsqla
 ```
 
-2. Run the example
+2. Run it
 ```bash
 sqlalchemy_url=sqlite+aiosqlite:///db.sqlite?check_same_thread=false uvicorn example:app
 ```
 
-### `GET /heros?offset=10`
+3. `GET /heros?offset=10`
 
-```bash
-curl -X 'GET' \
-  'http://127.0.0.1:8000/heros?offset=10&limit=10' \
-  -H 'accept: application/json'
-```
-
-Returns
-```json
-{
-  "data": [
-    {
-      "name": "The Flash",
-      "secret_identity": "Barry Allen",
-      "id": 11
-    },
-    {
-      "name": "Green Lantern",
-      "secret_identity": "Hal Jordan",
-      "id": 12
+  ```bash
+  curl -X 'GET' \
+    'http://127.0.0.1:8000/heros?offset=10&limit=10' \
+    -H 'accept: application/json'
+  ```
+  Returns
+  ```json
+  {
+    "data": [
+      {
+        "name": "The Flash",
+        "secret_identity": "Barry Allen",
+        "id": 11
+      },
+      {
+        "name": "Green Lantern",
+        "secret_identity": "Hal Jordan",
+        "id": 12
+      }
+    ],
+    "meta": {
+      "offset": 10,
+      "total_items": 12,
+      "total_pages": 2,
+      "page_number": 2
     }
-  ],
-  "meta": {
-    "offset": 10,
-    "total_items": 12,
-    "total_pages": 2,
-    "page_number": 2
   }
-}
-```
+  ```
 
 [aiosqlite]: https://github.com/omnilib/aiosqlite
 [FastAPI]: https://fastapi.tiangolo.com/
