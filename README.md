@@ -56,7 +56,7 @@ async def get_heros(paginate:Paginate):
 
 ```python
 ...
-from fastapi import new_pagination
+from fastapi import Page, new_pagination
 ...
 
 Paginate = new_pagination(min_page_size=5, max_page_size=500)
