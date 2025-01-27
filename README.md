@@ -1,31 +1,76 @@
-# FastSQLA
+# 🚀 FastSQLA
 
 [![PyPI - Version](https://img.shields.io/pypi/v/FastSQLA?color=brightgreen)](https://pypi.org/project/FastSQLA/)
 [![Conventional Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-brightgreen.svg)](https://conventionalcommits.org)
 [![codecov](https://codecov.io/gh/hadrien/fastsqla/graph/badge.svg?token=XK3YT60MWK)](https://codecov.io/gh/hadrien/fastsqla)
 
-**FastSQLA** is an [SQLAlchemy] extension for [FastAPI]. It supports asynchronous
-SQLAlchemy sessions using SQLAlchemy >= 2.0 and include built-in pagination.
+`FastSQLA` is an [`SQLAlchemy`] extension for [`FastAPI`].
+It supports asynchronous `SQLAlchemy` sessions and includes built-in custimizable
+pagination.
 
-In a nutshell:
-<detail>
-    <summary>
-        **FastSQLA** configures SQLAlchemy when the app starts using the
-        [`lifespan` parameter of the `FastAPI` app](https://fastapi.tiangolo.com/advanced/events/#lifespan).
-    <summary>
-    ```python
-    from fastapi import FastAPI
-    from fastsqla import lifespan
+## Features
 
-    app = FastAPI(lifespan=lifespan)
-    ```
-<detail>
-<detail><summary><summary>
-Provides an SQLAlchemy Session as a FastAPI dependency for use in endpoint functions.
-Includes a Paginate dependency to paginate query results in endpoint functions.
-Pagination can be customized using new_pagination.
+<details>
+    <summary>Automatic SQLAlchemy configuration at app startup.</summary>
 
-# Installing
+  Using [`FastAPI` Lifespan](https://fastapi.tiangolo.com/advanced/events/#lifespan):
+```python
+from fastapi import FastAPI
+from fastsqla import lifespan
+
+app = FastAPI(lifespan=lifespan)
+```
+</details>
+<details>
+    <summary>Async SQLAlchemy session as a FastAPI dependency.</summary>
+
+```python
+...
+from fastsqla import Session
+from sqlalchemy import select
+...
+
+@app.get("/heros")
+async def get_heros(session:Session):
+    stmt = select(...)
+    result = await session.execute(stmt)
+    ...
+```
+</details>
+<details>
+    <summary>Built-in pagination.</summary>
+
+```python
+...
+from fastsqla import Page, Paginate
+from sqlalchemy import select
+...
+
+@app.get("/heros", response_model=Page[HeroModel])
+async def get_heros(paginate:Paginate):
+    return paginate(select(Hero))
+```
+</details>
+<details>
+    <summary>Allows pagination customization.</summary>
+
+```python
+...
+from fastapi import new_pagination
+...
+
+Paginate = new_pagination(min_page_size=5, max_page_size=500)
+
+@app.get("/heros", response_model=Page[HeroModel])
+async def get_heros(paginate:Paginate):
+    return paginate(select(Hero))
+```
+</details>
+
+And more ...
+<!-- <details><summary></summary></details> -->
+
+## Installing
 
 Using [uv](https://docs.astral.sh/uv/):
 ```bash
@@ -37,10 +82,7 @@ Using [pip](https://pip.pypa.io/):
 pip install fastsqla
 ```
 
-# Quick Example
-
-Assuming it runs against a DB with a table `hero` with 3 columns `id`, `name` and
-`secret_identity`:
+## Quick Example
 
 ```python
 # example.py
@@ -98,12 +140,12 @@ async def create_user(new_hero: HeroBase, session: Session):
     return {"data": hero}
 ```
 
-<detail>
-<summary>Create an`sqlite3` db</summary>
-
 > [!NOTE]
-> The example uses an sqlite db, but FastSQLA is compatible with any async db driver
-> supported by [SQLAlchemy]
+> Sqlite is used for the sake of the example.
+> FastSQLA is compatible with all async db drivers that SQLAlchemy is compatible with.
+
+<details>
+    <summary>Create an <code>sqlite3</code> db:</summary>
 
 ```bash
 sqlite3 db.sqlite <<EOF
@@ -128,50 +170,49 @@ INSERT INTO hero (name, secret_identity) VALUES ('The Flash', 'Barry Allen');
 INSERT INTO hero (name, secret_identity) VALUES ('Green Lantern', 'Hal Jordan');
 EOF
 ```
-</detail>
 
+</details>
 
-1. Install the packages require by the example:
+<details>
+    <summary>Install dependencies & run the app</summary>
+
 ```bash
-pip install aiosqlite uvicorn fastsqla
-```
-
-2. Run it
-```bash
+pip install uvicorn aiosqlite fastsqla
 sqlalchemy_url=sqlite+aiosqlite:///db.sqlite?check_same_thread=false uvicorn example:app
 ```
 
-3. `GET /heros?offset=10`
+</details>
 
-  ```bash
-  curl -X 'GET' \
-    'http://127.0.0.1:8000/heros?offset=10&limit=10' \
-    -H 'accept: application/json'
-  ```
-  Returns
-  ```json
-  {
-    "data": [
-      {
-        "name": "The Flash",
-        "secret_identity": "Barry Allen",
-        "id": 11
-      },
-      {
-        "name": "Green Lantern",
-        "secret_identity": "Hal Jordan",
-        "id": 12
-      }
-    ],
-    "meta": {
-      "offset": 10,
-      "total_items": 12,
-      "total_pages": 2,
-      "page_number": 2
+Execute `GET /heros?offset=10`:
+
+```bash
+curl -X 'GET' \
+'http://127.0.0.1:8000/heros?offset=10&limit=10' \
+-H 'accept: application/json'
+```
+Returns:
+```json
+{
+  "data": [
+    {
+      "name": "The Flash",
+      "secret_identity": "Barry Allen",
+      "id": 11
+    },
+    {
+      "name": "Green Lantern",
+      "secret_identity": "Hal Jordan",
+      "id": 12
     }
+  ],
+  "meta": {
+    "offset": 10,
+    "total_items": 12,
+    "total_pages": 2,
+    "page_number": 2
   }
-  ```
+}
+```
 
-[aiosqlite]: https://github.com/omnilib/aiosqlite
-[FastAPI]: https://fastapi.tiangolo.com/
-[SQLAlchemy]: http://sqlalchemy.org/
+[`FastAPI`]: https://fastapi.tiangolo.com/
+[`SQLAlchemy`]: http://sqlalchemy.org/
