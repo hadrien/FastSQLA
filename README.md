@@ -21,61 +21,76 @@ pip install fastsqla
 
 # Quick Example
 
->! Note
->! Example uses an sqlite db, but FastSQLA is compatible with any async db supported by
->! SQLAlchemy
+## `example.py`
 
-Assuming it runs against a DB with a table `user` with 2 columns `id` and `name`:
+Assuming it runs against a DB with a table `hero` with 3 columns `id`, `name` and
+`secret_identity`:
 
 ```python
-# main.py
-from fastapi import FastAPI, HTTPException
-from fastsqla import Base, Item, Page, Paginate, Session, lifespan
-from pydantic import BaseModel
-from sqlalchemy import select
+# example.py
+from http import HTTPStatus
 
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel, ConfigDict
+from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import Mapped, mapped_column
+
+from fastsqla import Base, Item, Page, Paginate, Session, lifespan
 
 app = FastAPI(lifespan=lifespan)
 
 
-class User(Base):
-    __tablename__ = "user"
+class Hero(Base):
+    __tablename__ = "hero"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(unique=True)
+    secret_identity: Mapped[str]
 
 
-class UserIn(BaseModel):
+class HeroBase(BaseModel):
     name: str
+    secret_identity: str
 
 
-class UserModel(UserIn):
+class HeroModel(HeroBase):
+    model_config = ConfigDict(from_attributes=True)
     id: int
 
 
-@app.get("/users", response_model=Page[UserModel])
+@app.get("/heros", response_model=Page[HeroModel])
 async def list_users(paginate: Paginate):
-    return await paginate(select(User))
+    return await paginate(select(Hero))
 
 
-@app.get("/users/{user_id}", response_model=Item[UserModel])
-async def get_user(user_id: int, session: Session):
-    user = await session.get(User, user_id)
-    if user is None:
-        raise HTTPException(404)
-    return {"data": user}
+@app.get("/heros/{hero_id}", response_model=Item[HeroModel])
+async def get_user(hero_id: int, session: Session):
+    hero = await session.get(Hero, hero_id)
+    if hero is None:
+        raise HTTPException(HTTPStatus.NOT_FOUND, "Hero not found")
+    return {"data": hero}
 
 
-@app.post("/users", response_model=Item[UserModel])
-async def create_user(new_user: UserIn, session: Session):
-    user = User(**new_user.model_dump())
-    session.add(user)
-    await session.flush()
-    return {"data": user}
+@app.post("/heros", response_model=Item[HeroModel])
+async def create_user(new_hero: HeroBase, session: Session):
+    hero = Hero(**new_hero.model_dump())
+    session.add(hero)
+    try:
+        await session.flush()
+    except IntegrityError:
+        raise HTTPException(HTTPStatus.CONFLICT, "Duplicate hero name")
+    return {"data": hero}
 ```
 
+## `db.sqlite`
 
-Create an `sqlite3` db:
+> [!NOTE]
+> The example uses an sqlite db, but FastSQLA is compatible with any async db supported
+> by SQLAlchemy
+
+Create an`sqlite3` db:
 
 ```bash
-sqlite3 db.sqlite <<EOF
 sqlite3 db.sqlite <<EOF
 CREATE TABLE hero (
     id              INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -99,15 +114,48 @@ INSERT INTO hero (name, secret_identity) VALUES ('Green Lantern', 'Hal Jordan');
 EOF
 ```
 
+## Run
 
-Installing [aiosqlite] to connect to the sqlite db asynchronously:
+1. Install the packages needed to run the example:
 ```bash
-pip install aiosqlite
+pip install aiosqlite uvicorn fastsqla
 ```
 
-Running the app:
+2. Run the example
 ```bash
-sqlalchemy_url=sqlite+aiosqlite:///db.sqlite?check_same_thread=false uvicorn main:app
+sqlalchemy_url=sqlite+aiosqlite:///db.sqlite?check_same_thread=false uvicorn example:app
+```
+
+### `GET /heros?offset=10`
+
+```bash
+curl -X 'GET' \
+  'http://127.0.0.1:8000/heros?offset=10&limit=10' \
+  -H 'accept: application/json'
+```
+
+Returns
+```json
+{
+  "data": [
+    {
+      "name": "The Flash",
+      "secret_identity": "Barry Allen",
+      "id": 11
+    },
+    {
+      "name": "Green Lantern",
+      "secret_identity": "Hal Jordan",
+      "id": 12
+    }
+  ],
+  "meta": {
+    "offset": 10,
+    "total_items": 12,
+    "total_pages": 2,
+    "page_number": 2
+  }
+}
 ```
 
 [aiosqlite]: https://github.com/omnilib/aiosqlite
