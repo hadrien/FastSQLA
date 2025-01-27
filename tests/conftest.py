@@ -32,7 +32,7 @@ async def session(engine):
 def tear_down():
     from sqlalchemy.orm import clear_mappers
 
-    from fastapi_async_sqla import Base
+    from fastsqla import Base
 
     yield
 

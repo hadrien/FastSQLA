@@ -13,7 +13,7 @@ jobs:
     - name: 🔧 setup uv
       uses: ./.github/uv
     - name: 🧪 pytest
-      run: uv run pytest --cov fastapi_async_sqla --cov-report=term-missing --cov-report=xml
+      run: uv run pytest --cov fastsqla --cov-report=term-missing --cov-report=xml
     - name:  "🐔 codecov: upload test coverage"
       uses: codecov/codecov-action@v4.2.0
       env:

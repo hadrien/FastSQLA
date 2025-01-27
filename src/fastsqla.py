@@ -40,7 +40,7 @@ class Base(DeclarativeBase, DeferredReflection):
 
 
 class State(TypedDict):
-    fastapi_async_sqla_engine: AsyncEngine
+    fastsqla_engine: AsyncEngine
 
 
 @asynccontextmanager
@@ -60,7 +60,7 @@ async def lifespan(_) -> AsyncGenerator[State, None]:
 
     await logger.ainfo("Configured SQLAlchemy.")
 
-    yield {"fastapi_async_sqla_engine": engine}
+    yield {"fastsqla_engine": engine}
 
     SessionFactory.configure(bind=None)
     await engine.dispose()
@@ -120,7 +120,7 @@ class Collection(BaseModel, Generic[T]):
     data: list[T]
 
 
-class Page(Collection):
+class Page(Collection[T]):
     meta: Meta
 
 

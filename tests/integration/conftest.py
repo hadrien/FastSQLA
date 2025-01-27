@@ -6,7 +6,7 @@ from fastapi import FastAPI
 
 @fixture
 def app(environ):
-    from fastapi_async_sqla import lifespan
+    from fastsqla import lifespan
 
     app = FastAPI(lifespan=lifespan)
     return app

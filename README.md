@@ -1,27 +1,36 @@
-# FastAPI-Async-SQLA
+# FastSQLA
 
-[![PyPI - Version](https://img.shields.io/pypi/v/FastAPI-Async-SQLA?color=brightgreen)](https://pypi.org/project/FastAPI-Async-SQLA/)
+[![PyPI - Version](https://img.shields.io/pypi/v/FastSQLA?color=brightgreen)](https://pypi.org/project/FastSQLA/)
 [![Conventional Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-brightgreen.svg)](https://conventionalcommits.org)
-[![codecov](https://codecov.io/gh/hadrien/fastapi-async-sqla/graph/badge.svg?token=XK3YT60MWK)](https://codecov.io/gh/hadrien/fastapi-async-sqla)
+[![codecov](https://codecov.io/gh/hadrien/fastsqla/graph/badge.svg?token=XK3YT60MWK)](https://codecov.io/gh/hadrien/fastsqla)
 
-FastAPI-Async-SQLA is an [SQLAlchemy] extension for [FastAPI]. It supports asynchronous
-SQLAlchemy sessions using SQLAlchemy >= 2.0 and provides pagination support.
+FastSQLA is an [SQLAlchemy] extension for [FastAPI]. It supports asynchronous
+SQLAlchemy sessions using SQLAlchemy >= 2.0 and include built-in pagination.
 
 # Installing
 
+Using [uv](https://docs.astral.sh/uv/):
+```bash
+uv add fastsqla
+```
+
 Using [pip](https://pip.pypa.io/):
 ```
-pip install fastapi-async-sqla
+pip install fastsqla
 ```
 
 # Quick Example
+
+>! Note
+>! Example uses an sqlite db, but FastSQLA is compatible with any async db supported by
+>! SQLAlchemy
 
 Assuming it runs against a DB with a table `user` with 2 columns `id` and `name`:
 
 ```python
 # main.py
 from fastapi import FastAPI, HTTPException
-from fastapi_async_sqla import Base, Item, Page, Paginate, Session, lifespan
+from fastsqla import Base, Item, Page, Paginate, Session, lifespan
 from pydantic import BaseModel
 from sqlalchemy import select
 
@@ -62,15 +71,34 @@ async def create_user(new_user: UserIn, session: Session):
     return {"data": user}
 ```
 
-Creating a db using `sqlite3`:
+
+Create an `sqlite3` db:
+
 ```bash
 sqlite3 db.sqlite <<EOF
-CREATE TABLE user (
-    id    INTEGER PRIMARY KEY AUTOINCREMENT,
-    name  TEXT NOT NULL
+sqlite3 db.sqlite <<EOF
+CREATE TABLE hero (
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    name            TEXT NOT NULL UNIQUE, -- Hero name (e.g., Superman)
+    secret_identity TEXT NOT NULL         -- Secret identity (e.g., Clark Kent)
 );
+
+-- Insert heroes with hero name and secret identity
+INSERT INTO hero (name, secret_identity) VALUES ('Superman', 'Clark Kent');
+INSERT INTO hero (name, secret_identity) VALUES ('Batman', 'Bruce Wayne');
+INSERT INTO hero (name, secret_identity) VALUES ('Wonder Woman', 'Diana Prince');
+INSERT INTO hero (name, secret_identity) VALUES ('Iron Man', 'Tony Stark');
+INSERT INTO hero (name, secret_identity) VALUES ('Spider-Man', 'Peter Parker');
+INSERT INTO hero (name, secret_identity) VALUES ('Captain America', 'Steve Rogers');
+INSERT INTO hero (name, secret_identity) VALUES ('Black Widow', 'Natasha Romanoff');
+INSERT INTO hero (name, secret_identity) VALUES ('Thor', 'Thor Odinson');
+INSERT INTO hero (name, secret_identity) VALUES ('Scarlet Witch', 'Wanda Maximoff');
+INSERT INTO hero (name, secret_identity) VALUES ('Doctor Strange', 'Stephen Strange');
+INSERT INTO hero (name, secret_identity) VALUES ('The Flash', 'Barry Allen');
+INSERT INTO hero (name, secret_identity) VALUES ('Green Lantern', 'Hal Jordan');
 EOF
 ```
+
 
 Installing [aiosqlite] to connect to the sqlite db asynchronously:
 ```bash
