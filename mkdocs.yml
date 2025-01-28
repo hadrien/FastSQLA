@@ -1,0 +1,49 @@
+site_name: FastSQLA
+site_url: https://mydomain.org/FastSQLA
+repo_name: hadrien/FastSQLA
+repo_url: https://github.com/hadrien/fastsqla
+edit_uri: edit/main/docs/
+
+nav:
+- Get Started:
+  - Welcome to FastSQLA: index.md
+  - Changelog: changelog.md
+
+theme:
+  name: material
+  features:
+    - content.tabs.link
+    - content.code.annotate
+    - content.code.copy
+    - announce.dismiss
+    - navigation.tabs
+    - navigation.instant
+    - navigation.instant.prefetch
+    - navigation.instant.progress
+    - navigation.path
+    - navigation.sections
+    - navigation.top
+    - navigation.tracking
+    - search.suggest
+    - toc.follow
+  palette:
+    - media: "(prefers-color-scheme)"
+      toggle:
+        icon: material/brightness-auto
+        name: Switch to light mode
+
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to dark mode
+
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      toggle:
+        icon: material/weather-night
+        name: Switch to system preference
+
+plugins:
+  - search
+  - mkdocstrings
