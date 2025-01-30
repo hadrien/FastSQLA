@@ -20,10 +20,10 @@ jobs:
         fetch-depth: 0
     - name: 🔧 setup uv
       uses: ./.github/uv
-
+    - name: ⚙️ install deps
+      run: uv sync --extra docs
     - name: 📙 mkdocs build
-      run: mkdocs build
-
+      run: uv run mkdocs build
     - name: 📦 Upload artifacts
       uses: actions/upload-artifact@v4
       with:
