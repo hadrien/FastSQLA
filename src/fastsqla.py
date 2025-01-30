@@ -4,7 +4,7 @@ from collections.abc import AsyncGenerator, Awaitable, Callable, Iterable
 from contextlib import asynccontextmanager
 from typing import Annotated, Generic, TypeVar, TypedDict
 
-from fastapi import Depends, Query
+from fastapi import Depends, FastAPI, Query
 from pydantic import BaseModel, Field
 from sqlalchemy import Result, Select, func, select
 from sqlalchemy.ext.asyncio import (
@@ -44,7 +44,13 @@ class State(TypedDict):
 
 
 @asynccontextmanager
-async def lifespan(_) -> AsyncGenerator[State, None]:
+async def lifespan(app: FastAPI) -> AsyncGenerator[State, None]:
+    """A lifespan context manager that setup `FastSQLA` when opened.
+
+    This async context manager must be used to setup SQLAlchemy.
+
+    TBD
+    """
     prefix = "sqlalchemy_"
     sqla_config = {k.lower(): v for k, v in os.environ.items()}
     try:

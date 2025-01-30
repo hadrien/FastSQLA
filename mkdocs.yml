@@ -7,9 +7,16 @@ edit_uri: edit/main/docs/
 nav:
 - Get Started:
   - Welcome to FastSQLA: index.md
+  - Configuration: configuration.md
+  #- SQLAlchemy Session: session.md
+  #- Pagination: pagination.md
+  - API: api.md
   - Changelog: changelog.md
 
 theme:
+  favicon: images/favicon.png
+  icon:
+    logo: material/database
   name: material
   features:
     - content.tabs.link
@@ -46,4 +53,23 @@ theme:
 
 plugins:
   - search
-  - mkdocstrings
+  - autorefs
+  - mkdocstrings:
+      enable_inventory: true
+      handlers:
+        python:
+          import:
+          - https://docs.python.org/3/objects.inv
+          - https://docs.sqlalchemy.org/en/20/objects.inv
+          - https://fastapi.tiangolo.com/objects.inv
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - attr_list
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - toc:
+      permalink: true

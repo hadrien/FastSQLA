@@ -53,7 +53,7 @@ async def get_heros(paginate:Paginate):
 ```
 </details>
 <details>
-    <summary>Allows pagination customization.</summary>
+    <summary>Pagination customization.</summary>
 
 ```python
 ...
