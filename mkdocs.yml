@@ -8,9 +8,6 @@ nav:
 - Get Started:
   - Welcome to FastSQLA: index.md
   - Configuration: configuration.md
-  #- SQLAlchemy Session: session.md
-  #- Pagination: pagination.md
-  - API: api.md
   - Changelog: changelog.md
 
 theme:

@@ -45,11 +45,56 @@ class State(TypedDict):
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[State, None]:
-    """A lifespan context manager that setup `FastSQLA` when opened.
+    """Use `fastsqla.lifespan` to set up SQLAlchemy.
 
-    This async context manager must be used to setup SQLAlchemy.
+    In an ASGI application, [lifespan events](https://asgi.readthedocs.io/en/latest/specs/lifespan.html)
+    are used to communicate startup & shutdown events.
 
-    TBD
+    The [`lifespan`](https://fastapi.tiangolo.com/advanced/events/#lifespan) parameter of
+    the `FastAPI` app can be set to a context manager. That context manager is
+    opened when app starts and closed when app stops.
+
+    In order for `FastSQLA` to setup `SQLAlchemy` before the app is started, set
+    `lifespan` parameter to `fastsqla.lifespan`:
+
+    ```python
+    from fastapi import FastAPI
+    from fastsqla import lifespan
+
+
+    app = FastAPI(lifespan=lifespan)
+    ```
+
+    If you need to open more than one lifespan context, create an async context manager
+    function to open as many lifespans as needed and set it as the lifespan of the app.
+    Use an [AsyncExitStack][contextlib.AsyncExitStack] to open multiple lifespan contexts:
+
+    ```python
+    from collections.abc import AsyncGenerator
+    from contextlib import asynccontextmanager
+
+    from fastapi import FastAPI
+    from fastsqla import lifespan as fastsqla_lifespan
+    from this_other_library import another_lifespan
+
+
+    @asynccontextmanager
+    async def lifespan(app:FastAPI) -> AsyncGenerator[dict, None]:
+        async with AsyncExitStack() as stack:
+            yield {
+                **stack.enter_async_context(lifespan(app)),
+                **stack.enter_async_context(another_lifespan(app)),
+            }
+
+
+    app = FastAPI(lifespan=lifespan)
+    ```
+
+    To know more about lifespan protocol:
+
+    * [Lifespan Protocol](https://asgi.readthedocs.io/en/latest/specs/lifespan.html)
+    * [Use Lifespan State instead of `app.state`](https://github.com/Kludex/fastapi-tips?tab=readme-ov-file#6-use-lifespan-state-instead-of-appstate)
+    * [FastAPI lifespan documentation](https://fastapi.tiangolo.com/advanced/events/):
     """
     prefix = "sqlalchemy_"
     sqla_config = {k.lower(): v for k, v in os.environ.items()}

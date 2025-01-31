@@ -33,49 +33,12 @@ pip install fastsqla
 
 ## Setup
 
-### Lifespan
+### `fastsqla.lifespan`
 
-Setup using [FastSQLA lifespan context manager]
-
-```python
-from fastapi import FastAPI
-from fastsqla import lifespan
-
-
-app = FastAPI(lifespan=lifespan)
-```
-
-If you need to open more than one lifespan context, create an async context manager
-function to open as many lifespans as needed and set it as the lifespan of the app.
-Use an [AsyncExitStack][contextlib.AsyncExitStack] to open multiple lifespan contexts:
-
-```python
-from collections.abc import AsyncGenerator
-from contextlib import asynccontextmanager
-
-from fastapi import FastAPI
-from fastsqla import lifespan as fastsqla_lifespan
-from this_other_library import another_lifespan
-
-
-@asynccontextmanager
-async def lifespan(app:FastAPI) -> AsyncGenerator[dict, None]:
-    async with AsyncExitStack() as stack:
-        yield {
-            **stack.enter_async_context(lifespan(app)),
-            **stack.enter_async_context(another_lifespan(app)),
-        }
-
-
-app = FastAPI(lifespan=lifespan)
-```
-
-To know more about lifespan protocol:
-
-* [Lifespan Protocol](https://asgi.readthedocs.io/en/latest/specs/lifespan.html)
-* [Use Lifespan State instead of `app.state`](https://github.com/Kludex/fastapi-tips?tab=readme-ov-file#6-use-lifespan-state-instead-of-appstate)
-* [FastAPI lifespan documentation](https://fastapi.tiangolo.com/advanced/events/):
-
+::: fastsqla.lifespan
+    options:
+        heading_level: false
+        show_source: false
 
 ### Get an async SQLAlchemy session
 
