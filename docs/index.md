@@ -16,9 +16,6 @@ following [`SQLAlchemy`'s best practices](https://docs.sqlalchemy.org/en/20/orm/
 
 ## Installing
 
-As advised on [`FastAPI` documentation](https://fastapi.tiangolo.com/virtual-environments/),
-create and activate a virtual environment and then install `FastSQLA`.
-
 Using [`uv`](https://docs.astral.sh/uv):
 
 ```bash
