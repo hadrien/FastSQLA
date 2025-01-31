@@ -3,7 +3,8 @@ name: Build & Publish Doc
 on:
   push:
     branches:
-      - docs/mkdocs
+      - main
+      - docs/**
 
 jobs:
 
