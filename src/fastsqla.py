@@ -51,8 +51,8 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[State, None]:
     are used to communicate startup & shutdown events.
 
     The [`lifespan`](https://fastapi.tiangolo.com/advanced/events/#lifespan) parameter of
-    the `FastAPI` app can be set to a context manager. That context manager is
-    opened when app starts and closed when app stops.
+    the `FastAPI` app can be assigned to a context manager, which is opened when the app
+    starts and closed when the app stops.
 
     In order for `FastSQLA` to setup `SQLAlchemy` before the app is started, set
     `lifespan` parameter to `fastsqla.lifespan`:
@@ -65,9 +65,8 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[State, None]:
     app = FastAPI(lifespan=lifespan)
     ```
 
-    If you need to open more than one lifespan context, create an async context manager
-    function to open as many lifespans as needed and set it as the lifespan of the app.
-    Use an [AsyncExitStack][contextlib.AsyncExitStack] to open multiple lifespan contexts:
+    If multiple lifespan contexts are required, create an async context manager function
+    to handle them and set it as the app's lifespan:
 
     ```python
     from collections.abc import AsyncGenerator
@@ -94,7 +93,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[State, None]:
 
     * [Lifespan Protocol](https://asgi.readthedocs.io/en/latest/specs/lifespan.html)
     * [Use Lifespan State instead of `app.state`](https://github.com/Kludex/fastapi-tips?tab=readme-ov-file#6-use-lifespan-state-instead-of-appstate)
-    * [FastAPI lifespan documentation](https://fastapi.tiangolo.com/advanced/events/):
+    * [FastAPI lifespan documentation](https://fastapi.tiangolo.com/advanced/events/)
     """
     prefix = "sqlalchemy_"
     sqla_config = {k.lower(): v for k, v in os.environ.items()}
@@ -121,6 +120,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[State, None]:
 
 @asynccontextmanager
 async def open_session() -> AsyncGenerator[AsyncSession, None]:
+    """Context Open a new session and commit or rollback on exit."""
     session = SessionFactory()
     try:
         yield session

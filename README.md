@@ -1,4 +1,6 @@
-# 🚀 FastSQLA
+# FastSQLA
+
+_Async SQLAlchemy for FastAPI — boilerplate, pagination, and seamless session management._
 
 [![PyPI - Version](https://img.shields.io/pypi/v/FastSQLA?color=brightgreen)](https://pypi.org/project/FastSQLA/)
 [![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/hadrien/fastsqla/ci.yml?branch=main&logo=github&label=CI)](https://github.com/hadrien/FastSQLA/actions?query=branch%3Amain+event%3Apush)
@@ -6,8 +8,12 @@
 [![Conventional Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-brightgreen.svg)](https://conventionalcommits.org)
 [![GitHub License](https://img.shields.io/github/license/hadrien/fastsqla)](https://github.com/hadrien/FastSQLA/blob/main/LICENSE)
 
-`FastSQLA` is an [`SQLAlchemy`] extension for [`FastAPI`].
-It offers support for asynchronous SQLAlchemy and features built-in, customizable pagination.
+`FastSQLA` is an [`SQLAlchemy 2`](https://docs.sqlalchemy.org/en/20/) extension for
+[`FastAPI`](https://fastapi.tiangolo.com/).
+It streamlines the configuration and asynchronous connection to relational databases by
+providing boilerplate and intuitive helpers. Additionally, it offers built-in
+customizable pagination and automatically manages the `SQLAlchemy` session lifecycle
+following [`SQLAlchemy`'s best practices](https://docs.sqlalchemy.org/en/20/orm/session_basics.html#when-do-i-construct-a-session-when-do-i-commit-it-and-when-do-i-close-it).
 
 ## Features
 
@@ -50,6 +56,29 @@ from sqlalchemy import select
 @app.get("/heros", response_model=Page[HeroModel])
 async def get_heros(paginate:Paginate):
     return paginate(select(Hero))
+```
+Which would return something like:
+```json
+{
+  "data": [
+    {
+      "name": "The Flash",
+      "secret_identity": "Barry Allen",
+      "id": 11
+    },
+    {
+      "name": "Green Lantern",
+      "secret_identity": "Hal Jordan",
+      "id": 12
+    }
+  ],
+  "meta": {
+    "offset": 10,
+    "total_items": 12,
+    "total_pages": 2,
+    "page_number": 2
+  }
+}
 ```
 </details>
 <details>
