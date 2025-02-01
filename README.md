@@ -8,6 +8,8 @@ _Async SQLAlchemy 2 for FastAPI — boilerplate, pagination, and seamless sessio
 [![Conventional Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-brightgreen.svg)](https://conventionalcommits.org)
 [![GitHub License](https://img.shields.io/github/license/hadrien/fastsqla)](https://github.com/hadrien/FastSQLA/blob/main/LICENSE)
 
+**Documentation**: https://hadrien.github.io/FastSQLA/
+
 `FastSQLA` is an [`SQLAlchemy 2`](https://docs.sqlalchemy.org/en/20/) extension for
 [`FastAPI`](https://fastapi.tiangolo.com/).
 It streamlines the configuration and asynchronous connection to relational databases by
@@ -121,13 +123,9 @@ pip install fastsqla
 
 ## Quick Example
 
-💡 The example uses an `SQLite` database for simplicity.
+### `example.py`
 
-`FastSQLA` is compatible with all asynchronous db drivers that `SQLAlchemy` is
-compatible with.
-
-<details>
-  <summary>Write the application code in <code>example.py</code></summary>
+Let's write some tiny app in `example.py`:
 
 ```python
 # example.py
@@ -184,12 +182,15 @@ async def create_user(new_hero: HeroBase, session: Session):
         raise HTTPException(HTTPStatus.CONFLICT, "Duplicate hero name")
     return {"data": hero}
 ```
-</details>
 
+### Database
 
-<details>
-  <summary>Create an <code>SQLite</code> using `sqlite3` db:</summary>
+💡 This example uses an `SQLite` database for simplicity.
 
+`FastSQLA` is compatible with all asynchronous db drivers that `SQLAlchemy` is
+compatible with.
+
+Let's create an `SQLite` database using `sqlite3`:
 ```bash
 sqlite3 db.sqlite <<EOF
 CREATE TABLE hero (
@@ -213,22 +214,20 @@ INSERT INTO hero (name, secret_identity) VALUES ('The Flash',       'Barry Allen
 INSERT INTO hero (name, secret_identity) VALUES ('Green Lantern',   'Hal Jordan');
 EOF
 ```
-</details>
 
-<details>
-  <summary>Install dependencies & run the app</summary>
+### Run the app
 
+Let's install required dependencies & run the app:
 ```bash
 pip install uvicorn aiosqlite fastsqla
 sqlalchemy_url=sqlite+aiosqlite:///db.sqlite?check_same_thread=false uvicorn example:app
 ```
-</details>
-<details>
-  <summary>Execute <code>GET /heros?offset=10</code> using `curl`</summary>
 
+### Check the result
+
+Execute `GET /heros?offset=10&limit=10` using `curl`:
 ```bash
 curl -X 'GET' -H 'accept: application/json' 'http://127.0.0.1:8000/heros?offset=10&limit=10'
-
 ```
 Returns:
 ```json
@@ -253,3 +252,7 @@ Returns:
   }
 }
 ```
+
+## License
+
+This project is licensed under the terms of the [MIT license](https://github.com/hadrien/FastSQLA/blob/main/LICENSE).
