@@ -161,7 +161,8 @@ class HeroModel(HeroBase):
 
 @app.get("/heros", response_model=Page[HeroModel])
 async def list_users(paginate: Paginate):
-    return await paginate(select(Hero))
+    stmt = select(Hero)
+    return await paginate(stmt)
 
 
 @app.get("/heros/{hero_id}", response_model=Item[HeroModel])
