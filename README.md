@@ -1,6 +1,6 @@
 # FastSQLA
 
-_Async SQLAlchemy for FastAPI — boilerplate, pagination, and seamless session management._
+_Async SQLAlchemy 2 for FastAPI — boilerplate, pagination, and seamless session management._
 
 [![PyPI - Version](https://img.shields.io/pypi/v/FastSQLA?color=brightgreen)](https://pypi.org/project/FastSQLA/)
 [![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/hadrien/fastsqla/ci.yml?branch=main&logo=github&label=CI)](https://github.com/hadrien/FastSQLA/actions?query=branch%3Amain+event%3Apush)
@@ -17,88 +17,82 @@ following [`SQLAlchemy`'s best practices](https://docs.sqlalchemy.org/en/20/orm/
 
 ## Features
 
-<details>
-    <summary>Automatic SQLAlchemy configuration at app startup.</summary>
+* Automatic SQLAlchemy setup at app startup using
+  [`FastAPI` Lifespan](https://fastapi.tiangolo.com/advanced/events/#lifespan):
 
-  Using [`FastAPI` Lifespan](https://fastapi.tiangolo.com/advanced/events/#lifespan):
-```python
-from fastapi import FastAPI
-from fastsqla import lifespan
+    ```python
+    from fastapi import FastAPI
+    from fastsqla import lifespan
 
-app = FastAPI(lifespan=lifespan)
-```
-</details>
-<details>
-    <summary>Async SQLAlchemy session as a FastAPI dependency.</summary>
+    app = FastAPI(lifespan=lifespan)
+    ```
 
-```python
-...
-from fastsqla import Session
-from sqlalchemy import select
-...
+* Async SQLAlchemy session as a FastAPI dependency:
 
-@app.get("/heros")
-async def get_heros(session:Session):
-    stmt = select(...)
-    result = await session.execute(stmt)
+    ```python
     ...
-```
-</details>
-<details>
-    <summary>Built-in pagination.</summary>
+    from fastsqla import Session
+    from sqlalchemy import select
+    ...
 
-```python
-...
-from fastsqla import Page, Paginate
-from sqlalchemy import select
-...
+    @app.get("/heros")
+    async def get_heros(session:Session):
+        stmt = select(...)
+        result = await session.execute(stmt)
+        ...
+    ```
 
-@app.get("/heros", response_model=Page[HeroModel])
-async def get_heros(paginate:Paginate):
-    return paginate(select(Hero))
-```
-Which would return something like:
-```json
-{
-  "data": [
+* Built-in pagination:
+
+    ```python
+    ...
+    from fastsqla import Page, Paginate
+    from sqlalchemy import select
+    ...
+
+    @app.get("/heros", response_model=Page[HeroModel])
+    async def get_heros(paginate:Paginate):
+        return paginate(select(Hero))
+    ```
+  Returning data & pagination metadata:
+    ```json
     {
-      "name": "The Flash",
-      "secret_identity": "Barry Allen",
-      "id": 11
-    },
-    {
-      "name": "Green Lantern",
-      "secret_identity": "Hal Jordan",
-      "id": 12
+      "data": [
+        {
+          "name": "The Flash",
+          "secret_identity": "Barry Allen",
+          "id": 11
+        },
+        {
+          "name": "Green Lantern",
+          "secret_identity": "Hal Jordan",
+          "id": 12
+        }
+      ],
+      "meta": {
+        "offset": 10,
+        "total_items": 12,
+        "total_pages": 2,
+        "page_number": 2
+      }
     }
-  ],
-  "meta": {
-    "offset": 10,
-    "total_items": 12,
-    "total_pages": 2,
-    "page_number": 2
-  }
-}
-```
-</details>
-<details>
-    <summary>Pagination customization.</summary>
+    ```
 
-```python
-...
-from fastapi import Page, new_pagination
-...
+* Pagination customization:
+    ```python
+    ...
+    from fastapi import Page, new_pagination
+    ...
 
-Paginate = new_pagination(min_page_size=5, max_page_size=500)
+    Paginate = new_pagination(min_page_size=5, max_page_size=500)
 
-@app.get("/heros", response_model=Page[HeroModel])
-async def get_heros(paginate:Paginate):
-    return paginate(select(Hero))
-```
-</details>
+    @app.get("/heros", response_model=Page[HeroModel])
+    async def get_heros(paginate:Paginate):
+        return paginate(select(Hero))
+    ```
 
 And more ...
-<!-- <details><summary></summary></details> -->
+
 
 ## Installing
 
@@ -113,6 +107,14 @@ pip install fastsqla
 ```
 
 ## Quick Example
+
+💡 The example uses an `SQLite` database for simplicity.
+
+`FastSQLA` is compatible with all asynchronous db drivers that `SQLAlchemy` is
+compatible with.
+
+<details>
+  <summary>Write the application code in <code>example.py</code></summary>
 
 ```python
 # example.py
@@ -169,13 +171,11 @@ async def create_user(new_hero: HeroBase, session: Session):
         raise HTTPException(HTTPStatus.CONFLICT, "Duplicate hero name")
     return {"data": hero}
 ```
+</details>
 
-> [!NOTE]
-> Sqlite is used for the sake of the example.
-> FastSQLA is compatible with all async db drivers that SQLAlchemy is compatible with.
 
 <details>
-    <summary>Create an <code>sqlite3</code> db:</summary>
+  <summary>Create an <code>SQLite</code> using `sqlite3` db:</summary>
 
 ```bash
 sqlite3 db.sqlite <<EOF
@@ -186,39 +186,36 @@ CREATE TABLE hero (
 );
 
 -- Insert heroes with hero name and secret identity
-INSERT INTO hero (name, secret_identity) VALUES ('Superman', 'Clark Kent');
-INSERT INTO hero (name, secret_identity) VALUES ('Batman', 'Bruce Wayne');
-INSERT INTO hero (name, secret_identity) VALUES ('Wonder Woman', 'Diana Prince');
-INSERT INTO hero (name, secret_identity) VALUES ('Iron Man', 'Tony Stark');
-INSERT INTO hero (name, secret_identity) VALUES ('Spider-Man', 'Peter Parker');
+INSERT INTO hero (name, secret_identity) VALUES ('Superman',        'Clark Kent');
+INSERT INTO hero (name, secret_identity) VALUES ('Batman',          'Bruce Wayne');
+INSERT INTO hero (name, secret_identity) VALUES ('Wonder Woman',    'Diana Prince');
+INSERT INTO hero (name, secret_identity) VALUES ('Iron Man',        'Tony Stark');
+INSERT INTO hero (name, secret_identity) VALUES ('Spider-Man',      'Peter Parker');
 INSERT INTO hero (name, secret_identity) VALUES ('Captain America', 'Steve Rogers');
-INSERT INTO hero (name, secret_identity) VALUES ('Black Widow', 'Natasha Romanoff');
-INSERT INTO hero (name, secret_identity) VALUES ('Thor', 'Thor Odinson');
-INSERT INTO hero (name, secret_identity) VALUES ('Scarlet Witch', 'Wanda Maximoff');
-INSERT INTO hero (name, secret_identity) VALUES ('Doctor Strange', 'Stephen Strange');
-INSERT INTO hero (name, secret_identity) VALUES ('The Flash', 'Barry Allen');
-INSERT INTO hero (name, secret_identity) VALUES ('Green Lantern', 'Hal Jordan');
+INSERT INTO hero (name, secret_identity) VALUES ('Black Widow',     'Natasha Romanoff');
+INSERT INTO hero (name, secret_identity) VALUES ('Thor',            'Thor Odinson');
+INSERT INTO hero (name, secret_identity) VALUES ('Scarlet Witch',   'Wanda Maximoff');
+INSERT INTO hero (name, secret_identity) VALUES ('Doctor Strange',  'Stephen Strange');
+INSERT INTO hero (name, secret_identity) VALUES ('The Flash',       'Barry Allen');
+INSERT INTO hero (name, secret_identity) VALUES ('Green Lantern',   'Hal Jordan');
 EOF
 ```
-
 </details>
 
 <details>
-    <summary>Install dependencies & run the app</summary>
+  <summary>Install dependencies & run the app</summary>
 
 ```bash
 pip install uvicorn aiosqlite fastsqla
 sqlalchemy_url=sqlite+aiosqlite:///db.sqlite?check_same_thread=false uvicorn example:app
 ```
-
 </details>
-
-Execute `GET /heros?offset=10`:
+<details>
+  <summary>Execute <code>GET /heros?offset=10</code> using `curl`</summary>
 
 ```bash
-curl -X 'GET' \
-'http://127.0.0.1:8000/heros?offset=10&limit=10' \
--H 'accept: application/json'
+curl -X 'GET' -H 'accept: application/json' 'http://127.0.0.1:8000/heros?offset=10&limit=10'
+
 ```
 Returns:
 ```json
@@ -243,6 +240,3 @@ Returns:
   }
 }
 ```
-
-[`FastAPI`]: https://fastapi.tiangolo.com/
-[`SQLAlchemy`]: http://sqlalchemy.org/
