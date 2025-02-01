@@ -17,7 +17,7 @@ following [`SQLAlchemy`'s best practices](https://docs.sqlalchemy.org/en/20/orm/
 
 ## Features
 
-* Automatic SQLAlchemy setup at app startup using
+* Easy setup at app startup using
   [`FastAPI` Lifespan](https://fastapi.tiangolo.com/advanced/events/#lifespan):
 
     ```python
@@ -27,7 +27,7 @@ following [`SQLAlchemy`'s best practices](https://docs.sqlalchemy.org/en/20/orm/
     app = FastAPI(lifespan=lifespan)
     ```
 
-* Async SQLAlchemy session as a FastAPI dependency:
+* `SQLAlchemy` async session dependency:
 
     ```python
     ...
@@ -42,6 +42,18 @@ following [`SQLAlchemy`'s best practices](https://docs.sqlalchemy.org/en/20/orm/
         ...
     ```
 
+* `SQLAlchemy` async session with an async context manager:
+
+    ```python
+    from fastsqla import open_session
+
+    async def background_job():
+        async with open_session() as session:
+            stmt = select(...)
+            result = await session.execute(stmt)
+            ...
+    ```
+
 * Built-in pagination:
 
     ```python
@@ -52,10 +64,11 @@ following [`SQLAlchemy`'s best practices](https://docs.sqlalchemy.org/en/20/orm/
 
     @app.get("/heros", response_model=Page[HeroModel])
     async def get_heros(paginate:Paginate):
-        return paginate(select(Hero))
+        return await paginate(select(Hero))
     ```
-  Returning data & pagination metadata:
+    <center>👇👇👇</center>
     ```json
+    // /heros?offset=10&limit=10
     {
       "data": [
         {
@@ -90,8 +103,8 @@ following [`SQLAlchemy`'s best practices](https://docs.sqlalchemy.org/en/20/orm/
     async def get_heros(paginate:Paginate):
         return paginate(select(Hero))
     ```
-
-And more ...
+* Session lifecycle management: session is commited on request success or rollback on
+  failure.
 
 
 ## Installing
