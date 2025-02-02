@@ -186,21 +186,21 @@ async def create_user(new_hero: HeroBase, session: Session):
 
 ### Database
 
-💡 This example uses an `SQLite` database for simplicity.
+💡 This example uses an `SQLite` database for simplicity: `FastSQLA` is compatible with
+all asynchronous db drivers that `SQLAlchemy` is compatible with.
 
-`FastSQLA` is compatible with all asynchronous db drivers that `SQLAlchemy` is
-compatible with.
+Let's create an `SQLite` database using `sqlite3` and insert 12 rows in the `hero` table:
 
-Let's create an `SQLite` database using `sqlite3`:
 ```bash
 sqlite3 db.sqlite <<EOF
+-- Create Table hero
 CREATE TABLE hero (
     id              INTEGER PRIMARY KEY AUTOINCREMENT,
-    name            TEXT NOT NULL UNIQUE, -- Hero name (e.g., Superman)
+    name            TEXT NOT NULL UNIQUE, -- Unique hero name (e.g., Superman)
     secret_identity TEXT NOT NULL         -- Secret identity (e.g., Clark Kent)
 );
 
--- Insert heroes with hero name and secret identity
+-- Insert heroes with their name and secret identity
 INSERT INTO hero (name, secret_identity) VALUES ('Superman',        'Clark Kent');
 INSERT INTO hero (name, secret_identity) VALUES ('Batman',          'Bruce Wayne');
 INSERT INTO hero (name, secret_identity) VALUES ('Wonder Woman',    'Diana Prince');
@@ -218,10 +218,14 @@ EOF
 
 ### Run the app
 
-Let's install required dependencies & run the app:
+Let's install required dependencies:
 ```bash
 pip install uvicorn aiosqlite fastsqla
-sqlalchemy_url=sqlite+aiosqlite:///db.sqlite?check_same_thread=false uvicorn example:app
+```
+Let's run the app:
+```
+sqlalchemy_url=sqlite+aiosqlite:///db.sqlite?check_same_thread=false \
+  uvicorn example:app
 ```
 
 ### Check the result
@@ -253,6 +257,13 @@ Returns:
   }
 }
 ```
+
+You can also check the generated openapi doc by opening your browser to
+[http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs).
+
+![OpenAPI generated documentation of the example API](images/example-openapi-generated-doc.png)
+
+
 
 ## License
 

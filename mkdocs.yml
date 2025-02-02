@@ -16,6 +16,7 @@ theme:
     logo: material/database
   name: material
   features:
+    - admonition
     - announce.dismiss
     - content.code.annotate
     - content.code.copy
@@ -49,8 +50,8 @@ theme:
         name: Switch to system preference
 
 plugins:
-  - search
   - autorefs
+  - glightbox
   - mkdocstrings:
       enable_inventory: true
       handlers:
@@ -59,14 +60,18 @@ plugins:
           - https://docs.python.org/3/objects.inv
           - https://docs.sqlalchemy.org/en/20/objects.inv
           - https://fastapi.tiangolo.com/objects.inv
+  - search
 
 markdown_extensions:
   - admonition
-  - pymdownx.details
-  - pymdownx.superfences
   - attr_list
+  - md_in_html
+  - pymdownx.blocks.caption
+  - pymdownx.details
   - pymdownx.emoji:
       emoji_index: !!python/name:material.extensions.emoji.twemoji
       emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - pymdownx.superfences
   - toc:
       permalink: true
+

@@ -11,22 +11,23 @@ variables, with each parameter name prefixed by **`SQLALCHEMY_`**.
 
 !!! note
 
-    FastSQLA is case-insensitive when reading environment variables, so parameter names
-    prefixed with **`SQLALCHEMY_`** can be provided in any letter case.
+    FastSQLA is **case-insensitive** when reading environment variables, so parameter
+    names prefixed with **`SQLALCHEMY_`** can be provided in any letter case.
 
 ## Examples
 
-1.  :simple-postgresql: PostgreSQL url using [`asyncpg`][sqlalchemy.dialects.postgresql.asyncpg]
-    driver with a [`pool_recycle`][sqlalchemy.create_engine.params.pool_recycle] of 30
-    minutes:
+1.  :simple-postgresql: PostgreSQL url using
+    [`asyncpg`][sqlalchemy.dialects.postgresql.asyncpg] driver with a
+    [`pool_recycle`][sqlalchemy.create_engine.params.pool_recycle] of 30 minutes:
 
     ```bash
     export SQLALCHEMY_URL=postgresql+asyncpg://postgres@localhost
     export SQLALCHEMY_POOL_RECYCLE=1800
     ```
 
-2.  :simple-sqlite: SQLite db file using [`aiosqlite`][sqlalchemy.dialects.sqlite.aiosqlite]
-    driver with a [`pool_size`][sqlalchemy.create_engine.params.pool_size] of 50:
+2.  :simple-sqlite: SQLite db file using
+    [`aiosqlite`][sqlalchemy.dialects.sqlite.aiosqlite] driver with a
+    [`pool_size`][sqlalchemy.create_engine.params.pool_size] of 50:
 
     ```bash
     export sqlalchemy_url=sqlite+aiosqlite:////tmp/test.db?check_same_thread=false
