@@ -7,6 +7,7 @@ _Async SQLAlchemy 2 for FastAPI — boilerplate, pagination, and seamless sessio
 [![Codecov](https://img.shields.io/codecov/c/github/hadrien/fastsqla?token=XK3YT60MWK&logo=codecov)](https://codecov.io/gh/hadrien/FastSQLA)
 [![Conventional Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-brightgreen.svg)](https://conventionalcommits.org)
 [![GitHub License](https://img.shields.io/github/license/hadrien/fastsqla)](https://github.com/hadrien/FastSQLA/blob/main/LICENSE)
+![ ](https://img.shields.io/badge/With%20love%20from%20Canada-ffffff?logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI2MDAiIGhlaWdodD0iNjAwIiB2aWV3Qm94PSItMjAxNSAtMjAwMCA0MDMwIDQwMzAiPjxwYXRoIGZpbGw9IiNmMDAiIGQ9Im0tOTAgMjAzMCA0NS04NjNhOTUgOTUgMCAwIDAtMTExLTk4bC04NTkgMTUxIDExNi0zMjBhNjUgNjUgMCAwIDAtMjAtNzNsLTk0MS03NjIgMjEyLTk5YTY1IDY1IDAgMCAwIDM0LTc5bC0xODYtNTcyIDU0MiAxMTVhNjUgNjUgMCAwIDAgNzMtMzhsMTA1LTI0NyA0MjMgNDU0YTY1IDY1IDAgMCAwIDExMS01N2wtMjA0LTEwNTIgMzI3IDE4OWE2NSA2NSAwIDAgMCA5MS0yN2wzMzItNjUyIDMzMiA2NTJhNjUgNjUgMCAwIDAgOTEgMjdsMzI3LTE4OS0yMDQgMTA1MmE2NSA2NSAwIDAgMCAxMTEgNTdsNDIzLTQ1NCAxMDUgMjQ3YTY1IDY1IDAgMCAwIDczIDM4bDU0Mi0xMTUtMTg2IDU3MmE2NSA2NSAwIDAgMCAzNCA3OWwyMTIgOTktOTQxIDc2MmE2NSA2NSAwIDAgMC0yMCA3M2wxMTYgMzIwLTg1OS0xNTFhOTUgOTUgMCAwIDAtMTExIDk4bDQ1IDg2M3oiLz48L3N2Zz4K)
 
 **Documentation**: [https://hadrien.github.io/FastSQLA/](https://hadrien.github.io/FastSQLA/)
 
@@ -20,6 +21,7 @@ It streamlines the configuration and asynchronous connection to relational datab
 providing boilerplate and intuitive helpers. Additionally, it offers built-in
 customizable pagination and automatically manages the `SQLAlchemy` session lifecycle
 following [`SQLAlchemy`'s best practices](https://docs.sqlalchemy.org/en/20/orm/session_basics.html#when-do-i-construct-a-session-when-do-i-commit-it-and-when-do-i-close-it).
+
 
 ## Features
 
@@ -269,8 +271,6 @@ You can also check the generated openapi doc by opening your browser to
 [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs).
 
 ![OpenAPI generated documentation of the example API](images/example-openapi-generated-doc.png)
-
-
 
 ## License
 
