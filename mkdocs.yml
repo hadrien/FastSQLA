@@ -7,8 +7,11 @@ edit_uri: edit/main/docs/
 nav:
 - Get Started:
   - Welcome to FastSQLA: index.md
-  - Configuration: configuration.md
-  - Changelog: changelog.md
+- Usage:
+  - Setup: setup.md
+  - SQLAlchemy Session: session.md
+  - Pagination: pagination.md
+- Changelog: changelog.md
 
 theme:
   favicon: images/favicon.png
@@ -16,7 +19,6 @@ theme:
     logo: material/database
   name: material
   features:
-    - admonition
     - announce.dismiss
     - content.code.annotate
     - content.code.copy
@@ -63,6 +65,7 @@ plugins:
   - search
 
 markdown_extensions:
+  - abbr
   - admonition
   - attr_list
   - md_in_html
@@ -71,7 +74,16 @@ markdown_extensions:
   - pymdownx.emoji:
       emoji_index: !!python/name:material.extensions.emoji.twemoji
       emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
   - pymdownx.superfences
+
   - toc:
       permalink: true
-
+watch:
+  - docs
+  - src

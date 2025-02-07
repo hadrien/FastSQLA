@@ -1,10 +1,22 @@
-# Configuration
+# Setup
 
-Configuration is exclusively done via environment variables to follow the
+## `fastsqla.lifespan`
+
+::: fastsqla.lifespan
+    options:
+        heading_level: false
+        show_source: false
+
+## Configuration
+
+Configuration is done exclusively via environment variables, adhering to the
 [**Twelve-Factor App methodology**](https://12factor.net/config).
 
-The only required key is **`SQLALCHEMY_URL`**, which specifies the database URL and
-supports embedding specific database driver parameters in the query string.
+The only required key is **`SQLALCHEMY_URL`**, which defines the database URL. It
+specifies the database driver in the URL's scheme and allows embedding driver parameters
+in the query string. Example:
+
+    sqlite+aiosqlite:////tmp/test.db?check_same_thread=false
 
 All parameters of [`sqlalchemy.create_engine`][] can be configured by setting environment
 variables, with each parameter name prefixed by **`SQLALCHEMY_`**.
@@ -14,14 +26,14 @@ variables, with each parameter name prefixed by **`SQLALCHEMY_`**.
     FastSQLA is **case-insensitive** when reading environment variables, so parameter
     names prefixed with **`SQLALCHEMY_`** can be provided in any letter case.
 
-## Examples
+### Examples
 
 1.  :simple-postgresql: PostgreSQL url using
     [`asyncpg`][sqlalchemy.dialects.postgresql.asyncpg] driver with a
     [`pool_recycle`][sqlalchemy.create_engine.params.pool_recycle] of 30 minutes:
 
     ```bash
-    export SQLALCHEMY_URL=postgresql+asyncpg://postgres@localhost
+    export SQLALCHEMY_URL=postgresql+asyncpg://postgres@localhost/postgres
     export SQLALCHEMY_POOL_RECYCLE=1800
     ```
 
@@ -30,7 +42,7 @@ variables, with each parameter name prefixed by **`SQLALCHEMY_`**.
     [`pool_size`][sqlalchemy.create_engine.params.pool_size] of 50:
 
     ```bash
-    export sqlalchemy_url=sqlite+aiosqlite:////tmp/test.db?check_same_thread=false
+    export sqlalchemy_url=sqlite+aiosqlite:///tmp/test.db?check_same_thread=false
     export sqlalchemy_pool_size=10
     ```
 

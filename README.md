@@ -8,7 +8,11 @@ _Async SQLAlchemy 2 for FastAPI — boilerplate, pagination, and seamless sessio
 [![Conventional Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-brightgreen.svg)](https://conventionalcommits.org)
 [![GitHub License](https://img.shields.io/github/license/hadrien/fastsqla)](https://github.com/hadrien/FastSQLA/blob/main/LICENSE)
 
-**Documentation**: https://hadrien.github.io/FastSQLA/
+**Documentation**: [https://hadrien.github.io/FastSQLA/](https://hadrien.github.io/FastSQLA/)
+
+**Github Repo:** [https://github.com/hadrien/fastsqla](https://github.com/hadrien/fastsqla)
+
+-----------------------------------------------------------------------------------------
 
 `FastSQLA` is an [`SQLAlchemy 2`](https://docs.sqlalchemy.org/en/20/) extension for
 [`FastAPI`](https://fastapi.tiangolo.com/).
@@ -147,11 +151,13 @@ class Hero(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(unique=True)
     secret_identity: Mapped[str]
+    age: Mapped[int]
 
 
 class HeroBase(BaseModel):
     name: str
     secret_identity: str
+    age: int
 
 
 class HeroModel(HeroBase):
@@ -160,13 +166,13 @@ class HeroModel(HeroBase):
 
 
 @app.get("/heros", response_model=Page[HeroModel])
-async def list_users(paginate: Paginate):
+async def list_heros(paginate: Paginate):
     stmt = select(Hero)
     return await paginate(stmt)
 
 
 @app.get("/heros/{hero_id}", response_model=Item[HeroModel])
-async def get_user(hero_id: int, session: Session):
+async def get_hero(hero_id: int, session: Session):
     hero = await session.get(Hero, hero_id)
     if hero is None:
         raise HTTPException(HTTPStatus.NOT_FOUND, "Hero not found")
@@ -174,7 +180,7 @@ async def get_user(hero_id: int, session: Session):
 
 
 @app.post("/heros", response_model=Item[HeroModel])
-async def create_user(new_hero: HeroBase, session: Session):
+async def create_hero(new_hero: HeroBase, session: Session):
     hero = Hero(**new_hero.model_dump())
     session.add(hero)
     try:
@@ -197,22 +203,23 @@ sqlite3 db.sqlite <<EOF
 CREATE TABLE hero (
     id              INTEGER PRIMARY KEY AUTOINCREMENT,
     name            TEXT NOT NULL UNIQUE, -- Unique hero name (e.g., Superman)
-    secret_identity TEXT NOT NULL         -- Secret identity (e.g., Clark Kent)
+    secret_identity TEXT NOT NULL,        -- Secret identity (e.g., Clark Kent)
+    age             INTEGER NOT NULL      -- Age of the hero (e.g., 30)
 );
 
--- Insert heroes with their name and secret identity
-INSERT INTO hero (name, secret_identity) VALUES ('Superman',        'Clark Kent');
-INSERT INTO hero (name, secret_identity) VALUES ('Batman',          'Bruce Wayne');
-INSERT INTO hero (name, secret_identity) VALUES ('Wonder Woman',    'Diana Prince');
-INSERT INTO hero (name, secret_identity) VALUES ('Iron Man',        'Tony Stark');
-INSERT INTO hero (name, secret_identity) VALUES ('Spider-Man',      'Peter Parker');
-INSERT INTO hero (name, secret_identity) VALUES ('Captain America', 'Steve Rogers');
-INSERT INTO hero (name, secret_identity) VALUES ('Black Widow',     'Natasha Romanoff');
-INSERT INTO hero (name, secret_identity) VALUES ('Thor',            'Thor Odinson');
-INSERT INTO hero (name, secret_identity) VALUES ('Scarlet Witch',   'Wanda Maximoff');
-INSERT INTO hero (name, secret_identity) VALUES ('Doctor Strange',  'Stephen Strange');
-INSERT INTO hero (name, secret_identity) VALUES ('The Flash',       'Barry Allen');
-INSERT INTO hero (name, secret_identity) VALUES ('Green Lantern',   'Hal Jordan');
+-- Insert heroes with their name, secret identity, and age
+INSERT INTO hero (name, secret_identity, age) VALUES ('Superman',        'Clark Kent',       30);
+INSERT INTO hero (name, secret_identity, age) VALUES ('Batman',          'Bruce Wayne',      35);
+INSERT INTO hero (name, secret_identity, age) VALUES ('Wonder Woman',    'Diana Prince',     30);
+INSERT INTO hero (name, secret_identity, age) VALUES ('Iron Man',        'Tony Stark',       45);
+INSERT INTO hero (name, secret_identity, age) VALUES ('Spider-Man',      'Peter Parker',     25);
+INSERT INTO hero (name, secret_identity, age) VALUES ('Captain America', 'Steve Rogers',     100);
+INSERT INTO hero (name, secret_identity, age) VALUES ('Black Widow',     'Natasha Romanoff', 35);
+INSERT INTO hero (name, secret_identity, age) VALUES ('Thor',            'Thor Odinson',     1500);
+INSERT INTO hero (name, secret_identity, age) VALUES ('Scarlet Witch',   'Wanda Maximoff',   30);
+INSERT INTO hero (name, secret_identity, age) VALUES ('Doctor Strange',  'Stephen Strange',  40);
+INSERT INTO hero (name, secret_identity, age) VALUES ('The Flash',       'Barry Allen',      28);
+INSERT INTO hero (name, secret_identity, age) VALUES ('Green Lantern',   'Hal Jordan',       35);
 EOF
 ```
 
