@@ -270,7 +270,7 @@ Returns:
 You can also check the generated openapi doc by opening your browser to
 [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs).
 
-![OpenAPI generated documentation of the example API](images/example-openapi-generated-doc.png)
+![OpenAPI generated documentation of the example API](https://raw.githubusercontent.com/hadrien/FastSQLA/refs/heads/main/docs/images/example-openapi-generated-doc.png)
 
 ## License
 
