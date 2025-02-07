@@ -315,7 +315,7 @@ Paginate = Annotated[PaginateType[T], Depends(new_pagination())]
 """A dependency used in endpoints to paginate `SQLAlchemy` select queries.
 
 It adds `offset`and `limit` query parameters to the endpoint, which are used to paginate.
-The model returned by the endpoint is a `Page` model, which contains the data and
+The model returned by the endpoint is a `Page` model. It contains a page of data and
 metadata:
 
 ```json
@@ -380,5 +380,4 @@ async def list_heros(paginate: Paginate, age:int | None = None):
         stmt = stmt.where(Hero.age == age)
     return await paginate(stmt)
 ```
-
 """

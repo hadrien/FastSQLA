@@ -24,14 +24,14 @@ To learn more about `SQLAlchemy` sessions:
 * [Session Basics](https://docs.sqlalchemy.org/en/20/orm/session_basics.html#)
 
 
-## Session dependency
+## `fastsqla.Session` dependency
 
 ::: fastsqla.Session
     options:
         heading_level: false
         show_source: false
 
-## Session context manager
+## `fastsqla.open_session` context manager
 
 ::: fastsqla.open_session
     options:
