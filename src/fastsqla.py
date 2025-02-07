@@ -36,6 +36,28 @@ logger = get_logger(__name__)
 
 
 class Base(DeclarativeBase, DeferredReflection):
+    """Inherit from `Base` to declare an `SQLAlchemy` model.
+
+    Example:
+    ```py
+    from fastsqla import Base
+    from sqlalchemy.orm import Mapped, mapped_column
+
+
+    class Hero(Base):
+        __tablename__ = "hero"
+        id: Mapped[int] = mapped_column(primary_key=True)
+        name: Mapped[str] = mapped_column(unique=True)
+        secret_identity: Mapped[str]
+        age: Mapped[int]
+    ```
+
+    To learn more on `SQLAlchemy` ORM & Declarative mapping:
+
+    * [ORM Quick Start](https://docs.sqlalchemy.org/en/20/orm/quickstart.html)
+    * [Declarative Mapping](https://docs.sqlalchemy.org/en/20/orm/mapping_styles.html#declarative-mapping)
+    """
+
     __abstract__ = True
 
 

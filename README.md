@@ -138,12 +138,12 @@ Let's write some tiny app in `example.py`:
 from http import HTTPStatus
 
 from fastapi import FastAPI, HTTPException
+from fastsqla import Base, Item, Page, Paginate, Session, lifespan
 from pydantic import BaseModel, ConfigDict
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Mapped, mapped_column
 
-from fastsqla import Base, Item, Page, Paginate, Session, lifespan
 
 app = FastAPI(lifespan=lifespan)
 

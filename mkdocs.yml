@@ -9,6 +9,7 @@ nav:
   - Welcome to FastSQLA: index.md
 - Usage:
   - Setup: setup.md
+  - Object-relational mapping: orm.md
   - SQLAlchemy Session: session.md
   - Pagination: pagination.md
 - Changelog: changelog.md
