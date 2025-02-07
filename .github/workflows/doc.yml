@@ -1,0 +1,45 @@
+name: Build & Publish Doc
+
+on:
+  push:
+    branches:
+      - main
+      - docs/**
+
+jobs:
+
+  Build-Doc:
+    runs-on: ubuntu-latest
+    concurrency: release
+    permissions:
+      contents: write
+      id-token: write
+    steps:
+    - name: 📥 checkout
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    - name: 🔧 setup uv
+      uses: ./.github/uv
+    - name: ⚙️ install deps
+      run: uv sync --extra docs
+    - name: 📙 mkdocs build
+      run: uv run mkdocs build
+    - name: 📦 Upload artifacts
+      uses: actions/upload-pages-artifact@v3
+      with:
+        path: site
+
+  Publish-Doc:
+    needs: Build-Doc
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    steps:
+    - name: Deploy to GitHub Pages
+      id: deployment
+      uses: actions/deploy-pages@v4
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}

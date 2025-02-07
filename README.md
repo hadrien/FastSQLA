@@ -1,74 +1,119 @@
-# 🚀 FastSQLA
+# FastSQLA
+
+_Async SQLAlchemy 2 for FastAPI — boilerplate, pagination, and seamless session management._
 
 [![PyPI - Version](https://img.shields.io/pypi/v/FastSQLA?color=brightgreen)](https://pypi.org/project/FastSQLA/)
+[![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/hadrien/fastsqla/ci.yml?branch=main&logo=github&label=CI)](https://github.com/hadrien/FastSQLA/actions?query=branch%3Amain+event%3Apush)
+[![Codecov](https://img.shields.io/codecov/c/github/hadrien/fastsqla?token=XK3YT60MWK&logo=codecov)](https://codecov.io/gh/hadrien/FastSQLA)
 [![Conventional Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-brightgreen.svg)](https://conventionalcommits.org)
-[![codecov](https://codecov.io/gh/hadrien/fastsqla/graph/badge.svg?token=XK3YT60MWK)](https://codecov.io/gh/hadrien/fastsqla)
+[![GitHub License](https://img.shields.io/github/license/hadrien/fastsqla)](https://github.com/hadrien/FastSQLA/blob/main/LICENSE)
+![🍁 With love from Canada](https://img.shields.io/badge/With%20love%20from%20Canada-ffffff?logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI2MDAiIGhlaWdodD0iNjAwIiB2aWV3Qm94PSItMjAxNSAtMjAwMCA0MDMwIDQwMzAiPjxwYXRoIGZpbGw9IiNmMDAiIGQ9Im0tOTAgMjAzMCA0NS04NjNhOTUgOTUgMCAwIDAtMTExLTk4bC04NTkgMTUxIDExNi0zMjBhNjUgNjUgMCAwIDAtMjAtNzNsLTk0MS03NjIgMjEyLTk5YTY1IDY1IDAgMCAwIDM0LTc5bC0xODYtNTcyIDU0MiAxMTVhNjUgNjUgMCAwIDAgNzMtMzhsMTA1LTI0NyA0MjMgNDU0YTY1IDY1IDAgMCAwIDExMS01N2wtMjA0LTEwNTIgMzI3IDE4OWE2NSA2NSAwIDAgMCA5MS0yN2wzMzItNjUyIDMzMiA2NTJhNjUgNjUgMCAwIDAgOTEgMjdsMzI3LTE4OS0yMDQgMTA1MmE2NSA2NSAwIDAgMCAxMTEgNTdsNDIzLTQ1NCAxMDUgMjQ3YTY1IDY1IDAgMCAwIDczIDM4bDU0Mi0xMTUtMTg2IDU3MmE2NSA2NSAwIDAgMCAzNCA3OWwyMTIgOTktOTQxIDc2MmE2NSA2NSAwIDAgMC0yMCA3M2wxMTYgMzIwLTg1OS0xNTFhOTUgOTUgMCAwIDAtMTExIDk4bDQ1IDg2M3oiLz48L3N2Zz4K)
 
-`FastSQLA` is an [`SQLAlchemy`] extension for [`FastAPI`].
-It supports asynchronous `SQLAlchemy` sessions and includes built-in custimizable
-pagination.
+**Documentation**: [https://hadrien.github.io/FastSQLA/](https://hadrien.github.io/FastSQLA/)
+
+**Github Repo:** [https://github.com/hadrien/fastsqla](https://github.com/hadrien/fastsqla)
+
+-----------------------------------------------------------------------------------------
+
+`FastSQLA` is an [`SQLAlchemy 2`](https://docs.sqlalchemy.org/en/20/) extension for
+[`FastAPI`](https://fastapi.tiangolo.com/).
+It streamlines the configuration and asynchronous connection to relational databases by
+providing boilerplate and intuitive helpers. Additionally, it offers built-in
+customizable pagination and automatically manages the `SQLAlchemy` session lifecycle
+following [`SQLAlchemy`'s best practices](https://docs.sqlalchemy.org/en/20/orm/session_basics.html#when-do-i-construct-a-session-when-do-i-commit-it-and-when-do-i-close-it).
+
 
 ## Features
 
-<details>
-    <summary>Automatic SQLAlchemy configuration at app startup.</summary>
+* Easy setup at app startup using
+  [`FastAPI` Lifespan](https://fastapi.tiangolo.com/advanced/events/#lifespan):
 
-  Using [`FastAPI` Lifespan](https://fastapi.tiangolo.com/advanced/events/#lifespan):
-```python
-from fastapi import FastAPI
-from fastsqla import lifespan
+    ```python
+    from fastapi import FastAPI
+    from fastsqla import lifespan
 
-app = FastAPI(lifespan=lifespan)
-```
-</details>
-<details>
-    <summary>Async SQLAlchemy session as a FastAPI dependency.</summary>
+    app = FastAPI(lifespan=lifespan)
+    ```
 
-```python
-...
-from fastsqla import Session
-from sqlalchemy import select
-...
+* `SQLAlchemy` async session dependency:
 
-@app.get("/heros")
-async def get_heros(session:Session):
-    stmt = select(...)
-    result = await session.execute(stmt)
+    ```python
     ...
-```
-</details>
-<details>
-    <summary>Built-in pagination.</summary>
+    from fastsqla import Session
+    from sqlalchemy import select
+    ...
 
-```python
-...
-from fastsqla import Page, Paginate
-from sqlalchemy import select
-...
+    @app.get("/heros")
+    async def get_heros(session:Session):
+        stmt = select(...)
+        result = await session.execute(stmt)
+        ...
+    ```
 
-@app.get("/heros", response_model=Page[HeroModel])
-async def get_heros(paginate:Paginate):
-    return paginate(select(Hero))
-```
-</details>
-<details>
-    <summary>Allows pagination customization.</summary>
+* `SQLAlchemy` async session with an async context manager:
 
-```python
-...
-from fastapi import Page, new_pagination
-...
+    ```python
+    from fastsqla import open_session
 
-Paginate = new_pagination(min_page_size=5, max_page_size=500)
+    async def background_job():
+        async with open_session() as session:
+            stmt = select(...)
+            result = await session.execute(stmt)
+            ...
+    ```
 
-@app.get("/heros", response_model=Page[HeroModel])
-async def get_heros(paginate:Paginate):
-    return paginate(select(Hero))
-```
-</details>
+* Built-in pagination:
 
-And more ...
-<!-- <details><summary></summary></details> -->
+    ```python
+    ...
+    from fastsqla import Page, Paginate
+    from sqlalchemy import select
+    ...
+
+    @app.get("/heros", response_model=Page[HeroModel])
+    async def get_heros(paginate:Paginate):
+        return await paginate(select(Hero))
+    ```
+    <center>👇👇👇</center>
+    ```json
+    // /heros?offset=10&limit=10
+    {
+      "data": [
+        {
+          "name": "The Flash",
+          "secret_identity": "Barry Allen",
+          "id": 11
+        },
+        {
+          "name": "Green Lantern",
+          "secret_identity": "Hal Jordan",
+          "id": 12
+        }
+      ],
+      "meta": {
+        "offset": 10,
+        "total_items": 12,
+        "total_pages": 2,
+        "page_number": 2
+      }
+    }
+    ```
+
+* Pagination customization:
+    ```python
+    ...
+    from fastapi import Page, new_pagination
+    ...
+
+    Paginate = new_pagination(min_page_size=5, max_page_size=500)
+
+    @app.get("/heros", response_model=Page[HeroModel])
+    async def get_heros(paginate:Paginate):
+        return paginate(select(Hero))
+    ```
+* Session lifecycle management: session is commited on request success or rollback on
+  failure.
+
 
 ## Installing
 
@@ -84,17 +129,21 @@ pip install fastsqla
 
 ## Quick Example
 
+### `example.py`
+
+Let's write some tiny app in `example.py`:
+
 ```python
 # example.py
 from http import HTTPStatus
 
 from fastapi import FastAPI, HTTPException
+from fastsqla import Base, Item, Page, Paginate, Session, lifespan
 from pydantic import BaseModel, ConfigDict
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Mapped, mapped_column
 
-from fastsqla import Base, Item, Page, Paginate, Session, lifespan
 
 app = FastAPI(lifespan=lifespan)
 
@@ -104,11 +153,13 @@ class Hero(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(unique=True)
     secret_identity: Mapped[str]
+    age: Mapped[int]
 
 
 class HeroBase(BaseModel):
     name: str
     secret_identity: str
+    age: int
 
 
 class HeroModel(HeroBase):
@@ -117,12 +168,13 @@ class HeroModel(HeroBase):
 
 
 @app.get("/heros", response_model=Page[HeroModel])
-async def list_users(paginate: Paginate):
-    return await paginate(select(Hero))
+async def list_heros(paginate: Paginate):
+    stmt = select(Hero)
+    return await paginate(stmt)
 
 
 @app.get("/heros/{hero_id}", response_model=Item[HeroModel])
-async def get_user(hero_id: int, session: Session):
+async def get_hero(hero_id: int, session: Session):
     hero = await session.get(Hero, hero_id)
     if hero is None:
         raise HTTPException(HTTPStatus.NOT_FOUND, "Hero not found")
@@ -130,7 +182,7 @@ async def get_user(hero_id: int, session: Session):
 
 
 @app.post("/heros", response_model=Item[HeroModel])
-async def create_user(new_hero: HeroBase, session: Session):
+async def create_hero(new_hero: HeroBase, session: Session):
     hero = Hero(**new_hero.model_dump())
     session.add(hero)
     try:
@@ -140,55 +192,56 @@ async def create_user(new_hero: HeroBase, session: Session):
     return {"data": hero}
 ```
 
-> [!NOTE]
-> Sqlite is used for the sake of the example.
-> FastSQLA is compatible with all async db drivers that SQLAlchemy is compatible with.
+### Database
 
-<details>
-    <summary>Create an <code>sqlite3</code> db:</summary>
+💡 This example uses an `SQLite` database for simplicity: `FastSQLA` is compatible with
+all asynchronous db drivers that `SQLAlchemy` is compatible with.
+
+Let's create an `SQLite` database using `sqlite3` and insert 12 rows in the `hero` table:
 
 ```bash
 sqlite3 db.sqlite <<EOF
+-- Create Table hero
 CREATE TABLE hero (
     id              INTEGER PRIMARY KEY AUTOINCREMENT,
-    name            TEXT NOT NULL UNIQUE, -- Hero name (e.g., Superman)
-    secret_identity TEXT NOT NULL         -- Secret identity (e.g., Clark Kent)
+    name            TEXT NOT NULL UNIQUE, -- Unique hero name (e.g., Superman)
+    secret_identity TEXT NOT NULL,        -- Secret identity (e.g., Clark Kent)
+    age             INTEGER NOT NULL      -- Age of the hero (e.g., 30)
 );
 
--- Insert heroes with hero name and secret identity
-INSERT INTO hero (name, secret_identity) VALUES ('Superman', 'Clark Kent');
-INSERT INTO hero (name, secret_identity) VALUES ('Batman', 'Bruce Wayne');
-INSERT INTO hero (name, secret_identity) VALUES ('Wonder Woman', 'Diana Prince');
-INSERT INTO hero (name, secret_identity) VALUES ('Iron Man', 'Tony Stark');
-INSERT INTO hero (name, secret_identity) VALUES ('Spider-Man', 'Peter Parker');
-INSERT INTO hero (name, secret_identity) VALUES ('Captain America', 'Steve Rogers');
-INSERT INTO hero (name, secret_identity) VALUES ('Black Widow', 'Natasha Romanoff');
-INSERT INTO hero (name, secret_identity) VALUES ('Thor', 'Thor Odinson');
-INSERT INTO hero (name, secret_identity) VALUES ('Scarlet Witch', 'Wanda Maximoff');
-INSERT INTO hero (name, secret_identity) VALUES ('Doctor Strange', 'Stephen Strange');
-INSERT INTO hero (name, secret_identity) VALUES ('The Flash', 'Barry Allen');
-INSERT INTO hero (name, secret_identity) VALUES ('Green Lantern', 'Hal Jordan');
+-- Insert heroes with their name, secret identity, and age
+INSERT INTO hero (name, secret_identity, age) VALUES ('Superman',        'Clark Kent',       30);
+INSERT INTO hero (name, secret_identity, age) VALUES ('Batman',          'Bruce Wayne',      35);
+INSERT INTO hero (name, secret_identity, age) VALUES ('Wonder Woman',    'Diana Prince',     30);
+INSERT INTO hero (name, secret_identity, age) VALUES ('Iron Man',        'Tony Stark',       45);
+INSERT INTO hero (name, secret_identity, age) VALUES ('Spider-Man',      'Peter Parker',     25);
+INSERT INTO hero (name, secret_identity, age) VALUES ('Captain America', 'Steve Rogers',     100);
+INSERT INTO hero (name, secret_identity, age) VALUES ('Black Widow',     'Natasha Romanoff', 35);
+INSERT INTO hero (name, secret_identity, age) VALUES ('Thor',            'Thor Odinson',     1500);
+INSERT INTO hero (name, secret_identity, age) VALUES ('Scarlet Witch',   'Wanda Maximoff',   30);
+INSERT INTO hero (name, secret_identity, age) VALUES ('Doctor Strange',  'Stephen Strange',  40);
+INSERT INTO hero (name, secret_identity, age) VALUES ('The Flash',       'Barry Allen',      28);
+INSERT INTO hero (name, secret_identity, age) VALUES ('Green Lantern',   'Hal Jordan',       35);
 EOF
 ```
 
-</details>
+### Run the app
 
-<details>
-    <summary>Install dependencies & run the app</summary>
-
+Let's install required dependencies:
 ```bash
 pip install uvicorn aiosqlite fastsqla
-sqlalchemy_url=sqlite+aiosqlite:///db.sqlite?check_same_thread=false uvicorn example:app
+```
+Let's run the app:
+```
+sqlalchemy_url=sqlite+aiosqlite:///db.sqlite?check_same_thread=false \
+  uvicorn example:app
 ```
 
-</details>
+### Check the result
 
-Execute `GET /heros?offset=10`:
-
+Execute `GET /heros?offset=10&limit=10` using `curl`:
 ```bash
-curl -X 'GET' \
-'http://127.0.0.1:8000/heros?offset=10&limit=10' \
--H 'accept: application/json'
+curl -X 'GET' -H 'accept: application/json' 'http://127.0.0.1:8000/heros?offset=10&limit=10'
 ```
 Returns:
 ```json
@@ -214,5 +267,11 @@ Returns:
 }
 ```
 
-[`FastAPI`]: https://fastapi.tiangolo.com/
-[`SQLAlchemy`]: http://sqlalchemy.org/
+You can also check the generated openapi doc by opening your browser to
+[http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs).
+
+![OpenAPI generated documentation of the example API](images/example-openapi-generated-doc.png)
+
+## License
+
+This project is licensed under the terms of the [MIT license](https://github.com/hadrien/FastSQLA/blob/main/LICENSE).
