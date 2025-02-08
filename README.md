@@ -1,6 +1,6 @@
 # FastSQLA
 
-_Async SQLAlchemy 2 for FastAPI — boilerplate, pagination, and seamless session management._
+_Async SQLAlchemy 2.0+ for FastAPI — boilerplate, pagination, and seamless session management._
 
 [![PyPI - Version](https://img.shields.io/pypi/v/FastSQLA?color=brightgreen)](https://pypi.org/project/FastSQLA/)
 [![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/hadrien/fastsqla/ci.yml?branch=main&logo=github&label=CI)](https://github.com/hadrien/FastSQLA/actions?query=branch%3Amain+event%3Apush)
@@ -15,7 +15,7 @@ _Async SQLAlchemy 2 for FastAPI — boilerplate, pagination, and seamless sessio
 
 -----------------------------------------------------------------------------------------
 
-`FastSQLA` is an [`SQLAlchemy 2`](https://docs.sqlalchemy.org/en/20/) extension for
+`FastSQLA` is an [`SQLAlchemy 2.0+`](https://docs.sqlalchemy.org/en/20/) extension for
 [`FastAPI`](https://fastapi.tiangolo.com/).
 It streamlines the configuration and asynchronous connection to relational databases by
 providing boilerplate and intuitive helpers. Additionally, it offers built-in
