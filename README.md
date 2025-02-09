@@ -75,10 +75,13 @@ following [`SQLAlchemy`'s best practices](https://docs.sqlalchemy.org/en/20/orm/
         return await paginate(select(Hero))
     ```
     
-    <center>👇👇👇</center>
+    <center>
+      
+    👇 `/heros?offset=10&limit=10` 👇
+  
+    </center>
     
     ```json
-    // /heros?offset=10&limit=10
     {
       "data": [
         {
