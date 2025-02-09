@@ -74,7 +74,9 @@ following [`SQLAlchemy`'s best practices](https://docs.sqlalchemy.org/en/20/orm/
     async def get_heros(paginate:Paginate):
         return await paginate(select(Hero))
     ```
+    
     <center>👇👇👇</center>
+    
     ```json
     // /heros?offset=10&limit=10
     {
