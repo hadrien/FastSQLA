@@ -48,6 +48,7 @@ docs = [
     "mkdocs-material>=9.5.50",
     "mkdocstrings[python]>=0.27.0",
 ]
+sqlmodel = ["sqlmodel>=0.0.22"]
 
 [tool.uv]
 package = true
@@ -71,7 +72,10 @@ dev-dependencies = [
 pytest-watch = { git = "https://github.com/styleseat/pytest-watch", rev = "0342193" }
 
 [tool.pytest.ini_options]
-asyncio_mode = 'auto'
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+
+filterwarnings = ["ignore::DeprecationWarning:"]
 
 [tool.coverage.run]
 branch = true
@@ -86,3 +90,17 @@ version_toml = ["pyproject.toml:project.version"]
 
 [tool.semantic_release.changelog.default_templates]
 changelog_file = "./docs/changelog.md"
+
+[tool.tox]
+legacy_tox_ini = """
+[tox]
+envlist = { default, sqlmodel }
+
+[testenv]
+passenv = CI
+runner = uv-venv-lock-runner
+commands =
+    pytest --cov fastsqla --cov-report=term-missing --cov-report=xml
+extras:
+    sqlmodel: sqlmodel
+"""

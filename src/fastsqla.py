@@ -17,6 +17,15 @@ from sqlalchemy.ext.declarative import DeferredReflection
 from sqlalchemy.orm import DeclarativeBase
 from structlog import get_logger
 
+logger = get_logger(__name__)
+
+try:
+    from sqlmodel.ext.asyncio.session import AsyncSession
+
+except ImportError:
+    pass
+
+
 __all__ = [
     "Base",
     "Collection",
@@ -30,7 +39,7 @@ __all__ = [
     "open_session",
 ]
 
-SessionFactory = async_sessionmaker(expire_on_commit=False)
+SessionFactory = async_sessionmaker(expire_on_commit=False, class_=AsyncSession)
 
 logger = get_logger(__name__)
 
