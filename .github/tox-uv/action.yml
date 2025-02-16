@@ -4,6 +4,7 @@ runs:
   using: composite
   steps:
     - name: ⚡️ setup uv
-      uses: .github/uv
+      uses: ./.github/uv
+    - name: ⚙️ install tox-uv
+      shell: bash
       run: uv tool install tox --with tox-uv
-
