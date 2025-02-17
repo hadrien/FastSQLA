@@ -17,6 +17,15 @@ from sqlalchemy.ext.declarative import DeferredReflection
 from sqlalchemy.orm import DeclarativeBase
 from structlog import get_logger
 
+logger = get_logger(__name__)
+
+try:
+    from sqlmodel.ext.asyncio.session import AsyncSession
+
+except ImportError:
+    pass
+
+
 __all__ = [
     "Base",
     "Collection",
@@ -30,7 +39,7 @@ __all__ = [
     "open_session",
 ]
 
-SessionFactory = async_sessionmaker(expire_on_commit=False)
+SessionFactory = async_sessionmaker(expire_on_commit=False, class_=AsyncSession)
 
 logger = get_logger(__name__)
 
@@ -56,6 +65,10 @@ class Base(DeclarativeBase, DeferredReflection):
 
     * [ORM Quick Start](https://docs.sqlalchemy.org/en/20/orm/quickstart.html)
     * [Declarative Mapping](https://docs.sqlalchemy.org/en/20/orm/mapping_styles.html#declarative-mapping)
+
+    !!! note
+
+        You don't need this if you use [`SQLModel`](http://sqlmodel.tiangolo.com/).
     """
 
     __abstract__ = True
@@ -142,7 +155,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[State, None]:
 
 @asynccontextmanager
 async def open_session() -> AsyncGenerator[AsyncSession, None]:
-    """An asynchronous context manager that opens a new `SQLAlchemy` async session.
+    """Async context manager that opens a new `SQLAlchemy` or `SQLModel` async session.
 
     To the contrary of the [`Session`][fastsqla.Session] dependency which can only be
     used in endpoints, `open_session` can be used anywhere such as in background tasks.
@@ -151,6 +164,16 @@ async def open_session() -> AsyncGenerator[AsyncSession, None]:
     or rolls back when an exception is raised.
     In all cases, it closes the session and returns the associated connection to the
     connection pool.
+
+
+    Returns:
+        When `SQLModel` is not installed, an async generator that yields an
+            [`SQLAlchemy AsyncSession`][sqlalchemy.ext.asyncio.AsyncSession].
+
+        When `SQLModel` is installed, an async generator that yields an
+            [`SQLModel AsyncSession`](https://github.com/fastapi/sqlmodel/blob/main/sqlmodel/ext/asyncio/session.py#L32)
+            which inherits from [`SQLAlchemy AsyncSession`][sqlalchemy.ext.asyncio.AsyncSession].
+
 
     ```python
     from fastsqla import open_session
@@ -191,12 +214,12 @@ async def new_session() -> AsyncGenerator[AsyncSession, None]:
 
 
 Session = Annotated[AsyncSession, Depends(new_session)]
-"""A dependency used exclusively in endpoints to get an `SQLAlchemy` session.
+"""Dependency used exclusively in endpoints to get an `SQLAlchemy` or `SQLModel` session.
 
 `Session` is a [`FastAPI` dependency](https://fastapi.tiangolo.com/tutorial/dependencies/)
-that provides an asynchronous `SQLAlchemy` session.
+that provides an asynchronous `SQLAlchemy` session or `SQLModel` one if it's installed.
 By defining an argument with type `Session` in an endpoint, `FastAPI` will automatically
-inject an `SQLAlchemy` async session into the endpoint.
+inject an async session into the endpoint.
 
 At the end of request handling:
 
@@ -336,9 +359,9 @@ type PaginateType[T] = Callable[[Select], Awaitable[Page[T]]]
 Paginate = Annotated[PaginateType[T], Depends(new_pagination())]
 """A dependency used in endpoints to paginate `SQLAlchemy` select queries.
 
-It adds `offset`and `limit` query parameters to the endpoint, which are used to paginate.
-The model returned by the endpoint is a `Page` model. It contains a page of data and
-metadata:
+It adds **`offset`** and **`limit`** query parameters to the endpoint, which are used to
+paginate. The model returned by the endpoint is a `Page` model. It contains a page of
+data and metadata:
 
 ```json
 {
@@ -350,56 +373,5 @@ metadata:
         "page_number": int,
     }
 }
-```
-
------
-
-Example:
-``` py title="example.py" hl_lines="22 23 25"
-from fastsqla import Base, Paginate, Page
-from pydantic import BaseModel
-
-
-class Hero(Base):
-    __tablename__ = "hero"
-
-
-class Hero(Base):
-    __tablename__ = "hero"
-    id: Mapped[int] = mapped_column(primary_key=True)
-    name: Mapped[str] = mapped_column(unique=True)
-    secret_identity: Mapped[str]
-    age: Mapped[int]
-
-
-class HeroModel(HeroBase):
-    model_config = ConfigDict(from_attributes=True)
-    id: int
-
-
-@app.get("/heros", response_model=Page[HeroModel]) # (1)!
-async def list_heros(paginate: Paginate): # (2)!
-    stmt = select(Hero)
-    return await paginate(stmt) # (3)!
-```
-
-1.  The endpoint returns a `Page` model of `HeroModel`.
-2.  Just define an argument with type `Paginate` to get an async `paginate` function
-    injected in your endpoint function.
-3.  Await the `paginate` function with the `SQLAlchemy` select statement to get the
-    paginated result.
-
-To add filtering, just add whatever query parameters you need to the endpoint:
-
-```python
-
-from fastsqla import Paginate, Page
-
-@app.get("/heros", response_model=Page[HeroModel])
-async def list_heros(paginate: Paginate, age:int | None = None):
-    stmt = select(Hero)
-    if age:
-        stmt = stmt.where(Hero.age == age)
-    return await paginate(stmt)
 ```
 """

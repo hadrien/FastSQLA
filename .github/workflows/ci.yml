@@ -6,16 +6,21 @@ on:
 jobs:
 
   Tests:
+    strategy:
+      matrix:
+        tox_env: [default, sqlmodel]
     runs-on: ubuntu-latest
     steps:
     - name: 📥 checkout
       uses: actions/checkout@v4
-    - name: 🔧 setup uv
-      uses: ./.github/uv
-    - name: 🧪 pytest
-      run: uv run pytest --cov fastsqla --cov-report=term-missing --cov-report=xml
+    - name: 🔧 setup tox-uv
+      uses: ./.github/tox-uv
+    - name: 🧪 tox -e ${{ matrix.tox_env }}
+      run: uv run tox -e ${{ matrix.tox_env }}
     - name:  "🐔 codecov: upload test coverage"
       uses: codecov/codecov-action@v4.2.0
+      with:
+        flags: ${{ matrix.tox_env }}
       env:
         CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 

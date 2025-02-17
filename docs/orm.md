@@ -5,5 +5,5 @@
 ::: fastsqla.Base
     options:
         heading_level: false
-        show_source: false
-        show_bases: false
+        show_source: true
+        show_bases: true

@@ -1,0 +1,10 @@
+name: Setup tox-uv
+description: Setup tox-uv tool so tox uses uv to install dependencies
+runs:
+  using: composite
+  steps:
+    - name: ⚡️ setup uv
+      uses: ./.github/uv
+    - name: ⚙️ install tox-uv
+      shell: bash
+      run: uv tool install tox --with tox-uv

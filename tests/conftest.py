@@ -1,7 +1,13 @@
 from unittest.mock import patch
 
-from pytest import fixture
+from pytest import fixture, skip
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+
+
+def pytest_configure(config):
+    config.addinivalue_line(
+        "markers", "require_sqlmodel: skip test when sqlmodel is not installed."
+    )
 
 
 @fixture
@@ -38,3 +44,19 @@ def tear_down():
 
     Base.metadata.clear()
     clear_mappers()
+
+
+try:
+    import sqlmodel  # noqa
+except ImportError:
+    is_sqlmodel_installed = False
+else:
+    is_sqlmodel_installed = True
+
+
+@fixture(autouse=True)
+def check_sqlmodel(request):
+    """Skip test marked with mark.require_sqlmodel if sqlmodel is not installed."""
+    marker = request.node.get_closest_marker("require_sqlmodel")
+    if marker and not is_sqlmodel_installed:
+        skip(f"{request.node.nodeid} requires sqlmodel which is not installed.")
