@@ -15,8 +15,10 @@ _Async SQLAlchemy 2.0+ for FastAPI — boilerplate, pagination, and seamless ses
 
 -----------------------------------------------------------------------------------------
 
-`FastSQLA` is an [`SQLAlchemy 2.0+`](https://docs.sqlalchemy.org/en/20/) extension for
-[`FastAPI`](https://fastapi.tiangolo.com/).
+`FastSQLA` is an async [`SQLAlchemy 2.0+`](https://docs.sqlalchemy.org/en/20/)
+extension for [`FastAPI`](https://fastapi.tiangolo.com/) with built-in pagination,
+[`SQLModel`](http://sqlmodel.tiangolo.com/) support and more.
+
 It streamlines the configuration and asynchronous connection to relational databases by
 providing boilerplate and intuitive helpers. Additionally, it offers built-in
 customizable pagination and automatically manages the `SQLAlchemy` session lifecycle
@@ -74,13 +76,13 @@ following [`SQLAlchemy`'s best practices](https://docs.sqlalchemy.org/en/20/orm/
     async def get_heros(paginate:Paginate):
         return await paginate(select(Hero))
     ```
-    
+
     <center>
-      
+
     👇 `/heros?offset=10&limit=10` 👇
-  
+
     </center>
-    
+
     ```json
     {
       "data": [
@@ -119,6 +121,32 @@ following [`SQLAlchemy`'s best practices](https://docs.sqlalchemy.org/en/20/orm/
 * Session lifecycle management: session is commited on request success or rollback on
   failure.
 
+* [`SQLModel`](http://sqlmodel.tiangolo.com/) support:
+    ```python
+    ...
+    from fastsqla import Item, Page, Paginate, Session
+    from sqlmodel import Field, SQLModel
+    ...
+
+    class Hero(SQLModel, table=True):
+        id: int | None = Field(default=None, primary_key=True)
+        name: str
+        secret_identity: str
+        age: int
+
+
+    @app.get("/heroes", response_model=Page[Hero])
+    async def get_heroes(paginate: Paginate):
+        return await paginate(select(Hero))
+
+
+    @app.get("/heroes/{hero_id}", response_model=Item[Hero])
+    async def get_hero(session: Session, hero_id: int):
+        hero = await session.get(Hero, hero_id)
+        if hero is None:
+            raise HTTPException(status_code=HTTPStatus.NOT_FOUND)
+        return {"data": hero}
+    ```
 
 ## Installing
 
