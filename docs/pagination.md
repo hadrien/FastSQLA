@@ -1,6 +1,14 @@
 # Pagination
 
-## `fastsqla.Paginate[T]`
+## `fastapi.Page[T]`
+
+::: fastsqla.Page
+    options:
+        heading_level: false
+        show_source: false
+
+
+## `fastsqla.Paginate`
 
 ::: fastsqla.Paginate
     options:

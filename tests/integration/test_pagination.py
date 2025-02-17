@@ -1,7 +1,8 @@
 from typing import Annotated, cast
 from fastapi import Depends
+from pydantic import EmailStr
 from pytest import fixture
-from sqlalchemy import MetaData, Table, func, select, text
+from sqlalchemy import ForeignKey, MetaData, String, Table, func, select, text
 
 TOTAL_USERS = 42
 STICKY_PER_USER = 5
@@ -56,21 +57,21 @@ async def setup_tear_down(engine, faker):
 
 @fixture
 def app(app):
-    from fastsqla import (
-        Base,
-        Page,
-        Paginate,
-        PaginateType,
-        Session,
-        new_pagination,
-    )
+    from fastsqla import Base, Page, Paginate, PaginateType, Session, new_pagination
     from pydantic import BaseModel
+    from sqlalchemy.orm import Mapped, mapped_column
 
     class User(Base):
         __tablename__ = "user"
+        id: Mapped[int] = mapped_column(primary_key=True)
+        email: Mapped[EmailStr] = mapped_column(String, unique=True)
+        name: Mapped[str]
 
     class Sticky(Base):
         __tablename__ = "sticky"
+        id: Mapped[int] = mapped_column(primary_key=True)
+        user_id: Mapped[int] = mapped_column(ForeignKey(User.id))
+        body: Mapped[str]
 
     class UserModel(BaseModel):
         id: int
@@ -93,7 +94,7 @@ def app(app):
         result = await session.execute(stmt)
         return cast(int, result.scalar())
 
-    CustomResultProcessor = Annotated[
+    CustomPaginate = Annotated[
         PaginateType[StickyModel],
         Depends(
             new_pagination(
@@ -104,7 +105,7 @@ def app(app):
     ]
 
     @app.get("/custom-pagination")
-    async def list_stickies(paginate: CustomResultProcessor) -> Page[StickyModel]:
+    async def list_stickies(paginate: CustomPaginate) -> Page[StickyModel]:
         stmt = select(
             Sticky.id,
             Sticky.body,

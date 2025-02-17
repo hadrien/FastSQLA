@@ -283,6 +283,23 @@ class Collection(BaseModel, Generic[T]):
 
 
 class Page(Collection[T]):
+    """Generic container that contains collection data and page metadata.
+
+    The `Page` model is used to return paginated data in paginated endpoints:
+
+    ```json
+    {
+        "data": list[T],
+        "meta": {
+            "offset": int,
+            "total_items": int,
+            "total_pages": int,
+            "page_number": int,
+        }
+    }
+    ```
+    """
+
     meta: Meta
 
 
@@ -360,18 +377,5 @@ Paginate = Annotated[PaginateType[T], Depends(new_pagination())]
 """A dependency used in endpoints to paginate `SQLAlchemy` select queries.
 
 It adds **`offset`** and **`limit`** query parameters to the endpoint, which are used to
-paginate. The model returned by the endpoint is a `Page` model. It contains a page of
-data and metadata:
-
-```json
-{
-    "data": List[T],
-    "meta": {
-        "offset": int,
-        "total_items": int,
-        "total_pages": int,
-        "page_number": int,
-    }
-}
-```
+paginate. The model returned by the endpoint is a [`Page`][fastsqla.Page] model.
 """
