@@ -1,4 +1,4 @@
-# CHANGELOG
+# Changelog
 
 ## v0.3.0 (2025-02-17)
 
@@ -14,13 +14,11 @@
 
 * docs: setup mkdocs-material + add documentation (#13) ([`c8367fc`](https://github.com/hadrien/FastSQLA/commit/c8367fc642a27f61ca7a065df3f04ba16506276a))
 
+* docs: fix typo in README (#12) ([`4e58835`](https://github.com/hadrien/FastSQLA/commit/4e58835c22a613074ba24f5b9840f505a6c56497))
+
 ### Feature
 
 * feat: add support for SQLModel (#18) ([`edf2310`](https://github.com/hadrien/FastSQLA/commit/edf23107a44908f782786658e5aa44874d64bb36))
-
-### Unknown
-
-* doc: fix typo in README (#12) ([`4e58835`](https://github.com/hadrien/FastSQLA/commit/4e58835c22a613074ba24f5b9840f505a6c56497))
 
 ## v0.2.4 (2025-01-27)
 
