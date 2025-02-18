@@ -225,7 +225,7 @@ At the end of request handling:
 
 * If no exceptions are raised, the session is automatically committed.
 * If an exception is raised, the session is automatically rolled back.
-* In alls cases, the session is closed and the associated connection is returned to the
+* In all cases, the session is closed and the associated connection is returned to the
   connection pool.
 
 Example:
