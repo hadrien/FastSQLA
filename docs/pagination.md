@@ -15,7 +15,7 @@
         heading_level: false
         show_source: false
 
-### `SQLAlchemy` example
+## `SQLAlchemy` example
 
 ``` py title="example.py" hl_lines="25 26 27"
 from fastapi import FastAPI
