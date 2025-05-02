@@ -64,7 +64,7 @@ async def list_heros(paginate: Paginate, age:int | None = None):
     return await paginate(stmt)
 ```
 
-### `SQLModel` example
+## `SQLModel` example
 
 ```python
 from fastapi import FastAPI
