@@ -15,7 +15,7 @@
         heading_level: false
         show_source: false
 
-### `SQLAlchemy` example
+## `SQLAlchemy` example
 
 ``` py title="example.py" hl_lines="25 26 27"
 from fastapi import FastAPI
@@ -64,7 +64,7 @@ async def list_heros(paginate: Paginate, age:int | None = None):
     return await paginate(stmt)
 ```
 
-### `SQLModel` example
+## `SQLModel` example
 
 ```python
 from fastapi import FastAPI
