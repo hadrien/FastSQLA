@@ -64,6 +64,17 @@ plugins:
           - https://docs.sqlalchemy.org/en/20/objects.inv
           - https://fastapi.tiangolo.com/objects.inv
   - search
+  - llmstxt:
+      markdown_description: |
+        Async SQLAlchemy 2.0+ extension for FastAPI with SQLModel support, built-in pagination & more.
+      full_output: llms-full.txt
+      sections:
+        Sections:
+        - index.md
+        - setup.md
+        - session.md
+        - orm.md
+        - pagination.md
 
 markdown_extensions:
   - abbr
