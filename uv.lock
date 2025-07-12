@@ -1,4 +1,5 @@
 version = 1
+revision = 1
 requires-python = ">=3.12"
 resolution-markers = [
     "python_full_version < '3.13'",
@@ -58,6 +59,19 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/2a/74/f1bc80f23eeba13393b7222b11d95ca3af2c1e28edca18af487137eefed9/babel-2.16.0.tar.gz", hash = "sha256:d1f3554ca26605fe173f3de0c65f750f5a42f924499bf134de6423582298e316", size = 9348104 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/ed/20/bc79bc575ba2e2a7f70e8a1155618bb1301eaa5132a8271373a6903f73f8/babel-2.16.0-py3-none-any.whl", hash = "sha256:368b5b98b37c06b7daf6696391c3240c938b37767d4584413e8438c5c435fa8b", size = 9587599 },
+]
+
+[[package]]
+name = "beautifulsoup4"
+version = "4.13.4"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "soupsieve" },
+    { name = "typing-extensions" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/d8/e4/0c4c39e18fd76d6a628d4dd8da40543d136ce2d1752bd6eeeab0791f4d6b/beautifulsoup4-4.13.4.tar.gz", hash = "sha256:dbb3c4e1ceae6aefebdaf2423247260cd062430a410e38c66f2baa50a8437195", size = 621067 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/50/cd/30110dc0ffcf3b131156077b90e9f60ed75711223f306da4db08eff8403b/beautifulsoup4-4.13.4-py3-none-any.whl", hash = "sha256:9bbbb14bfde9d79f38b8cd5f8c7c85f4b8f2523190ebed90e950a8dea4cb1c4b", size = 187285 },
 ]
 
 [[package]]
@@ -264,7 +278,7 @@ wheels = [
 
 [[package]]
 name = "fastsqla"
-version = "0.2.4"
+version = "0.3.0"
 source = { editable = "." }
 dependencies = [
     { name = "fastapi" },
@@ -275,6 +289,7 @@ dependencies = [
 [package.optional-dependencies]
 docs = [
     { name = "mkdocs-glightbox" },
+    { name = "mkdocs-llmstxt" },
     { name = "mkdocs-material" },
     { name = "mkdocstrings", extra = ["python"] },
 ]
@@ -303,12 +318,14 @@ dev = [
 requires-dist = [
     { name = "fastapi", specifier = ">=0.115.6" },
     { name = "mkdocs-glightbox", marker = "extra == 'docs'", specifier = ">=0.4.0" },
+    { name = "mkdocs-llmstxt", marker = "extra == 'docs'", specifier = ">=0.2.0" },
     { name = "mkdocs-material", marker = "extra == 'docs'", specifier = ">=9.5.50" },
     { name = "mkdocstrings", extras = ["python"], marker = "extra == 'docs'", specifier = ">=0.27.0" },
     { name = "sqlalchemy", extras = ["asyncio"], specifier = ">=2.0.37" },
     { name = "sqlmodel", marker = "extra == 'sqlmodel'", specifier = ">=0.0.22" },
     { name = "structlog", specifier = ">=24.4.0" },
 ]
+provides-extras = ["docs", "sqlmodel"]
 
 [package.metadata.requires-dev]
 dev = [
@@ -578,6 +595,19 @@ wheels = [
 ]
 
 [[package]]
+name = "markdownify"
+version = "1.1.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "beautifulsoup4" },
+    { name = "six" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/2f/78/c48fed23c7aebc2c16049062e72de1da3220c274de59d28c942acdc9ffb2/markdownify-1.1.0.tar.gz", hash = "sha256:449c0bbbf1401c5112379619524f33b63490a8fa479456d41de9dc9e37560ebd", size = 17127 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/64/11/b751af7ad41b254a802cf52f7bc1fca7cabe2388132f2ce60a1a6b9b9622/markdownify-1.1.0-py3-none-any.whl", hash = "sha256:32a5a08e9af02c8a6528942224c91b933b4bd2c7d078f9012943776fc313eeef", size = 13901 },
+]
+
+[[package]]
 name = "markupsafe"
 version = "2.1.5"
 source = { registry = "https://pypi.org/simple" }
@@ -593,6 +623,18 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/88/07/2dc76aa51b481eb96a4c3198894f38b480490e834479611a4053fbf08623/MarkupSafe-2.1.5-cp312-cp312-musllinux_1_1_x86_64.whl", hash = "sha256:58c98fee265677f63a4385256a6d7683ab1832f3ddd1e66fe948d5880c21a169", size = 33038 },
     { url = "https://files.pythonhosted.org/packages/96/0c/620c1fb3661858c0e37eb3cbffd8c6f732a67cd97296f725789679801b31/MarkupSafe-2.1.5-cp312-cp312-win32.whl", hash = "sha256:8590b4ae07a35970728874632fed7bd57b26b0102df2d2b233b6d9d82f6c62ad", size = 16572 },
     { url = "https://files.pythonhosted.org/packages/3f/14/c3554d512d5f9100a95e737502f4a2323a1959f6d0d01e0d0997b35f7b10/MarkupSafe-2.1.5-cp312-cp312-win_amd64.whl", hash = "sha256:823b65d8706e32ad2df51ed89496147a42a2a6e01c13cfb6ffb8b1e92bc910bb", size = 17127 },
+]
+
+[[package]]
+name = "mdformat"
+version = "0.7.22"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "markdown-it-py" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/fc/eb/b5cbf2484411af039a3d4aeb53a5160fae25dd8c84af6a4243bc2f3fedb3/mdformat-0.7.22.tar.gz", hash = "sha256:eef84fa8f233d3162734683c2a8a6222227a229b9206872e6139658d99acb1ea", size = 34610 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/f2/6f/94a7344f6d634fe3563bea8b33bccedee37f2726f7807e9a58440dc91627/mdformat-0.7.22-py3-none-any.whl", hash = "sha256:61122637c9e1d9be1329054f3fa216559f0d1f722b7919b060a8c2a4ae1850e5", size = 34447 },
 ]
 
 [[package]]
@@ -672,6 +714,20 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/86/5a/0bc456397ba0acc684b5b1daa4ca232ed717938fd37198251d8bcc4053bf/mkdocs-glightbox-0.4.0.tar.gz", hash = "sha256:392b34207bf95991071a16d5f8916d1d2f2cd5d5bb59ae2997485ccd778c70d9", size = 32010 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/c1/72/b0c2128bb569c732c11ae8e49a777089e77d83c05946062caa19b841e6fb/mkdocs_glightbox-0.4.0-py3-none-any.whl", hash = "sha256:e0107beee75d3eb7380ac06ea2d6eac94c999eaa49f8c3cbab0e7be2ac006ccf", size = 31154 },
+]
+
+[[package]]
+name = "mkdocs-llmstxt"
+version = "0.2.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "beautifulsoup4" },
+    { name = "markdownify" },
+    { name = "mdformat" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/ee/25/263ea9c16d1f95f30d9eb1b76e63eb50a88a1ec9fad1829281bab7a371eb/mkdocs_llmstxt-0.2.0.tar.gz", hash = "sha256:104f10b8101167d6baf7761942b4743869be3d8f8a8d909f4e9e0b63307f709e", size = 41376 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/24/29/0a33f7d8499a01dd7fd0d90fb163b2d8eefa9c90ac0ecbc1a7770e50614e/mkdocs_llmstxt-0.2.0-py3-none-any.whl", hash = "sha256:907de892e0c8be74002e8b4d553820c2b5bbcf03cc303b95c8bca48fb49c1a29", size = 23244 },
 ]
 
 [[package]]
@@ -1229,6 +1285,15 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/a2/87/a6771e1546d97e7e041b6ae58d80074f81b7d5121207425c964ddf5cfdbd/sniffio-1.3.1.tar.gz", hash = "sha256:f4324edc670a0f49750a81b895f35c3adb843cca46f0530f79fc1babb23789dc", size = 20372 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/e9/44/75a9c9421471a6c4805dbf2356f7c181a29c1879239abab1ea2cc8f38b40/sniffio-1.3.1-py3-none-any.whl", hash = "sha256:2f6da418d1f1e0fddd844478f41680e794e6051915791a034ff65e5f100525a2", size = 10235 },
+]
+
+[[package]]
+name = "soupsieve"
+version = "2.7"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/3f/f4/4a80cd6ef364b2e8b65b15816a843c0980f7a5a2b4dc701fc574952aa19f/soupsieve-2.7.tar.gz", hash = "sha256:ad282f9b6926286d2ead4750552c8a6142bc4c783fd66b0293547c8fe6ae126a", size = 103418 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/e7/9c/0e6afc12c269578be5c0c1c9f4b49a8d32770a080260c333ac04cc1c832d/soupsieve-2.7-py3-none-any.whl", hash = "sha256:6e60cc5c1ffaf1cebcc12e8188320b72071e922c2e897f737cadce79ad5d30c4", size = 36677 },
 ]
 
 [[package]]
