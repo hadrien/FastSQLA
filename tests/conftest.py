@@ -11,11 +11,13 @@ def pytest_configure(config):
 
 
 @fixture
-def environ(tmp_path):
-    values = {
-        "PYTHONASYNCIODEBUG": "1",
-        "SQLALCHEMY_URL": f"sqlite+aiosqlite:///{tmp_path}/test.db",
-    }
+def sqlalchemy_url(tmp_path):
+    return f"sqlite+aiosqlite:///{tmp_path}/test.db"
+
+
+@fixture
+def environ(sqlalchemy_url):
+    values = {"PYTHONASYNCIODEBUG": "1", "SQLALCHEMY_URL": sqlalchemy_url}
 
     with patch.dict("os.environ", values=values, clear=True):
         yield values

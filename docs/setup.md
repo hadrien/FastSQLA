@@ -1,5 +1,9 @@
 # Setup
 
+To configure just using environment variables, check [`lifespan`][fastsqla.lifespan].
+
+To configure programatically, check [`new_lifespan`][fastsqla.new_lifespan]
+
 ## `fastsqla.lifespan`
 
 ::: fastsqla.lifespan
@@ -7,7 +11,7 @@
         heading_level: false
         show_source: false
 
-## Configuration
+### Lifespan configuration
 
 Configuration is done exclusively via environment variables, adhering to the
 [**Twelve-Factor App methodology**](https://12factor.net/config).
@@ -26,7 +30,7 @@ variables, with each parameter name prefixed by **`SQLALCHEMY_`**.
     FastSQLA is **case-insensitive** when reading environment variables, so parameter
     names prefixed with **`SQLALCHEMY_`** can be provided in any letter case.
 
-### Examples
+#### Examples
 
 1.  :simple-postgresql: PostgreSQL url using
     [`asyncpg`][sqlalchemy.dialects.postgresql.asyncpg] driver with a
@@ -53,3 +57,12 @@ variables, with each parameter name prefixed by **`SQLALCHEMY_`**.
     export sqlalchemy_url=mysql+aiomysql://bob:password!@db.example.com/app
     export sqlalchemy_echo=true
     ```
+
+
+
+## `fastsqla.new_lifespan`
+
+::: fastsqla.new_lifespan
+    options:
+        heading_level: false
+        show_source: false

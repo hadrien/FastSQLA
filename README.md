@@ -266,7 +266,7 @@ pip install uvicorn aiosqlite fastsqla
 ```
 Let's run the app:
 ```
-sqlalchemy_url=sqlite+aiosqlite:///db.sqlite?check_same_thread=false \
+sqlalchemy_url=sqlite+aiosqlite:///db.sqlite \
   uvicorn example:app
 ```
 
