@@ -4,9 +4,9 @@ runs:
   using: "composite"
   steps:
     - name: ⚡️ setup uv
-      uses: astral-sh/setup-uv@v2
+      uses: astral-sh/setup-uv@v6
       with:
         version: "latest"
         enable-cache: true
-        cache-suffix: 2024-09-08 09:10
+        cache-suffix: 2025-10-03 15:30
         cache-dependency-glob: "uv.lock"
