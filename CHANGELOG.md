@@ -1,5 +1,7 @@
 # Changelog
 
+<!-- version list -->
+
 ## v0.3.0 (2025-02-17)
 
 ### Documentation
