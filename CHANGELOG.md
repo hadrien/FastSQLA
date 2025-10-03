@@ -2,6 +2,14 @@
 
 <!-- version list -->
 
+## v0.4.5 (2025-10-03)
+
+### Bug Fixes
+
+- **changelog**: Add insertion_flag as expected by python-semantic-release
+  ([`2fb664f`](https://github.com/hadrien/FastSQLA/commit/2fb664f6e435367b1ab5516f2a482820237b7425))
+
+
 ## v0.3.0 (2025-02-17)
 
 ### Documentation
