@@ -1,7 +1,7 @@
 import math
 import os
 from collections.abc import AsyncGenerator, Awaitable, Callable, Iterable
-from contextlib import asynccontextmanager
+from contextlib import _AsyncGeneratorContextManager, asynccontextmanager
 from typing import Annotated, Generic, TypeVar, TypedDict
 
 from fastapi import Depends, FastAPI, Query
@@ -78,7 +78,9 @@ class State(TypedDict):
     fastsqla_engine: AsyncEngine
 
 
-def new_lifespan(url: str | None = None, **kw):
+def new_lifespan(
+    url: str | None = None, **kw
+) -> Callable[[FastAPI], _AsyncGeneratorContextManager[State, None]]:
     """Create a new lifespan async context manager.
 
     It expects the exact same parameters as
