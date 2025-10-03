@@ -39,7 +39,8 @@ Documentation = "https://github.com/hadrien/fastsqla"
 Repository = "https://github.com/hadrien/fastsqla"
 Issues = "https://github.com/hadrien/fastsqla/issues"
 Changelog = "https://github.com/hadrien/fastsqla/releases"
-
+[tool.setuptools]
+license-files = []
 [project.optional-dependencies]
 docs = [
     "mkdocs-glightbox>=0.4.0",
