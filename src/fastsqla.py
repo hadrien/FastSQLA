@@ -91,7 +91,7 @@ def new_lifespan(url: str | None = None, **kw):
     from fastsqla import new_lifespan
 
     lifespan = new_lifespan(
-        "sqlite+aiosqlite:///app/db.sqlite"), connect_args={"autocommit": False}
+        "sqlite+aiosqlite:///app/db.sqlite", connect_args={"autocommit": False}
     )
 
     app = FastAPI(lifespan=lifespan)

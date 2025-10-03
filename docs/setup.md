@@ -1,8 +1,11 @@
 # Setup
 
-To configure just using environment variables, check [`lifespan`][fastsqla.lifespan].
+FastSQLA provides two ways to configure your SQLAlchemy database connection:
 
-To configure programatically, check [`new_lifespan`][fastsqla.new_lifespan]
+- **Environment variables** ([`lifespan`][fastsqla.lifespan]): Simple configuration
+    following [12-factor app](https://12factor.net/config) principles, ideal for most use cases.
+- **Programmatic** ([`new_lifespan`][fastsqla.new_lifespan]): Direct SQLAlchemy engine
+    configuration for advanced customization needs
 
 ## `fastsqla.lifespan`
 
@@ -20,7 +23,7 @@ The only required key is **`SQLALCHEMY_URL`**, which defines the database URL. I
 specifies the database driver in the URL's scheme and allows embedding driver parameters
 in the query string. Example:
 
-    sqlite+aiosqlite:////tmp/test.db?check_same_thread=false
+    sqlite+aiosqlite:////tmp/test.db
 
 All parameters of [`sqlalchemy.create_engine`][] can be configured by setting environment
 variables, with each parameter name prefixed by **`SQLALCHEMY_`**.
@@ -46,8 +49,8 @@ variables, with each parameter name prefixed by **`SQLALCHEMY_`**.
     [`pool_size`][sqlalchemy.create_engine.params.pool_size] of 50:
 
     ```bash
-    export sqlalchemy_url=sqlite+aiosqlite:///tmp/test.db?check_same_thread=false
-    export sqlalchemy_pool_size=10
+    export sqlalchemy_url=sqlite+aiosqlite:///tmp/test.db
+    export sqlalchemy_pool_size=50
     ```
 
 3.  :simple-mariadb: MariaDB url using [`aiomysql`][sqlalchemy.dialects.mysql.aiomysql]
