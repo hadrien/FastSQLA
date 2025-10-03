@@ -53,3 +53,13 @@ async def test_new_lifespan_with_connect_args(sqlalchemy_url):
 
     async with lifespan(app):
         pass
+
+
+async def test_new_lifespan_fails_with_invalid_connect_args(sqlalchemy_url):
+    from fastsqla import new_lifespan
+
+    lifespan = new_lifespan(sqlalchemy_url, connect_args={"this is wrong": False})
+
+    with raises(TypeError):
+        async with lifespan(app):
+            pass
