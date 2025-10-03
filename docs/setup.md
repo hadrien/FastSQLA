@@ -1,5 +1,12 @@
 # Setup
 
+FastSQLA provides two ways to configure your SQLAlchemy database connection:
+
+- **Environment variables** ([`lifespan`][fastsqla.lifespan]): Simple configuration
+    following [12-factor app](https://12factor.net/config) principles, ideal for most use cases.
+- **Programmatic** ([`new_lifespan`][fastsqla.new_lifespan]): Direct SQLAlchemy engine
+    configuration for advanced customization needs
+
 ## `fastsqla.lifespan`
 
 ::: fastsqla.lifespan
@@ -7,7 +14,7 @@
         heading_level: false
         show_source: false
 
-## Configuration
+### Lifespan configuration
 
 Configuration is done exclusively via environment variables, adhering to the
 [**Twelve-Factor App methodology**](https://12factor.net/config).
@@ -16,7 +23,7 @@ The only required key is **`SQLALCHEMY_URL`**, which defines the database URL. I
 specifies the database driver in the URL's scheme and allows embedding driver parameters
 in the query string. Example:
 
-    sqlite+aiosqlite:////tmp/test.db?check_same_thread=false
+    sqlite+aiosqlite:////tmp/test.db
 
 All parameters of [`sqlalchemy.create_engine`][] can be configured by setting environment
 variables, with each parameter name prefixed by **`SQLALCHEMY_`**.
@@ -26,7 +33,7 @@ variables, with each parameter name prefixed by **`SQLALCHEMY_`**.
     FastSQLA is **case-insensitive** when reading environment variables, so parameter
     names prefixed with **`SQLALCHEMY_`** can be provided in any letter case.
 
-### Examples
+#### Examples
 
 1.  :simple-postgresql: PostgreSQL url using
     [`asyncpg`][sqlalchemy.dialects.postgresql.asyncpg] driver with a
@@ -42,8 +49,8 @@ variables, with each parameter name prefixed by **`SQLALCHEMY_`**.
     [`pool_size`][sqlalchemy.create_engine.params.pool_size] of 50:
 
     ```bash
-    export sqlalchemy_url=sqlite+aiosqlite:///tmp/test.db?check_same_thread=false
-    export sqlalchemy_pool_size=10
+    export sqlalchemy_url=sqlite+aiosqlite:///tmp/test.db
+    export sqlalchemy_pool_size=50
     ```
 
 3.  :simple-mariadb: MariaDB url using [`aiomysql`][sqlalchemy.dialects.mysql.aiomysql]
@@ -53,3 +60,12 @@ variables, with each parameter name prefixed by **`SQLALCHEMY_`**.
     export sqlalchemy_url=mysql+aiomysql://bob:password!@db.example.com/app
     export sqlalchemy_echo=true
     ```
+
+
+
+## `fastsqla.new_lifespan`
+
+::: fastsqla.new_lifespan
+    options:
+        heading_level: false
+        show_source: false

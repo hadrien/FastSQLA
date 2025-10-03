@@ -1,5 +1,8 @@
+from fastapi import FastAPI
 from pytest import fixture
 from sqlalchemy import text
+
+app = FastAPI()
 
 
 @fixture(autouse=True)
@@ -26,7 +29,7 @@ async def test_lifespan_reflects_user_table(environ):
     assert not hasattr(User, "email")
     assert not hasattr(User, "name")
 
-    async with lifespan(None):
+    async with lifespan(app):
         assert hasattr(User, "id")
         assert hasattr(User, "email")
         assert hasattr(User, "name")

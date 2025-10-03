@@ -20,7 +20,7 @@
 ``` py title="example.py" hl_lines="25 26 27"
 from fastapi import FastAPI
 from fastsqla import Base, Paginate, Page, lifespan
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from sqlalchemy import select
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -34,7 +34,7 @@ class Hero(Base):
     age: Mapped[int]
 
 
-class HeroModel(HeroBase):
+class HeroModel(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     id: int
     name: str
