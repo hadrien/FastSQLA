@@ -32,7 +32,7 @@ classifiers = [
     "Typing :: Typed",
 ]
 keywords = ["FastAPI", "SQLAlchemy", "AsyncIO"]
-license = { text = "MIT License" }
+license-files = ["./LICENSE"]
 dependencies = ["fastapi>=0.115.6", "sqlalchemy[asyncio]>=2.0.37", "structlog>=24.4.0"]
 
 [project.urls]
