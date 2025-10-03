@@ -1,7 +1,5 @@
 # Changelog
 
-<!-- version list -->
-
 ## v0.4.5 (2025-10-03)
 
 ### Bug Fixes

@@ -39,8 +39,10 @@ Documentation = "https://github.com/hadrien/fastsqla"
 Repository = "https://github.com/hadrien/fastsqla"
 Issues = "https://github.com/hadrien/fastsqla/issues"
 Changelog = "https://github.com/hadrien/fastsqla/releases"
+
 [tool.setuptools]
 license-files = []
+
 [project.optional-dependencies]
 docs = [
     "mkdocs-glightbox>=0.4.0",
@@ -90,6 +92,9 @@ env = "GH_TOKEN"
 [tool.semantic_release]
 version_toml = ["pyproject.toml:project.version"]
 allow_zero_version = true
+
+[tool.semantic_release.changelog]
+mode = "init"
 
 [tool.semantic_release.changelog.default_templates]
 changelog_file = "./docs/changelog.md"
