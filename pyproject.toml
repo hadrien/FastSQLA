@@ -53,7 +53,9 @@ sqlmodel = ["sqlmodel>=0.0.22"]
 
 [tool.uv]
 package = true
-dev-dependencies = [
+
+[dependency-groups]
+dev = [
     "asgi-lifespan>=2.1.0",
     "coverage>=7.6.1",
     "faker>=28.4.1",
