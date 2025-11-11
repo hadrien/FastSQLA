@@ -4,7 +4,8 @@ from collections.abc import AsyncGenerator, Awaitable, Callable, Iterable
 from contextlib import _AsyncGeneratorContextManager, asynccontextmanager
 from typing import Annotated, Generic, TypeVar, TypedDict
 
-from fastapi import Depends, FastAPI, Query
+from fastapi import Depends as BaseDepends
+from fastapi import FastAPI, Query
 from pydantic import BaseModel, Field
 from sqlalchemy import Result, Select, func, select
 from sqlalchemy.ext.asyncio import (
@@ -42,6 +43,15 @@ __all__ = [
 SessionFactory = async_sessionmaker(expire_on_commit=False, class_=AsyncSession)
 
 logger = get_logger(__name__)
+
+
+def Depends(*args, **kwargs):
+    "Allow backward compatibility with fastapi<0.121"
+    try:
+        return BaseDepends(*args, **kwargs)
+    except TypeError:
+        kwargs.pop("scope")
+        return BaseDepends(*args, **kwargs)
 
 
 class Base(DeclarativeBase, DeferredReflection):
@@ -252,7 +262,7 @@ async def new_session() -> AsyncGenerator[AsyncSession, None]:
         yield session
 
 
-Session = Annotated[AsyncSession, Depends(new_session)]
+Session = Annotated[AsyncSession, Depends(new_session, scope="function")]
 """Dependency used exclusively in endpoints to get an `SQLAlchemy` or `SQLModel` session.
 
 `Session` is a [`FastAPI` dependency](https://fastapi.tiangolo.com/tutorial/dependencies/)

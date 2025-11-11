@@ -4,32 +4,31 @@ on:
   push:
 
 jobs:
-
   Tests:
     strategy:
       matrix:
-        tox_env: [default, sqlmodel]
+        tox_env: [fastapi-pre121, fastapi-post121, sqlmodel]
     runs-on: ubuntu-latest
     steps:
-    - name: 📥 checkout
-      uses: actions/checkout@v4
-    - name: 🔧 setup tox-uv
-      uses: ./.github/tox-uv
-    - name: 🧪 tox -e ${{ matrix.tox_env }}
-      run: uv run tox -e ${{ matrix.tox_env }}
-    - name:  "🐔 codecov: upload test coverage"
-      uses: codecov/codecov-action@v4.2.0
-      with:
-        flags: ${{ matrix.tox_env }}
-      env:
-        CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+      - name: 📥 checkout
+        uses: actions/checkout@v4
+      - name: 🔧 setup tox-uv
+        uses: ./.github/tox-uv
+      - name: 🧪 tox -e ${{ matrix.tox_env }}
+        run: uv run tox -e ${{ matrix.tox_env }}
+      - name: "🐔 codecov: upload test coverage"
+        uses: codecov/codecov-action@v4.2.0
+        with:
+          flags: ${{ matrix.tox_env }}
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
   Ruff:
     runs-on: ubuntu-latest
     steps:
-    - name: 📥 checkout
-      uses: actions/checkout@v4
-    - name: 🔧 setup uv
-      uses: ./.github/uv
-    - name: 🐶 ruff
-      run: uv run ruff check
+      - name: 📥 checkout
+        uses: actions/checkout@v4
+      - name: 🔧 setup uv
+        uses: ./.github/uv
+      - name: 🐶 ruff
+        run: uv run ruff check
