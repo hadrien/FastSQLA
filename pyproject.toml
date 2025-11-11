@@ -70,6 +70,7 @@ dev = [
     "aiosqlite>=0.20.0",
     "python-semantic-release>=9.8.8",
     "twine>=5.1.1",
+    "pdbpp>=0.11.7",
 ]
 
 [tool.uv.sources]
@@ -100,15 +101,26 @@ mode = "init"
 changelog_file = "./docs/changelog.md"
 
 [tool.tox]
-legacy_tox_ini = """
-[tox]
-envlist = { default, sqlmodel }
+envlist = ["sqlmodel", "fastapi-pre121", "fastapi-post121"]
 
-[testenv]
-passenv = CI
-runner = uv-venv-lock-runner
-commands =
-    pytest --cov fastsqla --cov-report=term-missing --cov-report=xml
-extras:
-    sqlmodel: sqlmodel
-"""
+[tool.tox.env_run_base]
+runner = "uv-venv-runner"
+commands = [
+    [
+        "pytest",
+        "--cov",
+        "fastsqla",
+        "--cov-report=term-missing",
+        "--cov-report=xml",
+    ],
+]
+allowlist_externals = ["pytest", "pip"]
+
+[tool.tox.env.sqlmodel]
+extras = ["sqlmodel"]
+
+[tool.tox.env.fastapi-pre121]
+commands_pre = [["pip", "install", "-U", "fastapi<0.121"]]
+
+[tool.tox.env.fastapi-post121]
+commands_pre = [["pip", "install", "-U", "fastapi>=0.121"]]
