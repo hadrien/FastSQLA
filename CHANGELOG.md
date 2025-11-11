@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v0.5.0 (2025-11-11)
+
+### Features
+
+- Scope Session dependency to `function` ([#28](https://github.com/hadrien/FastSQLA/pull/28),
+  [`1b8f528`](https://github.com/hadrien/FastSQLA/commit/1b8f52879f1c9b0836de30ff2f2a3e4d54c39f46))
+
+
 ## v0.4.6 (2025-10-03)
 
 ### Bug Fixes
