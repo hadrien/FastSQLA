@@ -45,10 +45,10 @@ license-files = []
 
 [project.optional-dependencies]
 docs = [
-    "mkdocs-glightbox>=0.4.0",
-    "mkdocs-llmstxt>=0.2.0",
-    "mkdocs-material>=9.5.50",
-    "mkdocstrings[python]>=0.27.0",
+    "mkdocs-glightbox>=0.5.2",
+    "mkdocs-llmstxt>=0.5.0",
+    "mkdocs-material>=9.7.1",
+    "mkdocstrings[python]>=1.0.0",
 ]
 sqlmodel = ["sqlmodel>=0.0.22"]
 
