@@ -59,7 +59,9 @@ plugins:
       enable_inventory: true
       handlers:
         python:
-          import:
+          options:
+            docstring_style: google
+          inventories:
           - https://docs.python.org/3/objects.inv
           - https://docs.sqlalchemy.org/en/20/objects.inv
           - https://fastapi.tiangolo.com/objects.inv
@@ -86,10 +88,7 @@ markdown_extensions:
   - pymdownx.emoji:
       emoji_index: !!python/name:material.extensions.emoji.twemoji
       emoji_generator: !!python/name:material.extensions.emoji.to_svg
-  - pymdownx.highlight:
-      anchor_linenums: true
-      line_spans: __span
-      pygments_lang_class: true
+  - pymdownx.highlight
   - pymdownx.inlinehilite
   - pymdownx.snippets
   - pymdownx.superfences
