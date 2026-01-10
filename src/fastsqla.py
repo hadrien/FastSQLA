@@ -2,7 +2,7 @@ import math
 import os
 from collections.abc import AsyncGenerator, Awaitable, Callable, Iterable
 from contextlib import _AsyncGeneratorContextManager, asynccontextmanager
-from typing import Annotated, Generic, TypeVar, TypedDict
+from typing import Annotated, Generic, TypedDict, TypeVar
 
 from fastapi import Depends as BaseDepends
 from fastapi import FastAPI, Query
@@ -90,7 +90,7 @@ class State(TypedDict):
 
 def new_lifespan(
     url: str | None = None, **kw
-) -> Callable[[FastAPI], _AsyncGeneratorContextManager[State, None]]:
+) -> Callable[[FastAPI | None], _AsyncGeneratorContextManager[State, None]]:
     """Create a new lifespan async context manager.
 
     It expects the exact same parameters as
@@ -117,7 +117,7 @@ def new_lifespan(
     has_config = url is not None
 
     @asynccontextmanager
-    async def lifespan(app: FastAPI) -> AsyncGenerator[State, None]:
+    async def lifespan(app: FastAPI | None) -> AsyncGenerator[State, None]:
         if has_config:
             prefix = ""
             sqla_config = {**kw, **{"url": url}}

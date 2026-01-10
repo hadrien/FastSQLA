@@ -1,17 +1,23 @@
 from fastapi import FastAPI
-from pytest import raises
+from pytest import raises, fixture
 
-app = FastAPI()
+_app = FastAPI()
 
 
-async def test_it_returns_state(environ):
+@fixture(params=[_app, None])
+def app(request):
+    # lifespan tests pass whether lifespan receives app or None
+    return request.param
+
+
+async def test_it_returns_state(environ, app):
     from fastsqla import lifespan
 
     async with lifespan(app) as state:
         assert "fastsqla_engine" in state
 
 
-async def test_it_binds_an_sqla_engine_to_sessionmaker(environ):
+async def test_it_binds_an_sqla_engine_to_sessionmaker(environ, app):
     from fastsqla import SessionFactory, lifespan
 
     assert SessionFactory.kw["bind"] is None
@@ -24,7 +30,7 @@ async def test_it_binds_an_sqla_engine_to_sessionmaker(environ):
     assert SessionFactory.kw["bind"] is None
 
 
-async def test_it_fails_on_a_missing_sqlalchemy_url(monkeypatch):
+async def test_it_fails_on_a_missing_sqlalchemy_url(monkeypatch, app):
     from fastsqla import lifespan
 
     monkeypatch.delenv("SQLALCHEMY_URL", raising=False)
@@ -35,7 +41,7 @@ async def test_it_fails_on_a_missing_sqlalchemy_url(monkeypatch):
     assert raise_info.value.args[0] == "Missing sqlalchemy_url in environ."
 
 
-async def test_it_fails_on_not_async_engine(monkeypatch):
+async def test_it_fails_on_not_async_engine(monkeypatch, app):
     from fastsqla import lifespan
 
     monkeypatch.setenv("SQLALCHEMY_URL", "sqlite:///:memory:")
@@ -46,7 +52,7 @@ async def test_it_fails_on_not_async_engine(monkeypatch):
     assert "'pysqlite' is not async." in raise_info.value.args[0]
 
 
-async def test_new_lifespan_with_connect_args(sqlalchemy_url):
+async def test_new_lifespan_with_connect_args(sqlalchemy_url, app):
     from fastsqla import new_lifespan
 
     lifespan = new_lifespan(sqlalchemy_url, connect_args={"autocommit": False})
@@ -55,7 +61,7 @@ async def test_new_lifespan_with_connect_args(sqlalchemy_url):
         pass
 
 
-async def test_new_lifespan_fails_with_invalid_connect_args(sqlalchemy_url):
+async def test_new_lifespan_fails_with_invalid_connect_args(sqlalchemy_url, app):
     from fastsqla import new_lifespan
 
     lifespan = new_lifespan(sqlalchemy_url, connect_args={"this is wrong": False})
