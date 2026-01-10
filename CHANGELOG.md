@@ -1,6 +1,23 @@
 # CHANGELOG
 
 
+## v0.5.1 (2026-01-10)
+
+### Bug Fixes
+
+- Allow lifespan to receive app=None ([#30](https://github.com/hadrien/FastSQLA/pull/30),
+  [`3a3893f`](https://github.com/hadrien/FastSQLA/commit/3a3893f5d76ab0a93cd78323666c8bdee5a225c7))
+
+### Chores
+
+- Update LICENSE
+  ([`065b853`](https://github.com/hadrien/FastSQLA/commit/065b85320d9d48190520563fa767b11d57edac9f))
+
+- Upgrade docs dependencies and fix build issues
+  ([#29](https://github.com/hadrien/FastSQLA/pull/29),
+  [`8a8f456`](https://github.com/hadrien/FastSQLA/commit/8a8f456b530e76db7d1d6dab1c98bd0c4591f8ce))
+
+
 ## v0.5.0 (2025-11-11)
 
 ### Features
