@@ -138,8 +138,8 @@ keys.
 
 On **startup**:
 
-1. Creates an `AsyncEngine` via `async_engine_from_config()` (env var path) or
-   `create_async_engine()` (programmatic path).
+1. Creates an `AsyncEngine` via `async_engine_from_config()` — with prefix
+   `sqlalchemy_` for the env var path, or with no prefix for the programmatic path.
 2. Calls `Base.prepare()` inside a connection — this triggers SQLAlchemy's
    `DeferredReflection`, reflecting table metadata from the database for any model
    inheriting from `fastsqla.Base`.
