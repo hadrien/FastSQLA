@@ -170,6 +170,48 @@ CustomPaginate = Annotated[
 ]
 ```
 
+### Count Query with Filters
+
+Since `query_count_dependency` is a FastAPI dependency, it can accept query parameters and other dependencies. This is useful when the count must reflect the same filters applied to the main query:
+
+```python
+from sqlalchemy import func, select
+from fastsqla import Session
+
+async def filtered_hero_count(
+    session: Session,
+    age: int | None = None,
+    name: str | None = None,
+) -> int:
+    stmt = select(func.count()).select_from(Hero)
+    if age is not None:
+        stmt = stmt.where(Hero.age == age)
+    if name is not None:
+        stmt = stmt.where(Hero.name.ilike(f"%{name}%"))
+    result = await session.execute(stmt)
+    return cast(int, result.scalar())
+
+FilteredPaginate = Annotated[
+    PaginateType[HeroModel],
+    Depends(new_pagination(query_count_dependency=filtered_hero_count)),
+]
+
+@app.get("/heroes")
+async def list_heroes(
+    paginate: FilteredPaginate,
+    age: int | None = None,
+    name: str | None = None,
+) -> Page[HeroModel]:
+    stmt = select(Hero)
+    if age is not None:
+        stmt = stmt.where(Hero.age == age)
+    if name is not None:
+        stmt = stmt.where(Hero.name.ilike(f"%{name}%"))
+    return await paginate(stmt)
+```
+
+FastAPI resolves the shared `age` and `name` query parameters in both the endpoint and the count dependency, so the count always matches the filtered results.
+
 ## Custom Result Processor
 
 The default `result_processor` is:
