@@ -4,7 +4,7 @@
 #
 # bd (beads) post-merge hook - thin shim
 #
-# This shim delegates to 'bd hook post-merge' which contains
+# This shim delegates to 'bd hooks post-merge' which contains
 # the actual hook logic. This pattern ensures hook behavior is always
 # in sync with the installed bd version - no manual updates needed.
 #
@@ -21,4 +21,4 @@ if ! command -v bd >/dev/null 2>&1; then
     exit 0
 fi
 
-exec bd hook post-merge "$@"
+exec bd hooks post-merge "$@"
