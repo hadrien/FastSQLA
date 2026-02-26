@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v0.7.0 (2026-02-26)
+
+### Features
+
+- Add fastsqla-pagination agent skill ([#31](https://github.com/hadrien/FastSQLA/pull/31),
+  [`618cd14`](https://github.com/hadrien/FastSQLA/commit/618cd1485b4d5db672a04abf7f5ab596c5171146))
+
+
 ## v0.6.0 (2026-02-26)
 
 ### Chores
