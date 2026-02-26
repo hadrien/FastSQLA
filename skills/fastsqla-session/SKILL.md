@@ -88,6 +88,8 @@ When a `flush()` triggers a constraint violation (unique, foreign key, etc.), SQ
 The correct pattern is to catch `IntegrityError` after `flush()` and re-raise it as an `HTTPException`. The raised exception triggers FastSQLA's automatic rollback.
 
 ```python
+from http import HTTPStatus
+
 from sqlalchemy.exc import IntegrityError
 from fastapi import HTTPException
 from fastsqla import Session, Item
@@ -99,7 +101,9 @@ async def create_hero(session: Session, new_hero: HeroBase):
     try:
         await session.flush()
     except IntegrityError:
-        raise HTTPException(status_code=409, detail="Hero already exists")
+        raise HTTPException(
+            status_code=HTTPStatus.CONFLICT, detail="Hero already exists"
+        )
     return {"data": hero}
 ```
 
