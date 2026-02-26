@@ -1,6 +1,22 @@
 # CHANGELOG
 
 
+## v0.6.0 (2026-02-26)
+
+### Chores
+
+- Add context7 claim
+  ([`fd9bf41`](https://github.com/hadrien/FastSQLA/commit/fd9bf4189369669b8ce4091472bd28d618ae89b4))
+
+- Initialize beads issue tracking
+  ([`6e98cf4`](https://github.com/hadrien/FastSQLA/commit/6e98cf4d9c9ac295130f6e56e812723e482185c1))
+
+### Features
+
+- Add fastsqla-setup agent skill ([#33](https://github.com/hadrien/FastSQLA/pull/33),
+  [`969c4cd`](https://github.com/hadrien/FastSQLA/commit/969c4cd620b34293e4d13cb0608acd4f0be62fb0))
+
+
 ## v0.5.1 (2026-01-10)
 
 ### Bug Fixes
