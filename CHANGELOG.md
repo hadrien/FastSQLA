@@ -1,6 +1,88 @@
 # CHANGELOG
 
 
+## v0.7.1 (2026-05-04)
+
+### Bug Fixes
+
+- Upgrade dependencies to fix vulnerabilities ([#54](https://github.com/hadrien/FastSQLA/pull/54),
+  [`338b796`](https://github.com/hadrien/FastSQLA/commit/338b79684810d63ea478b67d686757e1f83498ae))
+
+### Chores
+
+- Enable dependabot
+  ([`c31ecc6`](https://github.com/hadrien/FastSQLA/commit/c31ecc6395a0aa33b329c7ffaf7ad546bbe64d8c))
+
+- Set dependabot interval to daily
+  ([`7d700ad`](https://github.com/hadrien/FastSQLA/commit/7d700adb49642434e0aa1c9888c6a83cd52a4ff8))
+
+- Update beads config ([#46](https://github.com/hadrien/FastSQLA/pull/46),
+  [`4ee115f`](https://github.com/hadrien/FastSQLA/commit/4ee115fdfe94299291b24e5b9c20d48240550a95))
+
+- **deps**: Bump h11 in the uv group across 1 directory
+  ([#36](https://github.com/hadrien/FastSQLA/pull/36),
+  [`d3eb8a5`](https://github.com/hadrien/FastSQLA/commit/d3eb8a564dc6ae8b86f57061721b962b931b71b2))
+
+- **deps**: Bump mkdocs-material from 9.7.1 to 9.7.6
+  ([#53](https://github.com/hadrien/FastSQLA/pull/53),
+  [`333966e`](https://github.com/hadrien/FastSQLA/commit/333966eba78313ac219731884eebd77ed53db28a))
+
+- **deps**: Bump requests in the uv group across 1 directory
+  ([#37](https://github.com/hadrien/FastSQLA/pull/37),
+  [`c51b28a`](https://github.com/hadrien/FastSQLA/commit/c51b28a1bde913f707ab4ba0beda2146b3ccadec))
+
+- **deps**: Bump sqlmodel from 0.0.22 to 0.0.38 ([#42](https://github.com/hadrien/FastSQLA/pull/42),
+  [`7a07b99`](https://github.com/hadrien/FastSQLA/commit/7a07b99ae9b9c1307358bcf4baacaec10302c161))
+
+- **deps**: Bump starlette in the uv group across 1 directory
+  ([#38](https://github.com/hadrien/FastSQLA/pull/38),
+  [`c8ffa15`](https://github.com/hadrien/FastSQLA/commit/c8ffa1544878d1c00e50e966c1f828ff19c5eecb))
+
+- **deps**: Bump structlog from 24.4.0 to 25.5.0
+  ([#52](https://github.com/hadrien/FastSQLA/pull/52),
+  [`8cd1635`](https://github.com/hadrien/FastSQLA/commit/8cd1635499713ee7b19a7e019ca2027ed0c5b61a))
+
+- **deps**: Bump the uv group across 1 directory with 3 updates
+  ([#48](https://github.com/hadrien/FastSQLA/pull/48),
+  [`9708fcc`](https://github.com/hadrien/FastSQLA/commit/9708fcc83974ce2e4ce9f25bda052104d6c8182f))
+
+- **deps**: Bump urllib3 in the uv group across 1 directory
+  ([#39](https://github.com/hadrien/FastSQLA/pull/39),
+  [`f8a4a79`](https://github.com/hadrien/FastSQLA/commit/f8a4a7959ed1cee7a14659e5bb1b5da4e6291d20))
+
+- **deps-dev**: Bump coverage from 7.6.1 to 7.13.5
+  ([#45](https://github.com/hadrien/FastSQLA/pull/45),
+  [`b5f451c`](https://github.com/hadrien/FastSQLA/commit/b5f451c96dd303aaf08597a5ca638ceb53aa6571))
+
+- **deps-dev**: Bump httpx from 0.27.2 to 0.28.1
+  ([#51](https://github.com/hadrien/FastSQLA/pull/51),
+  [`222e0ec`](https://github.com/hadrien/FastSQLA/commit/222e0ec03b1ffd9bbf4f214f1306162e219f8a86))
+
+- **deps-dev**: Bump pdbpp from 0.11.7 to 0.12.1
+  ([#43](https://github.com/hadrien/FastSQLA/pull/43),
+  [`94f2a02`](https://github.com/hadrien/FastSQLA/commit/94f2a0260a0c22fe4ed923f0d85ffe49b7dcc9e7))
+
+- **deps-dev**: Bump pytest from 8.3.2 to 9.0.2 ([#41](https://github.com/hadrien/FastSQLA/pull/41),
+  [`667604b`](https://github.com/hadrien/FastSQLA/commit/667604b67d539d233f6b71d34f05b60e8bb13848))
+
+- **deps-dev**: Bump pytest-cov from 5.0.0 to 7.1.0
+  ([#50](https://github.com/hadrien/FastSQLA/pull/50),
+  [`22f6b98`](https://github.com/hadrien/FastSQLA/commit/22f6b986d2ef7bd90996c5f495e5accc455cd6b3))
+
+- **deps-dev**: Bump python-semantic-release from 10.4.1 to 10.5.3
+  ([#44](https://github.com/hadrien/FastSQLA/pull/44),
+  [`073a1ac`](https://github.com/hadrien/FastSQLA/commit/073a1ac2a19a467f50c1e9d9d37b5d804fb455c3))
+
+- **deps-dev**: Bump ruff from 0.13.3 to 0.15.12
+  ([#49](https://github.com/hadrien/FastSQLA/pull/49),
+  [`089b078`](https://github.com/hadrien/FastSQLA/commit/089b078a4f36421979eb65b2bb943317c6c25728))
+
+### Documentation
+
+- Add fastsqla-session agent skill ([#34](https://github.com/hadrien/FastSQLA/pull/34),
+  [`560d178`](https://github.com/hadrien/FastSQLA/commit/560d1781c3f8f524f187b7f32bb7f886f2e24fd2))
+
+
 ## v0.7.0 (2026-02-26)
 
 ### Features
