@@ -1,6 +1,25 @@
 # CHANGELOG
 
 
+## v0.7.2 (2026-05-05)
+
+### Bug Fixes
+
+- Pin pygments to upstream HtmlFormatter filename=None fix
+  ([#57](https://github.com/hadrien/FastSQLA/pull/57),
+  [`df0ab7f`](https://github.com/hadrien/FastSQLA/commit/df0ab7f9524663653ff0c04a4019aa04caf89025))
+
+### Chores
+
+- **deps-dev**: Bump aiosqlite from 0.20.0 to 0.22.1
+  ([#56](https://github.com/hadrien/FastSQLA/pull/56),
+  [`8df1378`](https://github.com/hadrien/FastSQLA/commit/8df1378c02a66ef3612cdbaa6d9c02c08f008532))
+
+- **deps-dev**: Bump faker from 28.4.1 to 40.12.0
+  ([#55](https://github.com/hadrien/FastSQLA/pull/55),
+  [`031c46d`](https://github.com/hadrien/FastSQLA/commit/031c46d81c1fb36dc56e1654b8bd710c0493513c))
+
+
 ## v0.7.1 (2026-05-04)
 
 ### Bug Fixes
