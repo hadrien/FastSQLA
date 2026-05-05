@@ -2,8 +2,9 @@ name: Build & Publish Doc
 
 on:
   push:
+    tags:
+      - '*'
     branches:
-      - main
       - docs/**
 
 jobs:
