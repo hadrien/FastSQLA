@@ -49,6 +49,7 @@ docs = [
     "mkdocs-llmstxt>=0.5.0",
     "mkdocs-material>=9.7.1",
     "mkdocstrings[python]>=1.0.0",
+    "pygments @ git+https://github.com/pygments/pygments.git@b6f6dab78e13652741d5e5811b4256b4dcb5fcd8",
 ]
 sqlmodel = ["sqlmodel>=0.0.22"]
 
