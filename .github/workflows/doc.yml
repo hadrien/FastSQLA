@@ -6,6 +6,7 @@ on:
       - '*'
     branches:
       - docs/**
+  workflow_dispatch:
 
 jobs:
 
