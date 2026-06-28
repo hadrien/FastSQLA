@@ -1,6 +1,94 @@
 # CHANGELOG
 
 
+## v0.7.3 (2026-06-28)
+
+### Bug Fixes
+
+- **deps**: Bump cryptography in the uv group across 1 directory
+  ([#84](https://github.com/hadrien/FastSQLA/pull/84),
+  [`3ba5bf8`](https://github.com/hadrien/FastSQLA/commit/3ba5bf83c7c69f3b7ad519ab64729126e24251b3))
+
+### Chores
+
+- **deps**: Bump fastapi from 0.136.1 to 0.136.3
+  ([#69](https://github.com/hadrien/FastSQLA/pull/69),
+  [`0c40fb0`](https://github.com/hadrien/FastSQLA/commit/0c40fb099536fd43fca27aa396394610d2e3a8a7))
+
+- **deps**: Bump fastapi from 0.136.3 to 0.137.0
+  ([#81](https://github.com/hadrien/FastSQLA/pull/81),
+  [`92f2c7a`](https://github.com/hadrien/FastSQLA/commit/92f2c7acbf6c5a9663ce1bf859ba2b9665064ea5))
+
+- **deps**: Bump GitPython to 3.1.50 ([#62](https://github.com/hadrien/FastSQLA/pull/62),
+  [`b009011`](https://github.com/hadrien/FastSQLA/commit/b00901191bdf0312a5e914c0db17bf25c7978499))
+
+- **deps**: Bump idna in the uv group across 1 directory
+  ([#68](https://github.com/hadrien/FastSQLA/pull/68),
+  [`0564190`](https://github.com/hadrien/FastSQLA/commit/056419049d552ae889a7cdee1f8876c41670ea96))
+
+- **deps**: Bump pymdown-extensions in the uv group across 1 directory
+  ([#65](https://github.com/hadrien/FastSQLA/pull/65),
+  [`e80699a`](https://github.com/hadrien/FastSQLA/commit/e80699a02c2ac44a129587aa3bf48b2ade9220b2))
+
+- **deps**: Bump starlette in the uv group across 1 directory
+  ([#79](https://github.com/hadrien/FastSQLA/pull/79),
+  [`c5e0a5b`](https://github.com/hadrien/FastSQLA/commit/c5e0a5b058894f375a7823112bc904f735ca1e6d))
+
+- **deps**: Bump starlette in the uv group across 1 directory
+  ([#74](https://github.com/hadrien/FastSQLA/pull/74),
+  [`9b54b76`](https://github.com/hadrien/FastSQLA/commit/9b54b760936e1f721675def8c586d0069d7697ba))
+
+- **deps**: Bump urllib3 in the uv group across 1 directory
+  ([#61](https://github.com/hadrien/FastSQLA/pull/61),
+  [`209447c`](https://github.com/hadrien/FastSQLA/commit/209447c1441a5900ae6f83cb5972243ff27d69d5))
+
+- **deps-dev**: Bump coverage from 7.13.5 to 7.14.0
+  ([#63](https://github.com/hadrien/FastSQLA/pull/63),
+  [`fc13d33`](https://github.com/hadrien/FastSQLA/commit/fc13d33fa85d64b4ccbd97c64a2937679e290d34))
+
+- **deps-dev**: Bump coverage from 7.14.0 to 7.14.1
+  ([#71](https://github.com/hadrien/FastSQLA/pull/71),
+  [`504842d`](https://github.com/hadrien/FastSQLA/commit/504842d0b699df259cc997be13b66f3a8e29321c))
+
+- **deps-dev**: Bump faker from 40.12.0 to 40.15.0
+  ([#60](https://github.com/hadrien/FastSQLA/pull/60),
+  [`f80b96f`](https://github.com/hadrien/FastSQLA/commit/f80b96f227de15a682a9c36bb56a565a6e79ddd9))
+
+- **deps-dev**: Bump faker from 40.15.0 to 40.18.0
+  ([#66](https://github.com/hadrien/FastSQLA/pull/66),
+  [`b25c3f6`](https://github.com/hadrien/FastSQLA/commit/b25c3f69f3b7d4111ff508316168d5e5176ae80a))
+
+- **deps-dev**: Bump faker from 40.18.0 to 40.19.1
+  ([#72](https://github.com/hadrien/FastSQLA/pull/72),
+  [`d515fd0`](https://github.com/hadrien/FastSQLA/commit/d515fd01f86a24318ff1ab3b89386443b4ba2434))
+
+- **deps-dev**: Bump pytest-asyncio from 1.3.0 to 1.4.0
+  ([#73](https://github.com/hadrien/FastSQLA/pull/73),
+  [`0fae8b6`](https://github.com/hadrien/FastSQLA/commit/0fae8b6a41226dcb959aac10647a6fec059f2e70))
+
+- **deps-dev**: Bump ruff from 0.15.12 to 0.15.14
+  ([#67](https://github.com/hadrien/FastSQLA/pull/67),
+  [`f101225`](https://github.com/hadrien/FastSQLA/commit/f101225a4cfa3086e747e16d2ed6d13ac0346506))
+
+- **deps-dev**: Bump ruff from 0.15.14 to 0.15.15
+  ([#70](https://github.com/hadrien/FastSQLA/pull/70),
+  [`e555c3c`](https://github.com/hadrien/FastSQLA/commit/e555c3c3ded1948f5303fc1ba7e51745a0e8363d))
+
+- **deps-dev**: Bump ruff from 0.15.15 to 0.15.16
+  ([#75](https://github.com/hadrien/FastSQLA/pull/75),
+  [`6badcb7`](https://github.com/hadrien/FastSQLA/commit/6badcb702e85ad34c3cd44789a7888f1c817b919))
+
+### Continuous Integration
+
+- Allow manual trigger of doc build workflow ([#59](https://github.com/hadrien/FastSQLA/pull/59),
+  [`7ed499c`](https://github.com/hadrien/FastSQLA/commit/7ed499c61b56413b37f478c18dbabff30623eb5c))
+
+### Documentation
+
+- Build doc on tags instead of main ([#58](https://github.com/hadrien/FastSQLA/pull/58),
+  [`c1f0463`](https://github.com/hadrien/FastSQLA/commit/c1f04639169d9fc126c6612da315b79fab190a16))
+
+
 ## v0.7.2 (2026-05-05)
 
 ### Bug Fixes
