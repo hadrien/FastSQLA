@@ -1,6 +1,15 @@
 # CHANGELOG
 
 
+## v0.7.4 (2026-07-03)
+
+### Bug Fixes
+
+- **deps**: Bump fastapi from 0.137.0 to 0.138.0
+  ([#86](https://github.com/hadrien/FastSQLA/pull/86),
+  [`6a9f49b`](https://github.com/hadrien/FastSQLA/commit/6a9f49baac6150231ed187dca53a2705ab8fa3fa))
+
+
 ## v0.7.3 (2026-06-28)
 
 ### Bug Fixes
