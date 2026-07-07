@@ -1,6 +1,15 @@
 # CHANGELOG
 
 
+## v0.7.5 (2026-07-07)
+
+### Bug Fixes
+
+- **deps**: Bump structlog from 25.5.0 to 26.1.0
+  ([#89](https://github.com/hadrien/FastSQLA/pull/89),
+  [`195174f`](https://github.com/hadrien/FastSQLA/commit/195174fc9c2595d8c302d1e1907fef1025914971))
+
+
 ## v0.7.4 (2026-07-03)
 
 ### Bug Fixes
