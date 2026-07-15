@@ -1,6 +1,15 @@
 # CHANGELOG
 
 
+## v0.7.7 (2026-07-15)
+
+### Bug Fixes
+
+- **deps**: Bump soupsieve in the uv group across 1 directory
+  ([#94](https://github.com/hadrien/FastSQLA/pull/94),
+  [`474f8a8`](https://github.com/hadrien/FastSQLA/commit/474f8a801549d2aa24b8b68b75f193794103af4a))
+
+
 ## v0.7.6 (2026-07-09)
 
 ### Bug Fixes
