@@ -1,6 +1,7 @@
 {
   "database": "dolt",
-  "jsonl_export": "issues.jsonl",
   "backend": "dolt",
-  "dolt_database": "beads_fastsqla"
+  "dolt_mode": "embedded",
+  "dolt_database": "beads_fastsqla",
+  "project_id": "77e9debd-5928-4488-ad31-c390e573f863"
 }
