@@ -8,32 +8,51 @@
 {% block extrahead %}
   {{ super() }}
   {% if has_markdown_twin %}
-    <link
-      rel="alternate"
-      type="text/markdown"
-      href="{{ config.site_url.rstrip('/') }}/{{ markdown_path }}"
-    >
+    <link rel="alternate" type="text/markdown"
+      href="{{ config.site_url.rstrip('/') }}/{{ markdown_path }}">
   {% endif %}
 {% endblock %}
 
 {% block content %}
+  {% set rendered_content %}{{ super() }}{% endset %}
   {% if has_markdown_twin %}
-    <div
-      class="md-content__markdown-actions"
-      data-markdown-url="{{ markdown_path | url }}"
-    >
-      <a class="md-button md-button--primary" href="{{ markdown_path | url }}">
-        View as Markdown
-      </a>
-      <button class="md-button" type="button" data-copy-markdown>
-        Copy as Markdown
-      </button>
-      <span
-        class="md-content__markdown-status"
-        role="status"
-        aria-live="polite"
-      ></span>
-    </div>
+    {% set markdown_url = config.site_url.rstrip('/') ~ "/" ~ markdown_path %}
+    {% set llm_prompt = "Read " ~ markdown_url ~ " and answer questions about the content." %}
+    {% set markdown_actions %}
+      <div class="md-content__markdown-actions"
+        data-markdown-url="{{ markdown_path | url }}">
+        <button class="md-content__markdown-action" type="button" data-copy-markdown
+          title="Copy page Markdown for use with LLMs">
+          <span class="md-content__markdown-action-icon" aria-hidden="true">{% include ".icons/material/content-copy.svg" %}</span>
+          <span data-copy-label>Copy for LLM</span>
+        </button>
+        <a class="md-content__markdown-action" href="{{ markdown_path | url }}"
+          target="_blank" rel="noopener noreferrer"
+          title="View Markdown (opens in a new tab)">
+          <span class="md-content__markdown-action-icon" aria-hidden="true">{% include ".icons/material/language-markdown.svg" %}</span>
+          <span>View Markdown</span>
+        </a>
+        <span class="md-content__markdown-agents">
+          <a class="md-content__markdown-action md-content__markdown-action--icon"
+            href="https://chatgpt.com/?prompt={{ llm_prompt | urlencode }}"
+            target="_blank" rel="noopener noreferrer"
+            title="Open in ChatGPT (opens in a new tab)"
+            aria-label="Open in ChatGPT (opens in a new tab)">
+            {% include ".icons/fontawesome/brands/openai.svg" %}
+          </a>
+          <a class="md-content__markdown-action md-content__markdown-action--icon"
+            href="https://claude.ai/new?q={{ llm_prompt | urlencode }}"
+            target="_blank" rel="noopener noreferrer"
+            title="Open in Claude (opens in a new tab)"
+            aria-label="Open in Claude (opens in a new tab)">
+            {% include ".icons/simple/claude.svg" %}
+          </a>
+        </span>
+        <span class="md-visually-hidden" role="status" aria-live="polite"></span>
+      </div>
+    {% endset %}
+    {{ rendered_content | replace("</h1>", "</h1>" ~ markdown_actions, 1) }}
+  {% else %}
+    {{ rendered_content }}
   {% endif %}
-  {{ super() }}
 {% endblock %}

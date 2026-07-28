@@ -8,9 +8,10 @@ const bindMarkdownCopy = () => {
   button.addEventListener("click", async () => {
     const actions = button.closest("[data-markdown-url]");
     const status = actions?.querySelector("[role='status']");
+    const label = button.querySelector("[data-copy-label]");
 
     try {
-      if (!actions || !status || !navigator.clipboard) {
+      if (!actions || !status || !label || !navigator.clipboard) {
         throw new Error("Markdown copy controls are unavailable.");
       }
 
@@ -20,14 +21,27 @@ const bindMarkdownCopy = () => {
       }
 
       await navigator.clipboard.writeText(await response.text());
-      status.textContent = "Copied";
+      label.textContent = "Copied";
+      status.textContent = "Page Markdown copied";
       window.setTimeout(() => {
+        label.textContent = "Copy for LLM";
         status.textContent = "";
       }, 2000);
     } catch (error) {
-      if (status) {
-        status.textContent = "Copy failed";
+      if (label) {
+        label.textContent = "Copy failed";
       }
+      if (status) {
+        status.textContent = "Page Markdown could not be copied";
+      }
+      window.setTimeout(() => {
+        if (label) {
+          label.textContent = "Copy for LLM";
+        }
+        if (status) {
+          status.textContent = "";
+        }
+      }, 2000);
       console.error("Unable to copy the Markdown page.", error);
     }
   });
