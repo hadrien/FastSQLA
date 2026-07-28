@@ -55,12 +55,12 @@ Default query parameters added to the endpoint:
 
 ```python
 from fastapi import FastAPI
-from fastsqla import Base, Page, Paginate
+from fastsqla import Base, Page, Paginate, lifespan
 from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.orm import Mapped, mapped_column
 
-app = FastAPI()
+app = FastAPI(lifespan=lifespan)
 
 class Hero(Base):
     __tablename__ = "hero"
@@ -77,6 +77,10 @@ class HeroModel(BaseModel):
 async def list_heroes(paginate: Paginate[HeroModel]) -> Page[HeroModel]:
     return await paginate(select(Hero))
 ```
+
+Set `SQLALCHEMY_URL` to an async SQLAlchemy URL for a database that contains the
+mapped `hero` table before starting the app. For example,
+`sqlite+aiosqlite:///app.db` uses the `aiosqlite` driver.
 
 A request to `GET /heroes?offset=20&limit=10` returns the third page of results.
 
@@ -105,7 +109,7 @@ For custom pagination behavior, use `new_pagination()` to create a new dependenc
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| `min_page_size` | `int` | `10` | Default and minimum `limit` value |
+| `min_page_size` | `int` | `10` | Default `limit` value |
 | `max_page_size` | `int` | `100` | Maximum allowed `limit` value |
 | `query_count_dependency` | `Callable[..., Awaitable[int]] \| None` | `None` | FastAPI dependency returning total item count. When `None`, uses `SELECT COUNT(*) FROM (subquery)`. |
 | `result_processor` | `Callable[[Result], Iterable]` | `lambda r: iter(r.unique().scalars())` | Transforms the SQLAlchemy `Result` into an iterable of items |
