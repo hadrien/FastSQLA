@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% set has_markdown_twin = page and page.file.src_uri in config.extra.markdown_pages %}
+{% if has_markdown_twin %}
+  {% set markdown_path = page.url ~ "index.md" %}
+{% endif %}
+
+{% block extrahead %}
+  {{ super() }}
+  {% if has_markdown_twin %}
+    <link
+      rel="alternate"
+      type="text/markdown"
+      href="{{ config.site_url.rstrip('/') }}/{{ markdown_path }}"
+    >
+  {% endif %}
+{% endblock %}
+
+{% block content %}
+  {% if has_markdown_twin %}
+    <div
+      class="md-content__markdown-actions"
+      data-markdown-url="{{ markdown_path | url }}"
+    >
+      <a class="md-button md-button--primary" href="{{ markdown_path | url }}">
+        View as Markdown
+      </a>
+      <button class="md-button" type="button" data-copy-markdown>
+        Copy as Markdown
+      </button>
+      <span
+        class="md-content__markdown-status"
+        role="status"
+        aria-live="polite"
+      ></span>
+    </div>
+  {% endif %}
+  {{ super() }}
+{% endblock %}

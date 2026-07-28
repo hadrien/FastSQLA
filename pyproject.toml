@@ -30,7 +30,7 @@ classifiers = [
     "Topic :: Software Development",
     "Typing :: Typed",
 ]
-keywords = ["FastAPI", "SQLAlchemy", "AsyncIO"]
+keywords = ["fastapi", "sqlalchemy", "async", "session", "pagination", "sqlmodel"]
 dependencies = ["fastapi>=0.115.6", "sqlalchemy[asyncio]>=2.0.37", "structlog>=24.4.0"]
 
 [project.urls]

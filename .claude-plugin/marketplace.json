@@ -1,0 +1,26 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "fastsqla",
+  "description": "Agent Skills for building FastAPI applications with FastSQLA.",
+  "owner": {
+    "name": "Hadrien David",
+    "email": "h@driendavid.com"
+  },
+  "plugins": [
+    {
+      "name": "fastsqla",
+      "source": "./",
+      "description": "Use FastSQLA's current setup, async session, and pagination APIs correctly.",
+      "version": "1.0.0",
+      "author": {
+        "name": "Hadrien David",
+        "email": "h@driendavid.com"
+      },
+      "homepage": "https://hadrien.github.io/FastSQLA/",
+      "repository": "https://github.com/hadrien/FastSQLA",
+      "license": "MIT",
+      "keywords": ["fastapi", "sqlalchemy", "async", "pagination", "sqlmodel"],
+      "category": "development"
+    }
+  ]
+}

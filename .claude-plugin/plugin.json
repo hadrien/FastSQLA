@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin.json",
+  "name": "fastsqla",
+  "version": "1.0.0",
+  "description": "Use FastSQLA's current setup, async session, and pagination APIs correctly.",
+  "author": {
+    "name": "Hadrien David",
+    "email": "h@driendavid.com"
+  },
+  "homepage": "https://hadrien.github.io/FastSQLA/",
+  "repository": "https://github.com/hadrien/FastSQLA",
+  "license": "MIT",
+  "keywords": ["fastapi", "sqlalchemy", "async", "pagination", "sqlmodel"],
+  "skills": "./skills/"
+}

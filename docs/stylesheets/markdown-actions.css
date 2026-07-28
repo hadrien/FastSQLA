@@ -1,0 +1,17 @@
+.md-content__markdown-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-block-end: 1.25rem;
+}
+
+.md-content__markdown-actions .md-button {
+  margin: 0;
+}
+
+.md-content__markdown-status {
+  align-self: center;
+  min-height: 1.2em;
+  color: var(--md-default-fg-color--light);
+  font-size: 0.72rem;
+}

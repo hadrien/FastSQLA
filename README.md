@@ -24,6 +24,35 @@ providing boilerplate and intuitive helpers. Additionally, it offers built-in
 customizable pagination and automatically manages the `SQLAlchemy` session lifecycle
 following [`SQLAlchemy`'s best practices](https://docs.sqlalchemy.org/en/20/orm/session_basics.html#when-do-i-construct-a-session-when-do-i-commit-it-and-when-do-i-close-it).
 
+## For coding agents and LLMs
+
+FastSQLA publishes agent-readable documentation alongside the website:
+
+- [`llms.txt`](https://hadrien.github.io/FastSQLA/llms.txt) is the concise documentation
+  index.
+- [`llms-full.txt`](https://hadrien.github.io/FastSQLA/llms-full.txt) contains the
+  complete documentation in one file.
+- Every indexed page has a Markdown twin, such as
+  [`setup/index.md`](https://hadrien.github.io/FastSQLA/setup/index.md).
+- [Context7](https://context7.com/hadrien/fastsqla) serves the current documentation and
+  FastSQLA-specific usage rules.
+
+The repository also bundles Agent Skills for setup, session management, and pagination.
+Install all three as one plugin:
+
+### Claude Code
+
+```bash
+claude plugin marketplace add hadrien/FastSQLA
+claude plugin install fastsqla@fastsqla
+```
+
+### Codex
+
+```bash
+codex plugin marketplace add hadrien/FastSQLA
+codex plugin add fastsqla@fastsqla
+```
 
 ## Features
 
