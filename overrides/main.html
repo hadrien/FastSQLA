@@ -33,14 +33,14 @@
           <span>View Markdown</span>
         </a>
         <span class="md-content__markdown-agents">
-          <a class="md-content__markdown-action md-content__markdown-action--icon"
+          <a class="md-content__markdown-action md-content__markdown-action--icon md-content__markdown-action--chatgpt"
             href="https://chatgpt.com/?prompt={{ llm_prompt | urlencode }}"
             target="_blank" rel="noopener noreferrer"
             title="Open in ChatGPT (opens in a new tab)"
             aria-label="Open in ChatGPT (opens in a new tab)">
             {% include ".icons/fontawesome/brands/openai.svg" %}
           </a>
-          <a class="md-content__markdown-action md-content__markdown-action--icon"
+          <a class="md-content__markdown-action md-content__markdown-action--icon md-content__markdown-action--claude"
             href="https://claude.ai/new?q={{ llm_prompt | urlencode }}"
             target="_blank" rel="noopener noreferrer"
             title="Open in Claude (opens in a new tab)"
