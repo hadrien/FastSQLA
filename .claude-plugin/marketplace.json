@@ -9,7 +9,7 @@
   "plugins": [
     {
       "name": "fastsqla",
-      "source": "./plugins/fastsqla",
+      "source": "./plugin/fastsqla",
       "description": "Use FastSQLA's current setup, async session, and pagination APIs correctly.",
       "version": "1.0.0",
       "author": {
