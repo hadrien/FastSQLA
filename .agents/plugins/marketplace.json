@@ -8,7 +8,7 @@
       "name": "fastsqla",
       "source": {
         "source": "local",
-        "path": "./"
+        "path": "./plugins/fastsqla"
       },
       "policy": {
         "installation": "AVAILABLE",
