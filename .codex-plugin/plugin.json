@@ -1,0 +1,29 @@
+{
+  "name": "fastsqla",
+  "version": "1.0.0",
+  "description": "Use FastSQLA's current setup, async session, and pagination APIs correctly.",
+  "author": {
+    "name": "Hadrien David",
+    "email": "h@driendavid.com",
+    "url": "https://github.com/hadrien"
+  },
+  "homepage": "https://hadrien.github.io/FastSQLA/",
+  "repository": "https://github.com/hadrien/FastSQLA",
+  "license": "MIT",
+  "keywords": ["fastapi", "sqlalchemy", "async", "pagination", "sqlmodel"],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "FastSQLA",
+    "shortDescription": "FastSQLA setup, sessions, and pagination",
+    "longDescription": "Build FastAPI applications with FastSQLA's current async SQLAlchemy and SQLModel APIs.",
+    "developerName": "Hadrien David",
+    "category": "Productivity",
+    "capabilities": ["Read", "Write"],
+    "websiteURL": "https://hadrien.github.io/FastSQLA/",
+    "defaultPrompt": [
+      "Set up FastSQLA in this FastAPI application.",
+      "Use FastSQLA to add an async database endpoint.",
+      "Paginate this SQLAlchemy query with FastSQLA."
+    ]
+  }
+}

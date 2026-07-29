@@ -1,1 +1,16 @@
-{"url": "https://context7.com/hadrien/fastsqla","public_key": "pk_HGTiXpaLrQ2YW61qLOKbF"}
+{
+  "$schema": "https://context7.com/schema/context7.json",
+  "url": "https://context7.com/hadrien/fastsqla",
+  "public_key": "pk_HGTiXpaLrQ2YW61qLOKbF",
+  "projectTitle": "FastSQLA",
+  "description": "Async SQLAlchemy sessions and pagination for FastAPI, with optional SQLModel support.",
+  "folders": ["docs", "skills"],
+  "excludeFiles": ["CHANGELOG.md"],
+  "rules": [
+    "Configure FastAPI with fastsqla.lifespan or new_lifespan(); do not construct engines or sessions manually.",
+    "Declare fastsqla.Session as an endpoint parameter; FastSQLA commits on success and rolls back on exceptions.",
+    "Use fastsqla.open_session() outside request handlers, and only while the application lifespan is active.",
+    "Use fastsqla.Paginate and Page[T] for list endpoints; call await paginate(select(...)).",
+    "Install FastSQLA[sqlmodel] when using SQLModel; FastSQLA selects SQLModel's AsyncSession automatically."
+  ]
+}

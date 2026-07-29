@@ -1,5 +1,5 @@
 site_name: FastSQLA
-site_url: https://mydomain.org/FastSQLA
+site_url: https://hadrien.github.io/FastSQLA/
 repo_name: hadrien/FastSQLA
 repo_url: https://github.com/hadrien/fastsqla
 edit_uri: edit/main/docs/
@@ -12,9 +12,11 @@ nav:
   - Object-relational mapping: orm.md
   - SQLAlchemy Session: session.md
   - Pagination: pagination.md
+  - Troubleshooting: troubleshooting.md
 - Changelog: changelog.md
 
 theme:
+  custom_dir: overrides
   favicon: images/favicon.png
   icon:
     logo: material/database
@@ -52,6 +54,21 @@ theme:
         icon: material/weather-night
         name: Switch to system preference
 
+extra:
+  markdown_pages: &markdown_pages
+    - index.md
+    - setup.md
+    - session.md
+    - orm.md
+    - pagination.md
+    - troubleshooting.md
+
+extra_css:
+  - stylesheets/markdown-actions.css
+
+extra_javascript:
+  - javascripts/markdown-actions.js
+
 plugins:
   - autorefs
   - glightbox
@@ -71,12 +88,7 @@ plugins:
         Async SQLAlchemy 2.0+ extension for FastAPI with SQLModel support, built-in pagination & more.
       full_output: llms-full.txt
       sections:
-        Sections:
-        - index.md
-        - setup.md
-        - session.md
-        - orm.md
-        - pagination.md
+        Sections: *markdown_pages
 
 markdown_extensions:
   - abbr
