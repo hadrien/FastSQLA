@@ -29,7 +29,9 @@ jobs:
       run: uv run mkdocs build
     - name: 🔑 publish Context7 claim
       run: |
-        mkdir -p site/llms-full
+        mkdir -p site/llms site/llms-full
+        jq '{url: "https://context7.com/llmstxt/hadrien_github_io_fastsqla_llms_txt",
+        public_key}' context7.json > site/llms/context7.json
         jq '{url: "https://context7.com/llmstxt/hadrien_github_io_fastsqla_llms-full_txt",
         public_key}' context7.json > site/llms-full/context7.json
     - name: 📦 Upload artifacts
