@@ -7,6 +7,8 @@
 - Read the closest applicable `AGENTS.md` before changing files.
 - Inspect `git status` and existing diffs before modifying the worktree.
 - Record complex implementation plans as Bead notes before coding.
+- Keep the shared agent plugin at `plugin/fastsqla`; preserve the provider manifests in
+  `.claude-plugin` and `.codex-plugin`.
 
 ## Engineering
 
