@@ -27,6 +27,8 @@ jobs:
       run: uv sync --extra docs
     - name: 📙 mkdocs build
       run: uv run mkdocs build
+    - name: 🔑 publish Context7 claim
+      run: cp context7.json site/context7.json
     - name: 📦 Upload artifacts
       uses: actions/upload-pages-artifact@v3
       with:
