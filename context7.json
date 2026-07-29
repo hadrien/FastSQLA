@@ -4,7 +4,7 @@
   "public_key": "pk_HGTiXpaLrQ2YW61qLOKbF",
   "projectTitle": "FastSQLA",
   "description": "Async SQLAlchemy sessions and pagination for FastAPI, with optional SQLModel support.",
-  "folders": ["docs", "plugins/fastsqla/skills"],
+  "folders": ["docs", "plugin/fastsqla/skills"],
   "excludeFiles": ["CHANGELOG.md"],
   "rules": [
     "Configure FastAPI with fastsqla.lifespan or new_lifespan(); do not construct engines or sessions manually.",
