@@ -16,7 +16,7 @@ nav:
 - Changelog: changelog.md
 
 theme:
-  custom_dir: overrides
+  custom_dir: .github/mkdocs-overrides
   favicon: images/favicon.png
   icon:
     logo: material/database
