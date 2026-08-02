@@ -5,7 +5,58 @@ on:
   workflow_dispatch:
 
 jobs:
+  Changes:
+    runs-on: ubuntu-latest
+    outputs:
+      run_ci: ${{ steps.changes.outputs.run_ci }}
+    steps:
+      - name: 📥 checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: 🔎 detect CI-relevant changes
+        id: changes
+        env:
+          BEFORE_SHA: ${{ github.event.before }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        run: |
+          if [[ "$GITHUB_EVENT_NAME" == "push" && \
+                "$GITHUB_REF_NAME" == "$DEFAULT_BRANCH" && \
+                -n "$BEFORE_SHA" && ! "$BEFORE_SHA" =~ ^0+$ ]]; then
+            base_sha="$BEFORE_SHA"
+          else
+            git fetch --no-tags origin "$DEFAULT_BRANCH"
+            base_sha=$(git merge-base "origin/$DEFAULT_BRANCH" HEAD)
+          fi
+
+          run_ci=false
+          while IFS= read -r -d '' changed_file; do
+            case "$changed_file" in
+              *.py|uv.lock|tox.ini|.github/uv/*|.github/tox-uv/*|.github/workflows/ci.yml)
+                run_ci=true
+                ;;
+              pyproject.toml)
+                non_version_changes=$(git diff --unified=0 "$base_sha" HEAD -- pyproject.toml |
+                  awk '
+                    /^[+-]/ && !/^(---|\+\+\+)/ {
+                      line = substr($0, 2)
+                      if (line !~ /^[[:space:]]*version[[:space:]]*=[[:space:]]*"[^"]+"[[:space:]]*$/) {
+                        print
+                      }
+                    }
+                  ')
+                if [[ -n "$non_version_changes" ]]; then
+                  run_ci=true
+                fi
+                ;;
+            esac
+          done < <(git diff --name-only -z "$base_sha" HEAD)
+
+          echo "run_ci=$run_ci" >> "$GITHUB_OUTPUT"
+
   Tests:
+    needs: Changes
+    if: needs.Changes.outputs.run_ci == 'true'
     strategy:
       matrix:
         tox_env: [fastapi-pre121, fastapi-post121, sqlmodel]
@@ -25,6 +76,8 @@ jobs:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
   Ruff:
+    needs: Changes
+    if: needs.Changes.outputs.run_ci == 'true'
     runs-on: ubuntu-latest
     steps:
       - name: 📥 checkout
@@ -33,3 +86,31 @@ jobs:
         uses: ./.github/uv
       - name: 🐶 ruff
         run: uv run ruff check
+
+  CI:
+    name: CI gate
+    needs: [Changes, Tests, Ruff]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: ✅ verify CI results
+        env:
+          CHANGES_RESULT: ${{ needs.Changes.result }}
+          RUFF_RESULT: ${{ needs.Ruff.result }}
+          RUN_CI: ${{ needs.Changes.outputs.run_ci }}
+          TESTS_RESULT: ${{ needs.Tests.result }}
+        run: |
+          if [[ "$CHANGES_RESULT" != "success" ]]; then
+            echo "Change detection concluded: $CHANGES_RESULT" >&2
+            exit 1
+          fi
+
+          if [[ "$RUN_CI" == "true" ]]; then
+            if [[ "$TESTS_RESULT" != "success" || "$RUFF_RESULT" != "success" ]]; then
+              echo "Tests concluded: $TESTS_RESULT; Ruff concluded: $RUFF_RESULT" >&2
+              exit 1
+            fi
+          elif [[ "$TESTS_RESULT" != "skipped" || "$RUFF_RESULT" != "skipped" ]]; then
+            echo "Unexpected skipped-check results: Tests=$TESTS_RESULT; Ruff=$RUFF_RESULT" >&2
+            exit 1
+          fi

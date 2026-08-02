@@ -15,6 +15,7 @@ jobs:
       contents: write
       id-token: write
       pull-requests: write
+      statuses: write
     steps:
     - name: 📥 checkout
       uses: actions/checkout@v7
@@ -64,6 +65,24 @@ jobs:
           fi
 
           gh run watch "$ci_run_id" --exit-status
+          ci_run_url="https://github.com/${GITHUB_REPOSITORY}/actions/runs/${ci_run_id}"
+          successful_jobs=$(gh run view "$ci_run_id" \
+            --json jobs \
+            --jq '.jobs[] | select(.conclusion == "success") | .name')
+          if [[ -z "$successful_jobs" ]]; then
+            echo "CI run $ci_run_id had no successful jobs" >&2
+            exit 1
+          fi
+          while IFS= read -r context; do
+            gh api \
+              --method POST \
+              "repos/${GITHUB_REPOSITORY}/statuses/${release_sha}" \
+              -f state=success \
+              -f context="$context" \
+              -f description="Passed in CI run ${ci_run_id}" \
+              -f target_url="$ci_run_url" >/dev/null
+          done <<< "$successful_jobs"
+
           merge_response=$(gh api \
             --method PUT \
             "repos/${GITHUB_REPOSITORY}/pulls/${release_pr_number}/merge" \
