@@ -1,6 +1,15 @@
 # CHANGELOG
 
 
+## v0.8.1 (2026-08-02)
+
+### Continuous Integration
+
+- **deps**: Bump actions/upload-pages-artifact from 3 to 5
+  ([#121](https://github.com/hadrien/FastSQLA/pull/121),
+  [`621a5c7`](https://github.com/hadrien/FastSQLA/commit/621a5c7018d9c9a33fa1bce77ad97aeb250c5177))
+
+
 ## v0.8.0 (2026-08-02)
 
 ### Bug Fixes
