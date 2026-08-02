@@ -1,6 +1,102 @@
 # CHANGELOG
 
 
+## v0.8.0 (2026-08-02)
+
+### Bug Fixes
+
+- Satisfy Ruff 0.16 checks ([#112](https://github.com/hadrien/FastSQLA/pull/112),
+  [`37a0b8f`](https://github.com/hadrien/FastSQLA/commit/37a0b8fb03c6b6b1232b2af9485bdb6b1bc647e2))
+
+- **ci**: Authenticate release pushes explicitly
+  ([#130](https://github.com/hadrien/FastSQLA/pull/130),
+  [`97f6381`](https://github.com/hadrien/FastSQLA/commit/97f63814db00876b13d6482aeaa3972245bdeb5c))
+
+- **ci**: Dispatch release checks explicitly ([#131](https://github.com/hadrien/FastSQLA/pull/131),
+  [`5dd5369`](https://github.com/hadrien/FastSQLA/commit/5dd5369a4d9c9183057f338823b3c1059bd49b58))
+
+- **ci**: Merge release commits through prs ([#132](https://github.com/hadrien/FastSQLA/pull/132),
+  [`2b78467`](https://github.com/hadrien/FastSQLA/commit/2b784672def0d6ead00219c42c425e5ced64007d))
+
+- **ci**: Release through protected main ([#129](https://github.com/hadrien/FastSQLA/pull/129),
+  [`96766c7`](https://github.com/hadrien/FastSQLA/commit/96766c7699af9e722f3a86fc34b6fc3d6424352d))
+
+- **ci**: Restore semantic release publishing ([#128](https://github.com/hadrien/FastSQLA/pull/128),
+  [`fb282e0`](https://github.com/hadrien/FastSQLA/commit/fb282e022a9e07c4aa4138bd393555229da45a9c))
+
+- **deps**: Bump fastapi from 0.139.0 to 0.140.0
+  ([#109](https://github.com/hadrien/FastSQLA/pull/109),
+  [`2731f5e`](https://github.com/hadrien/FastSQLA/commit/2731f5ea7242b448acdcd7f0439fb956d5b32b37))
+
+- **deps**: Bump mkdocs-material from 9.7.6 to 9.7.7
+  ([#111](https://github.com/hadrien/FastSQLA/pull/111),
+  [`4673ea8`](https://github.com/hadrien/FastSQLA/commit/4673ea8d229cc5089517a422bbb62a5f1ab0ea28))
+
+- **deps**: Update greenlet for Python 3.14 ([#126](https://github.com/hadrien/FastSQLA/pull/126),
+  [`3fef256`](https://github.com/hadrien/FastSQLA/commit/3fef25692f41f905df3d9719044a096a85186c09))
+
+- **deps-dev**: Bump faker from 40.19.1 to 40.36.0
+  ([#110](https://github.com/hadrien/FastSQLA/pull/110),
+  [`0814aff`](https://github.com/hadrien/FastSQLA/commit/0814aff144edb2600d4ee5a900db43a814063c63))
+
+- **deps-dev**: Bump python-semantic-release from 10.5.3 to 10.6.1
+  ([#108](https://github.com/hadrien/FastSQLA/pull/108),
+  [`7961548`](https://github.com/hadrien/FastSQLA/commit/796154823add9efeb1198e0fb4078912dca03824))
+
+- **deps-dev**: Bump ruff from 0.15.16 to 0.16.0
+  ([#112](https://github.com/hadrien/FastSQLA/pull/112),
+  [`37a0b8f`](https://github.com/hadrien/FastSQLA/commit/37a0b8fb03c6b6b1232b2af9485bdb6b1bc647e2))
+
+### Build System
+
+- **deps**: Bump fastapi from 0.140.0 to 0.140.13
+  ([#125](https://github.com/hadrien/FastSQLA/pull/125),
+  [`8500789`](https://github.com/hadrien/FastSQLA/commit/8500789f44230935f001e21c2506928eb51a3331))
+
+### Chores
+
+- Configure dependency commit semantics ([#118](https://github.com/hadrien/FastSQLA/pull/118),
+  [`433305e`](https://github.com/hadrien/FastSQLA/commit/433305e27958904b9d9f38415e513e430737db41))
+
+- Configure secure Dependabot automerge ([#117](https://github.com/hadrien/FastSQLA/pull/117),
+  [`9eebdfd`](https://github.com/hadrien/FastSQLA/commit/9eebdfdd0aaef0b6d581543cd53d2e9e9d78c9f9))
+
+- Consolidate agent packaging ([#113](https://github.com/hadrien/FastSQLA/pull/113),
+  [`931d47c`](https://github.com/hadrien/FastSQLA/commit/931d47cc5ad7cca9b9cfb877b2b9b334763f4178))
+
+- Use singular plugin directory ([#114](https://github.com/hadrien/FastSQLA/pull/114),
+  [`ef1a5c3`](https://github.com/hadrien/FastSQLA/commit/ef1a5c33553d051336e6d07115f1b5624cb42593))
+
+- **beads**: Update config + save interactions
+  ([`4d94e0c`](https://github.com/hadrien/FastSQLA/commit/4d94e0c067c537451d7ae9f6e4f98827901b2723))
+
+- **deps-dev**: Bump pytest from 9.0.3 to 9.1.1
+  ([#124](https://github.com/hadrien/FastSQLA/pull/124),
+  [`581f636`](https://github.com/hadrien/FastSQLA/commit/581f6362f5ea4bc114e0a5e2a54542ce38286457))
+
+- **deps-dev**: Bump ruff from 0.15.16 to 0.16.0
+  ([#112](https://github.com/hadrien/FastSQLA/pull/112),
+  [`37a0b8f`](https://github.com/hadrien/FastSQLA/commit/37a0b8fb03c6b6b1232b2af9485bdb6b1bc647e2))
+
+### Continuous Integration
+
+- Fix Dependabot Actions cooldown ([#119](https://github.com/hadrien/FastSQLA/pull/119),
+  [`7414aec`](https://github.com/hadrien/FastSQLA/commit/7414aeca9217a27d6fd45e0766e833d661f32612))
+
+- **deps**: Bump actions/checkout from 4 to 7 ([#120](https://github.com/hadrien/FastSQLA/pull/120),
+  [`9b36996`](https://github.com/hadrien/FastSQLA/commit/9b369966c3b1dca3fa337426a1d47704bd95f4d5))
+
+### Documentation
+
+- Improve coding-agent discovery ([#107](https://github.com/hadrien/FastSQLA/pull/107),
+  [`11858db`](https://github.com/hadrien/FastSQLA/commit/11858dbfe83beed2cacd40382ab4abd547f6a7aa))
+
+### Features
+
+- Rename pagination default page-size option ([#127](https://github.com/hadrien/FastSQLA/pull/127),
+  [`2419e9e`](https://github.com/hadrien/FastSQLA/commit/2419e9ee8fcbf8e67bd832c191df2937393b211a))
+
+
 ## v0.7.8 (2026-07-17)
 
 ### Bug Fixes
