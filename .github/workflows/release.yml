@@ -4,13 +4,16 @@ on:
   push:
     branches:
       - main
+    tags:
+      - 'v*'
 
 jobs:
 
   Release-And-Publish:
     runs-on: ubuntu-latest
-    concurrency: release
+    concurrency: release-${{ github.ref_type }}
     permissions:
+      actions: read
       contents: write
       id-token: write
     steps:
@@ -18,21 +21,56 @@ jobs:
       uses: actions/checkout@v7
       with:
         fetch-depth: 0
+        token: ${{ secrets.GH_PERSONAL_ACCESS_TOKEN }}
     - name: 🔧 setup uv
       uses: ./.github/uv
     - name: 📜 semantic release version & publish on PyPI
       run: |
+        if [[ "$GITHUB_REF_TYPE" == "tag" ]]; then
+          uv run semantic-release changelog --post-to-release-tag "$GITHUB_REF_NAME"
+          echo "🙆🏽 Publishing on PyPI"
+          uv build
+          uv run twine upload dist/*
+          exit 0
+        fi
+
         next_version=$(uv run semantic-release version --print)
         last_released_version=$(uv run semantic-release version --print-last-released)
         if [[ "$next_version" == "$last_released_version" ]]; then
           echo "🙅🏽 Nothing to publish"
         else
-          uv run semantic-release version
-          echo "🙆🏽 Publishing on PyPI"
-          uv build
-          uv run twine upload dist/*
+          release_tag=$(uv run semantic-release version --print-tag)
+          uv run semantic-release version --no-push --no-vcs-release
+          release_sha=$(git rev-parse HEAD)
+          release_branch="release/${release_tag}-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          git push origin "HEAD:refs/heads/${release_branch}"
+
+          ci_run_id=""
+          for _ in {1..120}; do
+            ci_run_id=$(gh run list \
+              --workflow ci.yml \
+              --branch "$release_branch" \
+              --commit "$release_sha" \
+              --limit 1 \
+              --json databaseId \
+              --jq '.[0].databaseId')
+            if [[ -n "$ci_run_id" ]]; then
+              break
+            fi
+            sleep 5
+          done
+          if [[ -z "$ci_run_id" ]]; then
+            echo "CI did not start for release commit $release_sha" >&2
+            exit 1
+          fi
+
+          gh run watch "$ci_run_id" --exit-status
+          git push --atomic origin \
+            "HEAD:refs/heads/main" \
+            "refs/tags/${release_tag}:refs/tags/${release_tag}"
+          git push origin --delete "$release_branch"
         fi
       env:
-        GH_TOKEN: ${{ secrets.GH_PERSONAL_ACCESS_TOKEN }}
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         TWINE_USERNAME: ${{ secrets.TWINE_USERNAME }}
         TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
