@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: 📥 checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
       - name: 🔧 setup tox-uv
         uses: ./.github/tox-uv
       - name: 🧪 tox -e ${{ matrix.tox_env }}
@@ -27,7 +27,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: 📥 checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
       - name: 🔧 setup uv
         uses: ./.github/uv
       - name: 🐶 ruff
