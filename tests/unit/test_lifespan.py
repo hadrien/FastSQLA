@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from pytest import raises, fixture
+from pytest import fixture, raises
 
 _app = FastAPI()
 
@@ -31,14 +31,14 @@ async def test_it_binds_an_sqla_engine_to_sessionmaker(environ, app):
 
 
 async def test_it_fails_on_a_missing_sqlalchemy_url(monkeypatch, app):
-    from fastsqla import lifespan
+    from fastsqla import MissingConfigurationError, lifespan
 
     monkeypatch.delenv("SQLALCHEMY_URL", raising=False)
-    with raises(Exception) as raise_info:
+    with raises(
+        MissingConfigurationError, match=r"Missing sqlalchemy_url in environ\."
+    ):
         async with lifespan(app):
             pass
-
-    assert raise_info.value.args[0] == "Missing sqlalchemy_url in environ."
 
 
 async def test_it_fails_on_not_async_engine(monkeypatch, app):

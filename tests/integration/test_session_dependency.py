@@ -48,7 +48,6 @@ def app(setup_tear_down, app):
     @app.post("/users", response_model=Item[UserModel], status_code=HTTPStatus.CREATED)
     async def create_user(user_in: UserIn, session: Session):
         user = User(**user_in.model_dump())
-        user_in.model_dump
         session.add(user)
         try:
             await session.flush()

@@ -1,4 +1,5 @@
 from typing import Annotated, cast
+
 from fastapi import Depends
 from pydantic import EmailStr
 from pytest import fixture
@@ -57,9 +58,10 @@ async def setup_tear_down(engine, faker):
 
 @fixture
 def app(app):
-    from fastsqla import Base, Page, Paginate, PaginateType, Session, new_pagination
     from pydantic import BaseModel
     from sqlalchemy.orm import Mapped, mapped_column
+
+    from fastsqla import Base, Page, Paginate, PaginateType, Session, new_pagination
 
     class User(Base):
         __tablename__ = "user"

@@ -2,7 +2,7 @@ import math
 import os
 from collections.abc import AsyncGenerator, Awaitable, Callable, Iterable
 from contextlib import _AsyncGeneratorContextManager, asynccontextmanager
-from typing import Annotated, Generic, TypedDict, TypeVar
+from typing import Annotated, TypedDict, TypeVar
 
 from fastapi import Depends as BaseDepends
 from fastapi import FastAPI, Query
@@ -31,6 +31,7 @@ __all__ = [
     "Base",
     "Collection",
     "Item",
+    "MissingConfigurationError",
     "Page",
     "Paginate",
     "PaginateType",
@@ -88,6 +89,10 @@ class State(TypedDict):
     fastsqla_engine: AsyncEngine
 
 
+class MissingConfigurationError(RuntimeError):
+    """Raised when a required SQLAlchemy setting is missing."""
+
+
 def new_lifespan(
     url: str | None = None, **kw
 ) -> Callable[[FastAPI | None], _AsyncGeneratorContextManager[State, None]]:
@@ -112,6 +117,9 @@ def new_lifespan(
     Args:
         url (str): Database url.
         kw (dict): Configuration parameters as expected by [`sqlalchemy.ext.asyncio.create_async_engine`][sqlalchemy.ext.asyncio.create_async_engine]
+
+    Raises:
+        MissingConfigurationError: If a required SQLAlchemy setting is missing.
     """
 
     has_config = url is not None
@@ -120,7 +128,7 @@ def new_lifespan(
     async def lifespan(app: FastAPI | None) -> AsyncGenerator[State, None]:
         if has_config:
             prefix = ""
-            sqla_config = {**kw, **{"url": url}}
+            sqla_config = {**kw, "url": url}
 
         else:
             prefix = "sqlalchemy_"
@@ -130,7 +138,9 @@ def new_lifespan(
             engine = async_engine_from_config(sqla_config, prefix=prefix)
 
         except KeyError as exc:
-            raise Exception(f"Missing {prefix}{exc.args[0]} in environ.") from exc
+            raise MissingConfigurationError(
+                f"Missing {prefix}{exc.args[0]} in environ."
+            ) from exc
 
         async with engine.begin() as conn:
             await conn.run_sync(Base.prepare)
@@ -330,11 +340,11 @@ class Meta(BaseModel):
 T = TypeVar("T")
 
 
-class Item(BaseModel, Generic[T]):
+class Item[T](BaseModel):
     data: T
 
 
-class Collection(BaseModel, Generic[T]):
+class Collection[T](BaseModel):
     data: list[T]
 
 

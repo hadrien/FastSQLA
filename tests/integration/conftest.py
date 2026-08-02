@@ -1,7 +1,7 @@
 from asgi_lifespan import LifespanManager
-from httpx import AsyncClient, ASGITransport
-from pytest import fixture
 from fastapi import FastAPI
+from httpx import ASGITransport, AsyncClient
+from pytest import fixture
 
 
 @fixture

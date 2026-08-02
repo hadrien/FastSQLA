@@ -4,6 +4,10 @@ from pytest import fixture, raises
 from sqlalchemy import text
 
 
+class SimulatedError(RuntimeError):
+    pass
+
+
 @fixture
 def tablename(request):
     return request.node.name
@@ -38,22 +42,20 @@ async def test_it_re_raises_when_committing_fails():
 
     with patch("fastsqla.SessionFactory") as SessionFactory:
         session = AsyncMock()
-        session.commit.side_effect = Exception("Simulating a failure.")
+        session.commit.side_effect = SimulatedError("Simulating a failure.")
         SessionFactory.return_value = session
-        with raises(Exception) as raise_info:
+        with raises(SimulatedError, match=r"Simulating a failure\."):
             async with open_session():
                 pass
-
-    assert "Simulating a failure." in raise_info.value.args[0]
 
 
 async def test_it_rollback_on_failure(engine, tablename):
     from fastsqla import open_session
 
-    with raises(Exception):
+    with raises(SimulatedError, match=r"Simulating a failure\."):
         async with open_session() as session:
             await session.execute(text(f"insert into {tablename} values ('OK')"))
-            raise Exception("Simulating a failure.")
+            raise SimulatedError("Simulating a failure.")
 
     async with engine.connect() as conn:
         res = await conn.execute(text(f"select * from {tablename}"))
