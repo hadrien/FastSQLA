@@ -106,17 +106,23 @@ following [`SQLAlchemy`'s best practices](https://docs.sqlalchemy.org/en/20/orm/
     ```
 
 * Pagination customization:
+
     ```python
-    ...
-    from fastapi import Page, new_pagination
-    ...
+    from typing import Annotated
 
-    Paginate = new_pagination(min_page_size=5, max_page_size=500)
+    from fastapi import Depends
+    from fastsqla import Page, PaginateType, new_pagination
 
-    @app.get("/heros", response_model=Page[HeroModel])
-    async def get_heros(paginate:Paginate):
-        return paginate(select(Hero))
+    CustomPaginate = Annotated[
+        PaginateType[HeroModel],
+        Depends(new_pagination(default_page_size=5, max_page_size=500)),
+    ]
+
+    @app.get("/heroes", response_model=Page[HeroModel])
+    async def get_heroes(paginate: CustomPaginate):
+        return await paginate(select(Hero))
     ```
+
 * Session lifecycle management: session is commited on request success or rollback on
   failure.
 

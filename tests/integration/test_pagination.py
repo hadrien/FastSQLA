@@ -2,7 +2,7 @@ from typing import Annotated, cast
 
 from fastapi import Depends
 from pydantic import EmailStr
-from pytest import fixture
+from pytest import fixture, mark
 from sqlalchemy import ForeignKey, MetaData, String, Table, func, select, text
 
 TOTAL_USERS = 42
@@ -91,6 +91,14 @@ def app(app):
     async def list_users(paginate: Paginate[UserModel]) -> Page[UserModel]:
         return await paginate(select(User))
 
+    SmallPagePaginate = Annotated[
+        PaginateType[UserModel], Depends(new_pagination(default_page_size=5))
+    ]
+
+    @app.get("/small-pagination")
+    async def list_small_page(paginate: SmallPagePaginate) -> Page[UserModel]:
+        return await paginate(select(User))
+
     async def query_count(session: Session) -> int:
         stmt = select(func.count()).select_from(Sticky)
         result = await session.execute(stmt)
@@ -133,6 +141,16 @@ async def test_it_with_out_of_the_box_dependency(client):
     assert meta["total_pages"] == 5
     assert meta["offset"] == 40
     assert meta["total_items"] == TOTAL_USERS
+
+
+@mark.parametrize(("query_string", "expected_items"), [("", 5), ("?limit=1", 1)])
+async def test_it_with_custom_default_page_size(client, query_string, expected_items):
+    res = await client.get(f"/small-pagination{query_string}")
+    assert res.status_code == 200, (res.status_code, res.content)
+
+    assert len(res.json()["data"]) == expected_items, (
+        "Configured default must not change the accepted lower limit"
+    )
 
 
 async def test_it_with_custom_result_processor(client):
