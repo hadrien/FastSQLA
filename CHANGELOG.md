@@ -27,6 +27,9 @@
 - **ci**: Restore semantic release publishing ([#128](https://github.com/hadrien/FastSQLA/pull/128),
   [`fb282e0`](https://github.com/hadrien/FastSQLA/commit/fb282e022a9e07c4aa4138bd393555229da45a9c))
 
+- **ci**: Set release tagger identity ([#136](https://github.com/hadrien/FastSQLA/pull/136),
+  [`b0c3a9e`](https://github.com/hadrien/FastSQLA/commit/b0c3a9e950fd46c6fe0fc933c825ca23333049f2))
+
 - **deps**: Bump fastapi from 0.139.0 to 0.140.0
   ([#109](https://github.com/hadrien/FastSQLA/pull/109),
   [`2731f5e`](https://github.com/hadrien/FastSQLA/commit/2731f5ea7242b448acdcd7f0439fb956d5b32b37))
@@ -80,6 +83,9 @@
 - **deps-dev**: Bump ruff from 0.15.16 to 0.16.0
   ([#112](https://github.com/hadrien/FastSQLA/pull/112),
   [`37a0b8f`](https://github.com/hadrien/FastSQLA/commit/37a0b8fb03c6b6b1232b2af9485bdb6b1bc647e2))
+
+- **release**: V0.8.0
+  ([`09672db`](https://github.com/hadrien/FastSQLA/commit/09672db78d5e5589430bd5ef29f1c000743689b1))
 
 ### Continuous Integration
 
