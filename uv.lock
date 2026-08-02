@@ -399,13 +399,6 @@ dependencies = [
 ]
 
 [package.optional-dependencies]
-docs = [
-    { name = "mkdocs-glightbox" },
-    { name = "mkdocs-llmstxt" },
-    { name = "mkdocs-material" },
-    { name = "mkdocstrings", extra = ["python"] },
-    { name = "pygments" },
-]
 sqlmodel = [
     { name = "sqlmodel" },
 ]
@@ -427,20 +420,22 @@ dev = [
     { name = "toml" },
     { name = "twine" },
 ]
+docs = [
+    { name = "mkdocs-glightbox" },
+    { name = "mkdocs-llmstxt" },
+    { name = "mkdocs-material" },
+    { name = "mkdocstrings", extra = ["python"] },
+    { name = "pygments" },
+]
 
 [package.metadata]
 requires-dist = [
     { name = "fastapi", specifier = ">=0.115.6" },
-    { name = "mkdocs-glightbox", marker = "extra == 'docs'", specifier = ">=0.5.2" },
-    { name = "mkdocs-llmstxt", marker = "extra == 'docs'", specifier = ">=0.5.0" },
-    { name = "mkdocs-material", marker = "extra == 'docs'", specifier = ">=9.7.1" },
-    { name = "mkdocstrings", extras = ["python"], marker = "extra == 'docs'", specifier = ">=1.0.0" },
-    { name = "pygments", marker = "extra == 'docs'", git = "https://github.com/pygments/pygments.git?rev=b6f6dab78e13652741d5e5811b4256b4dcb5fcd8" },
     { name = "sqlalchemy", extras = ["asyncio"], specifier = ">=2.0.37" },
     { name = "sqlmodel", marker = "extra == 'sqlmodel'", specifier = ">=0.0.22" },
     { name = "structlog", specifier = ">=24.4.0" },
 ]
-provides-extras = ["docs", "sqlmodel"]
+provides-extras = ["sqlmodel"]
 
 [package.metadata.requires-dev]
 dev = [
@@ -458,6 +453,13 @@ dev = [
     { name = "ruff", specifier = ">=0.6.4" },
     { name = "toml", specifier = ">=0.10.2" },
     { name = "twine", specifier = ">=5.1.1" },
+]
+docs = [
+    { name = "mkdocs-glightbox", specifier = ">=0.5.2" },
+    { name = "mkdocs-llmstxt", specifier = ">=0.5.0" },
+    { name = "mkdocs-material", specifier = ">=9.7.1" },
+    { name = "mkdocstrings", extras = ["python"], specifier = ">=1.0.0" },
+    { name = "pygments", git = "https://github.com/pygments/pygments.git?rev=b6f6dab78e13652741d5e5811b4256b4dcb5fcd8" },
 ]
 
 [[package]]
