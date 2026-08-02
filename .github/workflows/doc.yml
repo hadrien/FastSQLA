@@ -2,20 +2,21 @@ name: Build & Publish Doc
 
 on:
   push:
-    tags:
-      - '*'
     branches:
+      - main
       - docs/**
   workflow_dispatch:
+
+concurrency:
+  group: docs
+  cancel-in-progress: true
 
 jobs:
 
   Build-Doc:
     runs-on: ubuntu-latest
-    concurrency: release
     permissions:
-      contents: write
-      id-token: write
+      contents: read
     steps:
     - name: 📥 checkout
       uses: actions/checkout@v7
@@ -24,7 +25,7 @@ jobs:
     - name: 🔧 setup uv
       uses: ./.github/uv
     - name: ⚙️ install deps
-      run: uv sync --extra docs
+      run: uv sync --group docs
     - name: 📙 mkdocs build
       run: uv run mkdocs build
     - name: 📦 Upload artifacts
