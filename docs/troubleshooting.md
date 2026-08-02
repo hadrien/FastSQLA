@@ -118,7 +118,7 @@ from fastsqla import PaginateType, new_pagination
 
 LargePage = Annotated[
     PaginateType[HeroModel],
-    Depends(new_pagination(min_page_size=10, max_page_size=250)),
+    Depends(new_pagination(default_page_size=10, max_page_size=250)),
 ]
 ```
 

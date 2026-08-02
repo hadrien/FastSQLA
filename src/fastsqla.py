@@ -1,5 +1,7 @@
+import functools
 import math
 import os
+import warnings
 from collections.abc import AsyncGenerator, Awaitable, Callable, Iterable
 from contextlib import _AsyncGeneratorContextManager, asynccontextmanager
 from typing import Annotated, TypedDict, TypeVar
@@ -397,18 +399,62 @@ async def _paginate(
     )
 
 
+def _accept_deprecated_page_size_option[**P, R](
+    function: Callable[P, R],
+) -> Callable[P, R]:
+    @functools.wraps(function)
+    def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
+        if "min_page_size" in kwargs:
+            if args or "default_page_size" in kwargs:
+                raise TypeError(
+                    "new_pagination() cannot receive both default_page_size and "
+                    "min_page_size"
+                )
+            warnings.warn(
+                "min_page_size is deprecated; use default_page_size instead",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+        return function(*args, **kwargs)
+
+    return wrapper
+
+
+@_accept_deprecated_page_size_option
 def new_pagination(
-    min_page_size: int = 10,
+    default_page_size: int = 10,
     max_page_size: int = 100,
     query_count_dependency: Callable[..., Awaitable[int]] | None = None,
     result_processor: Callable[[Result], Iterable] = lambda result: iter(
         result.unique().scalars()
     ),
+    *,
+    min_page_size: int | None = None,
 ):
+    """Create a FastAPI pagination dependency.
+
+    Args:
+        default_page_size: Default value of the `limit` query parameter.
+        max_page_size: Maximum accepted value of the `limit` query parameter.
+        query_count_dependency: Optional dependency that returns the total item count.
+        result_processor: Function that transforms the SQLAlchemy result into page data.
+        min_page_size: Deprecated alias for `default_page_size`.
+
+    Raises:
+        TypeError: Both page-size parameter names are supplied.
+        ValueError: The page-size configuration is invalid.
+    """
+    if min_page_size is not None:
+        default_page_size = min_page_size
+    if max_page_size < 1:
+        raise ValueError("max_page_size must be at least 1")
+    if not 1 <= default_page_size <= max_page_size:
+        raise ValueError("default_page_size must be between 1 and max_page_size")
+
     def default_dependency(
         session: Session,
         offset: int = Query(0, ge=0),
-        limit: int = Query(min_page_size, ge=1, le=max_page_size),
+        limit: int = Query(default_page_size, ge=1, le=max_page_size),
     ) -> PaginateType[T]:
         async def paginate(stmt: Select) -> Page:
             total_items = await _query_count(session, stmt)
@@ -421,7 +467,7 @@ def new_pagination(
     def dependency(
         session: Session,
         offset: int = Query(0, ge=0),
-        limit: int = Query(min_page_size, ge=1, le=max_page_size),
+        limit: int = Query(default_page_size, ge=1, le=max_page_size),
         total_items: int = Depends(query_count_dependency),
     ) -> PaginateType[T]:
         async def paginate(stmt: Select) -> Page:

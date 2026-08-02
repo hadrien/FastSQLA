@@ -105,14 +105,17 @@ async def list_heroes(
 
 ## The `new_pagination()` Factory
 
-For custom pagination behavior, use `new_pagination()` to create a new dependency. It accepts four parameters:
+Use `new_pagination()` to create a dependency with custom pagination behavior:
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| `min_page_size` | `int` | `10` | Default `limit` value |
-| `max_page_size` | `int` | `100` | Maximum allowed `limit` value |
-| `query_count_dependency` | `Callable[..., Awaitable[int]] \| None` | `None` | FastAPI dependency returning total item count. When `None`, uses `SELECT COUNT(*) FROM (subquery)`. |
-| `result_processor` | `Callable[[Result], Iterable]` | `lambda r: iter(r.unique().scalars())` | Transforms the SQLAlchemy `Result` into an iterable of items |
+| Parameter                | Type                                         | Default                                      | Description                                                                                                  |
+|--------------------------|----------------------------------------------|----------------------------------------------|--------------------------------------------------------------------------------------------------------------|
+| `default_page_size`      | `int`                                        | `10`                                         | Default `limit` value                                                                                        |
+| `max_page_size`          | `int`                                        | `100`                                        | Maximum allowed `limit` value                                                                                |
+| `query_count_dependency` | `Callable[..., Awaitable[int]] \| None`       | `None`                                       | FastAPI dependency returning the total item count; uses `SELECT COUNT(*) FROM (subquery)` when omitted       |
+| `result_processor`       | `Callable[[Result], Iterable]`               | `lambda r: iter(r.unique().scalars())`       | Transforms the SQLAlchemy `Result` into an iterable of items                                                 |
+
+Use `default_page_size` only for the default. The accepted `limit` range always starts at
+`1`. Treat `min_page_size` as a deprecated compatibility alias for `default_page_size`.
 
 The return value is a FastAPI dependency. Use it with `Annotated` and `Depends`:
 
@@ -141,7 +144,7 @@ from fastsqla import Page, PaginateType, new_pagination
 
 SmallPagePaginate = Annotated[
     PaginateType[HeroModel],
-    Depends(new_pagination(min_page_size=5, max_page_size=25)),
+    Depends(new_pagination(default_page_size=5, max_page_size=25)),
 ]
 
 @app.get("/heroes")
@@ -309,13 +312,13 @@ async def list_heroes(paginate: Paginate[Hero]) -> Page[Hero]:
 
 ## Quick Reference
 
-| What you need | What to use |
-|---|---|
-| Standard pagination (offset/limit) | `Paginate[T]` |
-| Custom page sizes | `Annotated[PaginateType[T], Depends(new_pagination(min_page_size=..., max_page_size=...))]` |
-| Custom count for joins | `new_pagination(query_count_dependency=my_count_dep)` |
-| Multi-column select results | `new_pagination(result_processor=lambda r: iter(r.mappings()))` |
-| Type annotation for paginate callable | `PaginateType[T]` |
-| Paginated response | `Page[T]` (data + meta) |
-| Unpaginated list response | `Collection[T]` (data only) |
-| Single item response | `Item[T]` (data only) |
+| What you need                          | What to use                                                                                       |
+|----------------------------------------|---------------------------------------------------------------------------------------------------|
+| Standard pagination (offset/limit)     | `Paginate[T]`                                                                                     |
+| Custom page sizes                      | `Annotated[PaginateType[T], Depends(new_pagination(default_page_size=..., max_page_size=...))]`   |
+| Custom count for joins                 | `new_pagination(query_count_dependency=my_count_dep)`                                             |
+| Multi-column select results            | `new_pagination(result_processor=lambda r: iter(r.mappings()))`                                   |
+| Type annotation for paginate callable  | `PaginateType[T]`                                                                                 |
+| Paginated response                     | `Page[T]` (data + meta)                                                                           |
+| Unpaginated list response              | `Collection[T]` (data only)                                                                       |
+| Single item response                   | `Item[T]` (data only)                                                                             |
