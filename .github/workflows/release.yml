@@ -21,7 +21,7 @@ jobs:
       uses: actions/checkout@v7
       with:
         fetch-depth: 0
-        token: ${{ secrets.GH_PERSONAL_ACCESS_TOKEN }}
+        persist-credentials: false
     - name: 🔧 setup uv
       uses: ./.github/uv
     - name: 📜 semantic release version & publish on PyPI
@@ -43,7 +43,8 @@ jobs:
           uv run semantic-release version --no-push --no-vcs-release
           release_sha=$(git rev-parse HEAD)
           release_branch="release/${release_tag}-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
-          git push origin "HEAD:refs/heads/${release_branch}"
+          release_remote="https://${GITHUB_ACTOR}:${RELEASE_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          git push "$release_remote" "HEAD:refs/heads/${release_branch}"
 
           ci_run_id=""
           for _ in {1..120}; do
@@ -65,12 +66,13 @@ jobs:
           fi
 
           gh run watch "$ci_run_id" --exit-status
-          git push --atomic origin \
+          git push --atomic "$release_remote" \
             "HEAD:refs/heads/main" \
             "refs/tags/${release_tag}:refs/tags/${release_tag}"
-          git push origin --delete "$release_branch"
+          git push "$release_remote" --delete "$release_branch"
         fi
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        RELEASE_TOKEN: ${{ secrets.GH_PERSONAL_ACCESS_TOKEN }}
         TWINE_USERNAME: ${{ secrets.TWINE_USERNAME }}
         TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
