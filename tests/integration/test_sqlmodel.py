@@ -6,7 +6,6 @@ from sqlalchemy import insert, select, text
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.automap import automap_base
 
-
 pytestmark = mark.require_sqlmodel
 
 
@@ -49,7 +48,7 @@ async def setup_tear_down(engine, heros_data):
 
         stmt = insert(Hero).values(
             [
-                dict(name=name, secret_identity=secret_identity, age=age)
+                {"name": name, "secret_identity": secret_identity, "age": age}
                 for name, secret_identity, age in heros_data
             ]
         )
@@ -61,8 +60,9 @@ async def setup_tear_down(engine, heros_data):
 
 @fixture
 async def app(setup_tear_down, app):
-    from fastsqla import Item, Page, Paginate, Session
     from sqlmodel import Field, SQLModel
+
+    from fastsqla import Item, Page, Paginate, Session
 
     class Hero(SQLModel, table=True):
         __table_args__ = {"extend_existing": True}
