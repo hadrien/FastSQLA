@@ -17,6 +17,7 @@ jobs:
       - name: 🧪 tox -e ${{ matrix.tox_env }}
         run: uv run tox -e ${{ matrix.tox_env }}
       - name: "🐔 codecov: upload test coverage"
+        continue-on-error: true
         uses: codecov/codecov-action@v4.2.0
         with:
           flags: ${{ matrix.tox_env }}
