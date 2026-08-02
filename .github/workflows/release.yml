@@ -22,16 +22,17 @@ jobs:
       uses: ./.github/uv
     - name: 📜 semantic release version & publish on PyPI
       run: |
-        RET_CODE=0
-        uv run semantic-release --strict version || RET_CODE=$?
-        if [ $RET_CODE -ne 0 ]; then
+        next_version=$(uv run semantic-release version --print)
+        last_released_version=$(uv run semantic-release version --print-last-released)
+        if [[ "$next_version" == "$last_released_version" ]]; then
           echo "🙅🏽 Nothing to publish"
         else
+          uv run semantic-release version
           echo "🙆🏽 Publishing on PyPI"
           uv build
           uv run twine upload dist/*
         fi
       env:
-        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GH_TOKEN: ${{ secrets.GH_PERSONAL_ACCESS_TOKEN }}
         TWINE_USERNAME: ${{ secrets.TWINE_USERNAME }}
         TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
