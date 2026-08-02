@@ -94,6 +94,7 @@ env = "GH_TOKEN"
 [tool.semantic_release]
 version_toml = ["pyproject.toml:project.version"]
 allow_zero_version = true
+build_command_env = ["TWINE_USERNAME", "TWINE_PASSWORD"]
 build_command = """
 uv lock &&
 git add uv.lock &&
