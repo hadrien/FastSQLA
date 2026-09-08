@@ -66,9 +66,9 @@ async def list_heros(paginate: Paginate, age:int | None = None):
 
 ## Forward-only cursor pagination
 
-`CursorPaginate[T]` reads `cursor` and `limit` from query parameters, including on POST
-routes. For structured searches, put pagination, filters, and ordering in a JSON body.
-Using `Hero` and `HeroModel` above:
+- `CursorPaginate[T]`: `cursor` and `limit` query parameters.
+- `CursorPage[T]`: `data` and `meta.next_cursor`; `null` marks the end.
+- For JSON input, use `new_cursor_pagination()` as below (`Hero` and `HeroModel` from above).
 
 ```python
 from typing import Literal
@@ -94,32 +94,20 @@ async def search_heroes(body: HeroSearch, session: Session) -> CursorPage[HeroMo
     return await paginate(stmt)
 ```
 
-For example, POST `{"min_age": 18, "order_by": "name", "limit": 10, "cursor": null}`.
-Direct dependency calls bypass FastAPI's query validation and defaults: supply `session`,
-`cursor`, and `limit` explicitly. The body model validates pagination; keep its limits
-aligned with the factory configuration. Map allowed ordering names to SQLAlchemy columns.
-
-Omit `cursor` for page one; pass `meta.next_cursor` to continue. Null marks the end.
-Responses have `data` and `meta.next_cursor`; queries fetch at most `limit + 1` rows.
-`new_cursor_pagination(default_page_size=10, max_page_size=100)` sets limits (minimum 1).
-Set `row_mapper=lambda row: row._mapping` for projections; the default selects `row[0]`.
-Ordering columns need not appear in the response.
-
-Declare direct, non-null ordering columns and include a unique tie-breaker, such as the
-primary key. Ascending, descending, and mixed directions are supported. The application
-owns ordering uniqueness, including across joins. Map each SQL row to one output item.
-Unsupported: expressions, nullable ordering, outer joins, grouping/distinct/unions,
-limits/offsets, and deduplication. Invalid cursors return HTTP 422.
-
-Cursor size depends on ordering metadata and boundary values; filters are not embedded.
-FastSQLA imposes no cursor-length limit. Applications control request-size limits for their
-chosen transport.
-
-Reapply authorization and the same filters and ordering each request. Cursors encode
-ordering values and provide no confidentiality. Traversal reads live data: deleting the
-boundary row is safe, but changing ordering values can skip or repeat items. Prefer
-immutable ordering columns and indexes matching the filters and ordering; pagination does
-not provide a snapshot.
+- POST body: `{"min_age": 18, "order_by": "name", "limit": 10, "cursor": null}`.
+- Omit `cursor` for page one; send `meta.next_cursor` to continue. Keep filters and ordering
+  fixed; reapply authorization each request.
+- Direct calls require explicit `session`, `cursor`, and `limit`. Validate body values and
+  keep page-size limits aligned with the factory.
+- Order by non-null columns with a unique tie-breaker, including across joins. Ascending,
+  descending, and mixed directions are supported.
+- Unsupported: expressions, nullable ordering, outer joins, grouping/distinct/unions,
+  existing limits/offsets, and deduplication.
+- Default mapping: `row[0]`. For projections, use `row_mapper=lambda row: row._mapping`.
+  Map each SQL row to one item; ordering columns need not appear in the response.
+- Invalid cursors return HTTP 422. FastSQLA imposes no cursor-length cap.
+- Cursors expose ordering values. Changing those values during traversal can skip or
+  repeat items; prefer immutable columns and matching indexes.
 
 ## `SQLModel` example
 
