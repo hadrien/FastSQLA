@@ -66,13 +66,38 @@ async def list_heros(paginate: Paginate, age:int | None = None):
 
 ## Forward-only cursor pagination
 
-```python
-from fastsqla import CursorPage, CursorPaginate
+`CursorPaginate[T]` reads `cursor` and `limit` from query parameters, including on POST
+routes. For structured searches, put pagination, filters, and ordering in a JSON body.
+Using `Hero` and `HeroModel` above:
 
-@app.get("/heroes/cursor")
-async def list_heroes(paginate: CursorPaginate[HeroModel]) -> CursorPage[HeroModel]:
-    return await paginate(select(Hero).order_by(Hero.age.desc(), Hero.id.desc()))
+```python
+from typing import Literal
+from fastsqla import CursorPage, Session, new_cursor_pagination
+from pydantic import BaseModel, ConfigDict, Field
+
+cursor_dependency = new_cursor_pagination(default_page_size=10, max_page_size=100)
+
+class HeroSearch(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    cursor: str | None = Field(None, min_length=1, max_length=4096)
+    limit: int = Field(10, ge=1, le=100)
+    min_age: int | None = Field(None, ge=0)
+    order_by: Literal["age", "name"] = "age"
+
+@app.post("/heroes/search")
+async def search_heroes(body: HeroSearch, session: Session) -> CursorPage[HeroModel]:
+    column = {"age": Hero.age, "name": Hero.name}[body.order_by]
+    stmt = select(Hero).order_by(column, Hero.id)
+    if body.min_age is not None:
+        stmt = stmt.where(Hero.age >= body.min_age)
+    paginate = cursor_dependency(session=session, cursor=body.cursor, limit=body.limit)
+    return await paginate(stmt)
 ```
+
+For example, POST `{"min_age": 18, "order_by": "name", "limit": 10, "cursor": null}`.
+Direct dependency calls bypass FastAPI's query validation and defaults: supply `session`,
+`cursor`, and `limit` explicitly. The body model validates pagination; keep its limits
+aligned with the factory configuration. Map allowed ordering names to SQLAlchemy columns.
 
 Omit `cursor` for page one; pass `meta.next_cursor` to continue. Null marks the end.
 Responses have `data` and `meta.next_cursor`; queries fetch at most `limit + 1` rows.
@@ -86,10 +111,18 @@ owns ordering uniqueness, including across joins. Map each SQL row to one output
 Unsupported: expressions, nullable ordering, outer joins, grouping/distinct/unions,
 limits/offsets, and deduplication. Invalid cursors return HTTP 422.
 
-Reapply authorization and fixed filters each request. Cursors encode ordering values and
-provide no confidentiality. Traversal reads live data: deleting the boundary row is safe,
-but changing ordering values can skip or repeat items. Prefer immutable ordering columns
-and indexes matching the filters and ordering; pagination does not provide a snapshot.
+All cursors are capped at **4,096 encoded characters**, including in POST bodies. This
+FastSQLA size bound limits cursor parsing; it is not an HTTP or URL-length requirement.
+Oversized incoming cursors return HTTP 422. Generating an oversized cursor raises
+`ValueError` rather than returning a continuation token the decoder rejects. Choose shorter
+ordering keys or fewer ordering columns if their encoded values exceed this limit. Filters
+are not embedded in cursors; complex filters do not increase cursor size.
+
+Reapply authorization and the same filters and ordering each request. Cursors encode
+ordering values and provide no confidentiality. Traversal reads live data: deleting the
+boundary row is safe, but changing ordering values can skip or repeat items. Prefer
+immutable ordering columns and indexes matching the filters and ordering; pagination does
+not provide a snapshot.
 
 ## `SQLModel` example
 
