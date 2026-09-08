@@ -1,14 +1,21 @@
+import base64
 import functools
+import json
 import math
 import os
+import re
 import warnings
 from collections.abc import AsyncGenerator, Awaitable, Callable, Iterable
 from contextlib import _AsyncGeneratorContextManager, asynccontextmanager
+from datetime import date, datetime
+from decimal import Decimal
 from typing import Annotated, TypedDict, TypeVar
+from uuid import UUID
 
+import sqlalchemy as sa
 from fastapi import Depends as BaseDepends
-from fastapi import FastAPI, Query
-from pydantic import BaseModel, Field
+from fastapi import FastAPI, HTTPException, Query
+from pydantic import BaseModel, Field, TypeAdapter
 from sqlalchemy import Result, Select, func, select
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
@@ -18,6 +25,9 @@ from sqlalchemy.ext.asyncio import (
 )
 from sqlalchemy.ext.declarative import DeferredReflection
 from sqlalchemy.orm import DeclarativeBase
+from sqlalchemy.sql import operators, visitors
+from sqlalchemy.sql.elements import Label, UnaryExpression
+from sqlalchemy.sql.selectable import Join
 from structlog import get_logger
 
 logger = get_logger(__name__)
@@ -32,6 +42,10 @@ except ImportError:
 __all__ = [
     "Base",
     "Collection",
+    "CursorMeta",
+    "CursorPage",
+    "CursorPaginate",
+    "CursorPaginateType",
     "Item",
     "MissingConfigurationError",
     "Page",
@@ -39,6 +53,7 @@ __all__ = [
     "PaginateType",
     "Session",
     "lifespan",
+    "new_cursor_pagination",
     "new_pagination",
     "open_session",
 ]
@@ -491,3 +506,219 @@ Paginate = Annotated[PaginateType[T], Depends(new_pagination())]
 It adds **`offset`** and **`limit`** query parameters to the endpoint, which are used to
 paginate. The model returned by the endpoint is a [`Page`][fastsqla.Page] model.
 """
+
+
+class CursorMeta(BaseModel):
+    next_cursor: str | None = Field(
+        description="Continuation cursor, or null at the end."
+    )
+
+
+class CursorPage[T](Collection[T]):
+    """Forward page whose next_cursor is present only when another row exists."""
+
+    meta: CursorMeta
+
+
+type CursorPaginateType[T] = Callable[[Select], Awaitable[CursorPage[T]]]
+type _CursorOrder = list[tuple[sa.Column, bool]]
+type _CursorValue = int | str | UUID | datetime | date | Decimal
+
+
+def _cursor_order(stmt: Select) -> _CursorOrder:
+    # SQLAlchemy statement introspection is isolated here for compatibility testing.
+    if not isinstance(stmt, Select) or any(
+        getattr(stmt, name) is not None
+        for name in ("_limit_clause", "_offset_clause", "_fetch_clause")
+    ):
+        raise ValueError("Cursor pagination requires an unlimited Select")
+    if stmt._distinct or stmt._group_by_clauses or stmt._having_criteria:
+        raise ValueError("Cursor pagination does not support DISTINCT or aggregation")
+    if any(
+        not isinstance(col.element if isinstance(col, Label) else col, sa.Column)
+        for col in stmt.selected_columns
+    ):
+        raise ValueError("Cursor pagination requires entity or column selections")
+    sources = stmt.get_final_froms()
+    if any(
+        isinstance(node, Join) and (node.isouter or node.full)
+        for source in sources
+        for node in visitors.iterate(source)
+    ):
+        raise ValueError("Cursor pagination does not support outer joins")
+    order = []
+    for expression in stmt._order_by_clauses:
+        descending = False
+        if isinstance(expression, UnaryExpression) and expression.modifier in (
+            operators.asc_op,
+            operators.desc_op,
+        ):
+            descending = expression.modifier is operators.desc_op
+            expression = expression.element
+        if (
+            not isinstance(expression, sa.Column)
+            or not isinstance(expression.table, sa.Table)
+            or expression.nullable
+            or not any(source.is_derived_from(expression.table) for source in sources)
+        ):
+            raise ValueError("Cursor ordering requires non-null columns from the query")
+        if not isinstance(
+            expression.type,
+            (sa.Integer, sa.String, sa.Uuid, sa.DateTime, sa.Date, sa.Numeric),
+        ) or expression.type.python_type not in (int, str, UUID, datetime, date, Decimal):
+            raise ValueError("Unsupported cursor column type")
+        order.append((expression, descending))
+    if not order:
+        raise ValueError("Cursor pagination requires an explicit unique ordering")
+    return order
+
+
+def _cursor_schema(order: _CursorOrder) -> list[str]:
+    return [
+        json.dumps([col.table.fullname, col.name, desc, col.type.python_type.__name__])
+        for col, desc in order
+    ]
+
+
+def _encode_cursor(order: _CursorOrder, values: tuple[_CursorValue, ...]) -> str:
+    encoded = []
+    for (column, _), value in zip(order, values, strict=True):
+        adapter = TypeAdapter(column.type.python_type)
+        encoded.append(
+            adapter.dump_python(adapter.validate_python(value, strict=True), mode="json")
+        )
+    payload = {"v": 1, "order": _cursor_schema(order), "values": encoded}
+    cursor = base64.urlsafe_b64encode(json.dumps(payload).encode()).decode().rstrip("=")
+    if len(cursor) > 4096:
+        raise ValueError("Cursor exceeds 4096 characters; use shorter ordering keys")
+    return cursor
+
+
+def _decode_cursor(cursor: str, order: _CursorOrder, dialect: str) -> list[_CursorValue]:
+    try:
+        if len(cursor) > 4096 or not re.fullmatch(r"[A-Za-z0-9_-]+", cursor):
+            raise ValueError("Invalid encoding")
+        payload = json.loads(
+            base64.b64decode(
+                cursor + "=" * (-len(cursor) % 4), altchars=b"-_", validate=True
+            )
+        )
+        if (
+            not isinstance(payload, dict)
+            or set(payload) != {"v", "order", "values"}
+            or type(payload["v"]) is not int
+            or payload["v"] != 1
+            or payload["order"] != _cursor_schema(order)
+            or not isinstance(payload["values"], list)
+            or len(payload["values"]) != len(order)
+        ):
+            raise ValueError("Invalid payload")
+        values = []
+        for (column, _), value in zip(order, payload["values"], strict=True):
+            value_type = column.type.python_type
+            if type(value) is not (int if value_type is int else str):
+                raise ValueError("Invalid key type")
+            if value_type is int:
+                bits = 16 if isinstance(column.type, sa.SmallInteger) else 32
+                if dialect == "sqlite" or isinstance(column.type, sa.BigInteger):
+                    bits = 64
+                if not -(2 ** (bits - 1)) <= value < 2 ** (bits - 1):
+                    raise ValueError("Integer key out of range")
+            parsed = TypeAdapter(value_type).validate_json(json.dumps(value), strict=True)
+            if value_type is Decimal and (
+                parsed.as_tuple().exponent < -16383
+                or parsed.adjusted()
+                >= (column.type.precision or 131072) - (column.type.scale or 0)
+            ):
+                raise ValueError("Decimal key out of range")
+            if dialect == "postgresql" and (
+                (value_type is str and "\0" in parsed)
+                or (
+                    value_type is datetime
+                    and (parsed.utcoffset() is not None) != column.type.timezone
+                )
+            ):
+                raise ValueError("Key cannot be represented by the database column")
+            values.append(parsed)
+        return values
+    except (ValueError, TypeError, RecursionError) as error:
+        raise HTTPException(status_code=422, detail="Invalid cursor") from error
+
+
+def new_cursor_pagination[T](
+    default_page_size: int = 10,
+    max_page_size: int = 100,
+    *,
+    row_mapper: Callable[[sa.Row], T] = lambda row: row[0],
+) -> Callable[..., CursorPaginateType[T]]:
+    """Create a forward cursor dependency with a one-row-to-one-item mapper.
+
+    Args:
+        default_page_size: Default limit when the client omits it.
+        max_page_size: Maximum accepted limit.
+        row_mapper: Maps each original result row to exactly one response item.
+
+    Raises:
+        ValueError: Page-size bounds or the supplied Select are unsupported.
+    """
+    if (
+        type(default_page_size) is not int
+        or type(max_page_size) is not int
+        or not 1 <= default_page_size <= max_page_size
+    ):
+        raise ValueError("Require 1 <= default_page_size <= max_page_size")
+
+    def dependency(
+        session: Session,
+        cursor: str | None = Query(None, min_length=1, max_length=4096),
+        limit: int = Query(default_page_size, ge=1, le=max_page_size),
+    ) -> CursorPaginateType[T]:
+        async def paginate(stmt: Select) -> CursorPage[T]:
+            order = _cursor_order(stmt)
+            columns = [column for column, _ in order]
+            if cursor is not None:
+                dialect = session.get_bind(clause=stmt).dialect.name
+                values = _decode_cursor(cursor, order, dialect)
+                if len({desc for _, desc in order}) == 1 and dialect in (
+                    "postgresql",
+                    "sqlite",
+                    "mysql",
+                ):
+                    keys = sa.tuple_(*columns)
+                    condition = (
+                        keys < tuple(values) if order[0][1] else keys > tuple(values)
+                    )
+                else:
+                    terms, prefix = [], []
+                    for (column, desc), value in zip(order, values, strict=True):
+                        comparison = column < value if desc else column > value
+                        terms.append(sa.and_(*prefix, comparison))
+                        prefix.append(column == value)
+                    bound = columns[0] <= values[0] if order[0][1] else columns[0] >= values[0]
+                    condition = sa.and_(bound, sa.or_(*terms))
+                stmt = stmt.where(condition)
+            result = await session.execute(
+                stmt.add_columns(*(column.label(None) for column in columns)).limit(
+                    limit + 1
+                )
+            )
+            width = len(result.keys()) - len(columns)
+            frozen = result.freeze()
+            rows = frozen().all()
+            next_cursor = (
+                _encode_cursor(order, rows[limit - 1][-len(columns) :])
+                if len(rows) > limit
+                else None
+            )
+            data = [
+                row_mapper(row) for row in frozen().columns(*range(width)).all()[:limit]
+            ]
+            return CursorPage(data=data, meta=CursorMeta(next_cursor=next_cursor))
+
+        return paginate
+
+    return dependency
+
+
+CursorPaginate = Annotated[CursorPaginateType[T], Depends(new_cursor_pagination())]
+"""Inject a forward paginator accepting cursor and limit query parameters."""

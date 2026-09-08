@@ -64,6 +64,33 @@ async def list_heros(paginate: Paginate, age:int | None = None):
     return await paginate(stmt)
 ```
 
+## Forward-only cursor pagination
+
+```python
+from fastsqla import CursorPage, CursorPaginate
+
+@app.get("/heroes/cursor")
+async def list_heroes(paginate: CursorPaginate[HeroModel]) -> CursorPage[HeroModel]:
+    return await paginate(select(Hero).order_by(Hero.age.desc(), Hero.id.desc()))
+```
+
+Omit `cursor` for page one; pass `meta.next_cursor` to continue. Null marks the end.
+Responses have `data` and `meta.next_cursor`; queries fetch at most `limit + 1` rows.
+`new_cursor_pagination(default_page_size=10, max_page_size=100)` sets limits (minimum 1).
+Set `row_mapper=lambda row: row._mapping` for projections; the default selects `row[0]`.
+Ordering columns need not appear in the response.
+
+Declare direct, non-null ordering columns and include a unique tie-breaker, such as the
+primary key. Ascending, descending, and mixed directions are supported. The application
+owns ordering uniqueness, including across joins. Map each SQL row to one output item.
+Unsupported: expressions, nullable ordering, outer joins, grouping/distinct/unions,
+limits/offsets, and deduplication. Invalid cursors return HTTP 422.
+
+Reapply authorization and fixed filters each request. Cursors encode ordering values and
+provide no confidentiality. Traversal reads live data: deleting the boundary row is safe,
+but changing ordering values can skip or repeat items. Prefer immutable ordering columns
+and indexes matching the filters and ordering; pagination does not provide a snapshot.
+
 ## `SQLModel` example
 
 ```python
