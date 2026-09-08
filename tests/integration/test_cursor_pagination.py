@@ -24,6 +24,7 @@ async def item(engine: AsyncEngine, session: AsyncSession) -> type[Any]:
         id: Mapped[int] = mapped_column(primary_key=True)
         name: Mapped[str]
         optional: Mapped[str | None]
+        flag: Mapped[bool] = mapped_column(default=False)
         day: Mapped[date]
         timestamp: Mapped[datetime]
         token: Mapped[UUID]
@@ -94,8 +95,7 @@ async def test_traverses_ties_and_typed_keys_with_changing_limit(
 
 
 @mark.parametrize(
-    ("cohort", "expected"), [(99, []), (1, ["11", "12"])],
-    ids=["empty", "exact-full-page"]
+    ("cohort", "expected"), [(99, []), (1, ["11", "12"])], ids=["empty", "full-page"]
 )
 async def test_terminal_pages(
     item: type[Any], session: AsyncSession, cohort: int, expected: list[str]
@@ -150,32 +150,39 @@ async def test_rejects_bad_cursors_before_sql(
 
 
 @mark.parametrize(
-    "changes",
+    ("key", "dialect", "changes"),
     [
-        {"v": True}, {"v": 2}, {"order": []}, {"values": [True, 1]},
-        {"values": ["1", 1]}, {"values": [2**100, 1]}, {"values": [1]}, {"extra": 1},
+        *(("cohort", "sqlite", changes) for changes in [
+            {"v": True}, {"v": 2}, {"order": []}, {"values": [True, 1]},
+            {"values": ["1", 1]}, {"values": [2**100, 1]}, {"values": [1]}, {"extra": 1},
+        ]),
+        ("cohort", "postgresql", {"values": [2**100, 1]}),
+        ("name", "postgresql", {"values": ["\0", 1]}),
+        ("timestamp", "postgresql", {"values": ["2026-01-01T00:00:00Z", 1]}),
+        ("amount", "postgresql", {"values": ["1e999999", 1]}),
+        ("amount", "postgresql", {"values": ["1e-20000", 1]}),
     ]
 )
 async def test_rejects_invalid_payload(
-    item: type[Any], session: AsyncSession, statements: list[str], changes: dict
+    item: type[Any], session: AsyncSession, key: str, dialect: str, changes: dict
 ):
-    stmt = select(item).order_by(item.cohort, item.id)
+    from fastsqla import _cursor_order, _decode_cursor
+
+    stmt = select(item).order_by(getattr(item, key), item.id)
     first = await page(session, stmt)
     token = first.meta.next_cursor
     payload = json.loads(base64.urlsafe_b64decode(token + "=" * (-len(token) % 4)))
     encoded = json.dumps(payload | changes).encode()
     token = base64.urlsafe_b64encode(encoded).decode().rstrip("=")
-    statements.clear()
     with raises(HTTPException) as error:
-        await page(session, stmt, cursor=token)
+        _decode_cursor(token, _cursor_order(stmt), dialect)
     assert error.value.status_code == 422
-    assert statements == []
 
 
 @mark.parametrize(
     "kind",
     ["unordered", "nullable", "expression", "limit", "offset", "distinct", "grouped",
-     "fetch"]
+     "fetch", "projection", "outer-join", "type"]
 )
 async def test_rejects_unsupported_queries_before_sql(
     item: type[Any], session: AsyncSession, statements: list[str], kind: str
@@ -190,10 +197,21 @@ async def test_rejects_unsupported_queries_before_sql(
         "distinct": stmt.distinct(),
         "grouped": stmt.group_by(item.cohort, item.id),
         "fetch": stmt.fetch(1),
+        "projection": select(func.count()).order_by(item.cohort, item.id),
+        "outer-join": stmt.outerjoin(item.__table__.alias(), item.id == 0),
+        "type": select(item).order_by(item.flag),
     }
     with raises(ValueError):
         await page(session, statements_by_kind[kind])
     assert statements == []
+
+
+def test_rejects_oversized_ordering_keys(item: type[Any]):
+    from fastsqla import _cursor_order, _encode_cursor
+
+    order = _cursor_order(select(item).order_by(item.name))
+    with raises(ValueError, match="4096"):
+        _encode_cursor(order, ("a" * 5000,))
 
 
 async def test_http_continuation(app: FastAPI, client: AsyncClient, item: type[Any]):

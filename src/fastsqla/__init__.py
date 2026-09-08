@@ -509,13 +509,11 @@ paginate. The model returned by the endpoint is a [`Page`][fastsqla.Page] model.
 
 
 class CursorMeta(BaseModel):
-    next_cursor: str | None = Field(
-        description="Continuation cursor, or null at the end."
-    )
+    next_cursor: str | None = Field(description="Next cursor, or null at the end.")
 
 
 class CursorPage[T](Collection[T]):
-    """Forward page whose next_cursor is present only when another row exists."""
+    """Forward page with a continuation cursor or null at the end."""
 
     meta: CursorMeta
 
@@ -550,8 +548,7 @@ def _cursor_order(stmt: Select) -> _CursorOrder:
     for expression in stmt._order_by_clauses:
         descending = False
         if isinstance(expression, UnaryExpression) and expression.modifier in (
-            operators.asc_op,
-            operators.desc_op,
+            operators.asc_op, operators.desc_op
         ):
             descending = expression.modifier is operators.desc_op
             expression = expression.element
@@ -581,12 +578,9 @@ def _cursor_schema(order: _CursorOrder) -> list[str]:
 
 
 def _encode_cursor(order: _CursorOrder, values: tuple[_CursorValue, ...]) -> str:
-    encoded = []
-    for (column, _), value in zip(order, values, strict=True):
-        adapter = TypeAdapter(column.type.python_type)
-        encoded.append(
-            adapter.dump_python(adapter.validate_python(value, strict=True), mode="json")
-        )
+    key_types = tuple(column.type.python_type for column, _ in order)
+    adapter = TypeAdapter(tuple[key_types])
+    encoded = adapter.dump_python(adapter.validate_python(values, strict=True), mode="json")
     payload = {"v": 1, "order": _cursor_schema(order), "values": encoded}
     cursor = base64.urlsafe_b64encode(json.dumps(payload).encode()).decode().rstrip("=")
     if len(cursor) > 4096:
@@ -598,11 +592,8 @@ def _decode_cursor(cursor: str, order: _CursorOrder, dialect: str) -> list[_Curs
     try:
         if len(cursor) > 4096 or not re.fullmatch(r"[A-Za-z0-9_-]+", cursor):
             raise ValueError("Invalid encoding")
-        payload = json.loads(
-            base64.b64decode(
-                cursor + "=" * (-len(cursor) % 4), altchars=b"-_", validate=True
-            )
-        )
+        padded = cursor + "=" * (-len(cursor) % 4)
+        payload = json.loads(base64.b64decode(padded, altchars=b"-_", validate=True))
         if (
             not isinstance(payload, dict)
             or set(payload) != {"v", "order", "values"}
@@ -678,16 +669,11 @@ def new_cursor_pagination[T](
             columns = [column for column, _ in order]
             if cursor is not None:
                 dialect = session.get_bind(clause=stmt).dialect.name
-                values = _decode_cursor(cursor, order, dialect)
-                if len({desc for _, desc in order}) == 1 and dialect in (
-                    "postgresql",
-                    "sqlite",
-                    "mysql",
-                ):
+                values = tuple(_decode_cursor(cursor, order, dialect))
+                same_direction = len({desc for _, desc in order}) == 1
+                if same_direction and dialect in ("postgresql", "sqlite", "mysql"):
                     keys = sa.tuple_(*columns)
-                    condition = (
-                        keys < tuple(values) if order[0][1] else keys > tuple(values)
-                    )
+                    condition = keys < values if order[0][1] else keys > values
                 else:
                     terms, prefix = [], []
                     for (column, desc), value in zip(order, values, strict=True):
@@ -697,11 +683,8 @@ def new_cursor_pagination[T](
                     bound = columns[0] <= values[0] if order[0][1] else columns[0] >= values[0]
                     condition = sa.and_(bound, sa.or_(*terms))
                 stmt = stmt.where(condition)
-            result = await session.execute(
-                stmt.add_columns(*(column.label(None) for column in columns)).limit(
-                    limit + 1
-                )
-            )
+            stmt = stmt.add_columns(*(col.label(None) for col in columns)).limit(limit + 1)
+            result = await session.execute(stmt)
             width = len(result.keys()) - len(columns)
             frozen = result.freeze()
             rows = frozen().all()
@@ -710,9 +693,8 @@ def new_cursor_pagination[T](
                 if len(rows) > limit
                 else None
             )
-            data = [
-                row_mapper(row) for row in frozen().columns(*range(width)).all()[:limit]
-            ]
+            original = frozen().columns(*range(width)).all()
+            data = [row_mapper(row) for row in original[:limit]]
             return CursorPage(data=data, meta=CursorMeta(next_cursor=next_cursor))
 
         return paginate
