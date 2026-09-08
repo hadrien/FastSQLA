@@ -137,8 +137,8 @@ async def test_projection_hides_cursor_columns_and_runs_one_query(
 
 
 @mark.parametrize(
-    "cursor", ["", "not-a-cursor", "e30", "a" * 9000],
-    ids=["empty", "malformed", "invalid-payload", "oversized"]
+    "cursor", ["", "not-a-cursor", "e30", "a+b"],
+    ids=["empty", "malformed", "invalid-payload", "invalid-alphabet"]
 )
 async def test_rejects_bad_cursors_before_sql(
     item: type[Any], session: AsyncSession, statements: list[str], cursor: str
@@ -206,28 +206,33 @@ async def test_rejects_unsupported_queries_before_sql(
     assert statements == []
 
 
-def test_rejects_oversized_ordering_keys(item: type[Any]):
-    from fastsqla import _cursor_order, _encode_cursor
-
-    order = _cursor_order(select(item).order_by(item.name))
-    with raises(ValueError, match="4096"):
-        _encode_cursor(order, ("a" * 5000,))
-
-
-async def test_http_continuation(app: FastAPI, client: AsyncClient, item: type[Any]):
+@mark.parametrize(
+    ("padding_size", "minimum_cursor_length"), [(0, 1), (5000, 4097)], ids=["short", "long"]
+)
+async def test_http_continuation(
+    app: FastAPI, client: AsyncClient, item: type[Any], session: AsyncSession,
+    padding_size: int, minimum_cursor_length: int,
+):
     from fastsqla import CursorPage, CursorPaginate
+
+    rows = (await session.scalars(select(item).order_by(item.cohort, item.id))).all()
+    expected = [row.name + "x" * padding_size for row in rows]
+    for row, name in zip(rows, expected, strict=True):
+        row.name = name
+    await session.commit()
 
     @app.get("/cursor")
     async def endpoint(paginate: CursorPaginate[str]) -> CursorPage[str]:
-        return await paginate(select(item.name).order_by(item.cohort, item.id))
+        return await paginate(select(item.name).order_by(item.name, item.cohort, item.id))
 
     first = await client.get("/cursor", params={"limit": 2})
     assert first.status_code == 200
-    assert first.json()["data"] == ["11", "12"]
-    second = await client.get(
-        "/cursor", params={"limit": 3, "cursor": first.json()["meta"]["next_cursor"]}
-    )
-    assert second.json() == {"data": ["21", "22", "31"], "meta": {"next_cursor": None}}
+    assert first.json()["data"] == expected[:2]
+    cursor = first.json()["meta"]["next_cursor"]
+    assert len(cursor) >= minimum_cursor_length
+    second = await client.get("/cursor", params={"limit": 3, "cursor": cursor})
+    assert second.status_code == 200
+    assert second.json() == {"data": expected[2:], "meta": {"next_cursor": None}}
     invalid = await client.get("/cursor", params={"cursor": "invalid"})
     assert invalid.status_code == 422
 

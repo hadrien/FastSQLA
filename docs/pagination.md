@@ -79,7 +79,7 @@ cursor_dependency = new_cursor_pagination(default_page_size=10, max_page_size=10
 
 class HeroSearch(BaseModel):
     model_config = ConfigDict(extra="forbid")
-    cursor: str | None = Field(None, min_length=1, max_length=4096)
+    cursor: str | None = Field(None, min_length=1)
     limit: int = Field(10, ge=1, le=100)
     min_age: int | None = Field(None, ge=0)
     order_by: Literal["age", "name"] = "age"
@@ -111,12 +111,9 @@ owns ordering uniqueness, including across joins. Map each SQL row to one output
 Unsupported: expressions, nullable ordering, outer joins, grouping/distinct/unions,
 limits/offsets, and deduplication. Invalid cursors return HTTP 422.
 
-All cursors are capped at **4,096 encoded characters**, including in POST bodies. This
-FastSQLA size bound limits cursor parsing; it is not an HTTP or URL-length requirement.
-Oversized incoming cursors return HTTP 422. Generating an oversized cursor raises
-`ValueError` rather than returning a continuation token the decoder rejects. Choose shorter
-ordering keys or fewer ordering columns if their encoded values exceed this limit. Filters
-are not embedded in cursors; complex filters do not increase cursor size.
+Cursor size depends on ordering metadata and boundary values; filters are not embedded.
+FastSQLA imposes no cursor-length limit. Applications control request-size limits for their
+chosen transport.
 
 Reapply authorization and the same filters and ordering each request. Cursors encode
 ordering values and provide no confidentiality. Traversal reads live data: deleting the

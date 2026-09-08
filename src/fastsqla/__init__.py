@@ -582,15 +582,12 @@ def _encode_cursor(order: _CursorOrder, values: tuple[_CursorValue, ...]) -> str
     adapter = TypeAdapter(tuple[key_types])
     encoded = adapter.dump_python(adapter.validate_python(values, strict=True), mode="json")
     payload = {"v": 1, "order": _cursor_schema(order), "values": encoded}
-    cursor = base64.urlsafe_b64encode(json.dumps(payload).encode()).decode().rstrip("=")
-    if len(cursor) > 4096:
-        raise ValueError("Cursor exceeds 4096 characters; use shorter ordering keys")
-    return cursor
+    return base64.urlsafe_b64encode(json.dumps(payload).encode()).decode().rstrip("=")
 
 
 def _decode_cursor(cursor: str, order: _CursorOrder, dialect: str) -> list[_CursorValue]:
     try:
-        if len(cursor) > 4096 or not re.fullmatch(r"[A-Za-z0-9_-]+", cursor):
+        if not re.fullmatch(r"[A-Za-z0-9_-]+", cursor):
             raise ValueError("Invalid encoding")
         padded = cursor + "=" * (-len(cursor) % 4)
         payload = json.loads(base64.b64decode(padded, altchars=b"-_", validate=True))
@@ -661,7 +658,7 @@ def new_cursor_pagination[T](
 
     def dependency(
         session: Session,
-        cursor: str | None = Query(None, min_length=1, max_length=4096),
+        cursor: str | None = Query(None, min_length=1),
         limit: int = Query(default_page_size, ge=1, le=max_page_size),
     ) -> CursorPaginateType[T]:
         async def paginate(stmt: Select) -> CursorPage[T]:
