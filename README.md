@@ -1,3 +1,5 @@
+
+
 # FastSQLA
 
 _Async SQLAlchemy 2.0+ for FastAPI — boilerplate, pagination, and seamless session management._
@@ -154,6 +156,8 @@ following [`SQLAlchemy`'s best practices](https://docs.sqlalchemy.org/en/20/orm/
     ```
 
 ## Installing
+
+Requires Python 3.12 or newer.
 
 Using [uv](https://docs.astral.sh/uv/):
 ```bash
