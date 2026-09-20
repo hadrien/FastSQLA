@@ -1,5 +1,3 @@
-
-
 # FastSQLA
 
 _Async SQLAlchemy 2.0+ for FastAPI — boilerplate, pagination, and seamless session management._
