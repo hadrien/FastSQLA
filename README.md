@@ -155,6 +155,8 @@ following [`SQLAlchemy`'s best practices](https://docs.sqlalchemy.org/en/20/orm/
 
 ## Installing
 
+Requires Python 3.12 or newer.
+
 Using [uv](https://docs.astral.sh/uv/):
 ```bash
 uv add fastsqla
