@@ -4,25 +4,42 @@ on:
   push:
 
 jobs:
-  Tests:
+  Compatibility:
     strategy:
+      fail-fast: false
       matrix:
         tox_env: [fastapi-pre121, fastapi-post121, sqlmodel]
+        python: ["3.12", "3.13", "3.14"]
     runs-on: ubuntu-latest
     steps:
       - name: 📥 checkout
         uses: actions/checkout@v7
       - name: 🔧 setup tox-uv
         uses: ./.github/tox-uv
+      - name: Install Python ${{ matrix.python }}
+        run: uv python install '${{ matrix.python }}'
       - name: 🧪 tox -e ${{ matrix.tox_env }}
-        run: uv run tox -e ${{ matrix.tox_env }}
+        run: tox -e '${{ matrix.tox_env }}' -x 'tool.tox.env_run_base.base_python=python${{ matrix.python }}'
       - name: "🐔 codecov: upload test coverage"
         continue-on-error: true
         uses: codecov/codecov-action@v7.1.0
         with:
-          flags: ${{ matrix.tox_env }}
+          flags: ${{ matrix.tox_env }},python-${{ matrix.python }}
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
+  Tests:
+    needs: Compatibility
+    if: ${{ always() }}
+    strategy:
+      matrix:
+        tox_env: [fastapi-pre121, fastapi-post121, sqlmodel]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require all compatibility tests to pass
+        env:
+          RESULT: ${{ needs.Compatibility.result }}
+        run: test "$RESULT" = success
 
   Ruff:
     runs-on: ubuntu-latest
