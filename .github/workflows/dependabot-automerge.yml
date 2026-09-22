@@ -1,12 +1,12 @@
 name: Dependabot auto-merge
 
 on:
-  pull_request:
+  pull_request_target:
     types: [opened, reopened, synchronize]
 
 permissions:
-  contents: write
-  pull-requests: write
+  contents: read
+  pull-requests: read
 
 concurrency:
   group: dependabot-auto-merge-${{ github.event.pull_request.number }}
@@ -20,6 +20,7 @@ jobs:
       github.event.pull_request.base.ref == github.event.repository.default_branch
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    # This workflow reads PR metadata only; never check out or execute PR code.
     steps:
       - name: Fetch Dependabot metadata
         id: metadata
@@ -32,7 +33,22 @@ jobs:
           steps.metadata.outputs.update-type == 'version-update:semver-patch' ||
           steps.metadata.outputs.update-type == 'version-update:semver-minor' ||
           steps.metadata.outputs.update-type == 'version-update:semver-major'
-        run: gh pr merge --auto --squash "$PR_URL"
+        run: |
+          # The release PAT can bypass rules; require checks before an immediate merge.
+          if gh pr checks "$PR_URL" --required; then
+            gh pr merge --squash --match-head-commit "$PR_HEAD" "$PR_URL"
+          else
+            # GraphQL variables are passed separately from the query text.
+            # shellcheck disable=SC2016
+            gh api graphql -f query='
+              mutation($id: ID!) {
+                enablePullRequestAutoMerge(input: {pullRequestId: $id, mergeMethod: SQUASH}) {
+                  pullRequest { number }
+                }
+              }' -f id="$PR_ID"
+          fi
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GH_PERSONAL_ACCESS_TOKEN }}
           PR_URL: ${{ github.event.pull_request.html_url }}
+          PR_ID: ${{ github.event.pull_request.node_id }}
+          PR_HEAD: ${{ github.event.pull_request.head.sha }}

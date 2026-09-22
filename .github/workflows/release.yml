@@ -5,14 +5,18 @@ on:
     branches:
       - main
 
+concurrency:
+  group: release
+  cancel-in-progress: false
+
 jobs:
 
-  Release-And-Publish:
+  Release:
     runs-on: ubuntu-latest
-    concurrency: release
+    outputs:
+      released: ${{ steps.release.outputs.released }}
     permissions:
       contents: write
-      id-token: write
     steps:
     - name: 📥 checkout
       uses: actions/checkout@v7
@@ -21,7 +25,8 @@ jobs:
         token: ${{ secrets.GH_PERSONAL_ACCESS_TOKEN }}
     - name: 🔧 setup uv
       uses: ./.github/uv
-    - name: 📜 semantic release version & publish on PyPI
+    - name: 📜 semantic release version & build
+      id: release
       run: |
         next_version=$(uv run semantic-release version --print)
         last_released_version=$(uv run semantic-release version --print-last-released)
@@ -29,8 +34,34 @@ jobs:
           echo "🙅🏽 Nothing to publish"
         else
           uv run semantic-release --strict version
+          echo "released=true" >> "$GITHUB_OUTPUT"
         fi
       env:
         GH_TOKEN: ${{ secrets.GH_PERSONAL_ACCESS_TOKEN }}
-        TWINE_USERNAME: ${{ secrets.TWINE_USERNAME }}
-        TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
+    - name: Upload distributions
+      if: steps.release.outputs.released == 'true'
+      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+      with:
+        name: distributions
+        path: dist/
+        if-no-files-found: error
+
+  Publish:
+    needs: Release
+    if: needs.Release.outputs.released == 'true'
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/project/fastsqla/
+    permissions:
+      id-token: write
+    steps:
+    - name: Download distributions
+      uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5
+      with:
+        name: distributions
+        path: dist/
+    - name: Publish to PyPI
+      uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33 # release/v1
+      with:
+        skip-existing: true
