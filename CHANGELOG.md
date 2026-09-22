@@ -1,6 +1,89 @@
 # CHANGELOG
 
 
+## v0.8.4 (2026-09-22)
+
+### Bug Fixes
+
+- Federate publishing and sign automated release commits
+  ([#175](https://github.com/hadrien/FastSQLA/pull/175),
+  [`9688434`](https://github.com/hadrien/FastSQLA/commit/968843400a39a79d54aed010883897ff0f34eafc))
+
+### Build System
+
+- **deps**: Bump anyio in the uv group across 1 directory
+  ([#174](https://github.com/hadrien/FastSQLA/pull/174),
+  [`68be066`](https://github.com/hadrien/FastSQLA/commit/68be066637fbe21893e1d11b91b494fc6d9dfe39))
+
+- **deps**: Bump soupsieve in the uv group across 1 directory
+  ([#169](https://github.com/hadrien/FastSQLA/pull/169),
+  [`a9c9537`](https://github.com/hadrien/FastSQLA/commit/a9c95379204f420b1ca6edea7785161ffdf897e1))
+
+- **deps**: Bump sqlmodel from 0.0.39 to 0.0.42
+  ([#160](https://github.com/hadrien/FastSQLA/pull/160),
+  [`dd9a7d2`](https://github.com/hadrien/FastSQLA/commit/dd9a7d2b70b3c68c2a0f0938398c578b64e1fda5))
+
+### Chores
+
+- **deps-dev**: Bump coverage from 7.15.4 to 7.16.0
+  ([#163](https://github.com/hadrien/FastSQLA/pull/163),
+  [`f104deb`](https://github.com/hadrien/FastSQLA/commit/f104debd13289e956c45c8778f59a064d35e4a3f))
+
+- **deps-dev**: Bump coverage from 7.16.0 to 7.16.1
+  ([#168](https://github.com/hadrien/FastSQLA/pull/168),
+  [`7023caf`](https://github.com/hadrien/FastSQLA/commit/7023caf6ead96b90d5b59ca297af597834f820a6))
+
+- **deps-dev**: Bump faker from 40.36.0 to 40.37.0
+  ([#159](https://github.com/hadrien/FastSQLA/pull/159),
+  [`825889a`](https://github.com/hadrien/FastSQLA/commit/825889a4522ddd5fe7292bfffad9a268ac12b7e7))
+
+- **deps-dev**: Bump faker from 40.37.0 to 40.38.0
+  ([#166](https://github.com/hadrien/FastSQLA/pull/166),
+  [`49d8357`](https://github.com/hadrien/FastSQLA/commit/49d8357d7216dc2f6772b6eb62ecd194767c74fa))
+
+- **deps-dev**: Bump faker from 40.38.0 to 40.39.0
+  ([#173](https://github.com/hadrien/FastSQLA/pull/173),
+  [`d108dd9`](https://github.com/hadrien/FastSQLA/commit/d108dd907f0bc7a8e465736c0c22817671c43709))
+
+- **deps-dev**: Bump python-semantic-release from 10.6.1 to 10.6.2
+  ([#161](https://github.com/hadrien/FastSQLA/pull/161),
+  [`719b6d4`](https://github.com/hadrien/FastSQLA/commit/719b6d493f0d5f30a59038f33b3c0d5f9d080dae))
+
+- **deps-dev**: Bump ruff from 0.16.2 to 0.16.3
+  ([#155](https://github.com/hadrien/FastSQLA/pull/155),
+  [`7b45517`](https://github.com/hadrien/FastSQLA/commit/7b45517806cf9a4e89350b8103c8095a645a7c3c))
+
+- **deps-dev**: Bump ruff from 0.16.3 to 0.16.4
+  ([#156](https://github.com/hadrien/FastSQLA/pull/156),
+  [`e3c41be`](https://github.com/hadrien/FastSQLA/commit/e3c41bea719b3c3b623d6ac5f784a75c6b441c11))
+
+- **deps-dev**: Bump ruff from 0.16.4 to 0.16.5
+  ([#158](https://github.com/hadrien/FastSQLA/pull/158),
+  [`6a53020`](https://github.com/hadrien/FastSQLA/commit/6a5302014882727558bdf0dffc6c0c789f6a3f1f))
+
+- **deps-dev**: Bump ruff from 0.16.5 to 0.16.6
+  ([#162](https://github.com/hadrien/FastSQLA/pull/162),
+  [`ba2b70a`](https://github.com/hadrien/FastSQLA/commit/ba2b70ae880d3b67bfb7e9eac22bc5f47b103f3b))
+
+- **deps-dev**: Bump ruff from 0.16.6 to 0.16.7
+  ([#167](https://github.com/hadrien/FastSQLA/pull/167),
+  [`26eb1de`](https://github.com/hadrien/FastSQLA/commit/26eb1de6e90103dadefcf79a01a5637204eac01d))
+
+- **deps-dev**: Bump ruff from 0.16.7 to 0.16.8
+  ([#172](https://github.com/hadrien/FastSQLA/pull/172),
+  [`f99c422`](https://github.com/hadrien/FastSQLA/commit/f99c422b4462e3efcb2f8554cd6442174f7793d6))
+
+- **deps-dev**: Bump twine from 6.2.0 to 7.0.0
+  ([#157](https://github.com/hadrien/FastSQLA/pull/157),
+  [`a602c3a`](https://github.com/hadrien/FastSQLA/commit/a602c3a31dda86463f04809c41a166e17ccb93e5))
+
+### Continuous Integration
+
+- **deps**: Bump codecov/codecov-action from 7.0.0 to 7.1.0
+  ([#171](https://github.com/hadrien/FastSQLA/pull/171),
+  [`e24d4b7`](https://github.com/hadrien/FastSQLA/commit/e24d4b72173303253d4142f2e77c46bbad1e0673))
+
+
 ## v0.8.2 (2026-08-13)
 
 ### Build System
