@@ -40,8 +40,8 @@ keywords = ["fastapi", "sqlalchemy", "async", "session", "pagination", "sqlmodel
 dependencies = ["fastapi>=0.115.6", "sqlalchemy[asyncio]>=2.0.37", "structlog>=24.4.0"]
 
 [project.urls]
-Homepage = "https://github.com/hadrien/fastsqla"
-Documentation = "https://github.com/hadrien/fastsqla"
+Homepage = "https://hadrien.github.io/FastSQLA/"
+Documentation = "https://hadrien.github.io/FastSQLA/"
 Repository = "https://github.com/hadrien/fastsqla"
 Issues = "https://github.com/hadrien/fastsqla/issues"
 Changelog = "https://github.com/hadrien/fastsqla/releases"
