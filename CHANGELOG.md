@@ -1,6 +1,15 @@
 # CHANGELOG
 
 
+## v0.8.5 (2026-09-22)
+
+### Continuous Integration
+
+- Verify compatibility across supported Python versions
+  ([#177](https://github.com/hadrien/FastSQLA/pull/177),
+  [`3e59f31`](https://github.com/hadrien/FastSQLA/commit/3e59f312ea806ca874b8d45f8ae32e687cd19599))
+
+
 ## v0.8.4 (2026-09-22)
 
 ### Bug Fixes
@@ -76,6 +85,9 @@
 - **deps-dev**: Bump twine from 6.2.0 to 7.0.0
   ([#157](https://github.com/hadrien/FastSQLA/pull/157),
   [`a602c3a`](https://github.com/hadrien/FastSQLA/commit/a602c3a31dda86463f04809c41a166e17ccb93e5))
+
+- **release**: V0.8.4
+  ([`645a71b`](https://github.com/hadrien/FastSQLA/commit/645a71bc8bfeb10e8d9e476a492e04df3e0e780b))
 
 ### Continuous Integration
 
