@@ -51,7 +51,7 @@ jobs:
             --arg version "$next_version" \
             --rawfile project pyproject.toml \
             --rawfile lock uv.lock \
-            --rawfile changelog docs/changelog.md '
+            --rawfile changelog CHANGELOG.md '
             {
               query: "mutation($input: CreateCommitOnBranchInput!) { createCommitOnBranch(input: $input) { commit { oid signature { isValid } } } }",
               variables: {input: {
@@ -61,7 +61,7 @@ jobs:
                 fileChanges: {additions: [
                   {path: "pyproject.toml", contents: ($project | @base64)},
                   {path: "uv.lock", contents: ($lock | @base64)},
-                  {path: "docs/changelog.md", contents: ($changelog | @base64)}
+                  {path: "CHANGELOG.md", contents: ($changelog | @base64)}
                 ]}
               }}
             }' > "$RUNNER_TEMP/release-commit.json"
