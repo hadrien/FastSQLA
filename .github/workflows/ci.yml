@@ -5,6 +5,9 @@ on:
 
 jobs:
   Compatibility:
+    permissions:
+      contents: read
+      id-token: write
     strategy:
       fail-fast: false
       matrix:
@@ -24,9 +27,8 @@ jobs:
         continue-on-error: true
         uses: codecov/codecov-action@v7.1.0
         with:
+          use_oidc: true
           flags: ${{ matrix.tox_env }},python-${{ matrix.python }}
-        env:
-          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
   Tests:
     needs: Compatibility
