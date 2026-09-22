@@ -1,0 +1,16 @@
+issuer: https://token.actions.githubusercontent.com
+audience: octo-sts.dev
+subject: repo:hadrien/FastSQLA:pull_request
+claim_pattern:
+  repository_id: '820593126'
+  repository_owner_id: '75603'
+  workflow_ref: 'hadrien/FastSQLA/\.github/workflows/dependabot-automerge\.yml@refs/heads/main'
+  event_name: pull_request_target
+  ref: refs/heads/main
+  base_ref: main
+permissions:
+  contents: write
+  pull_requests: write
+  checks: read
+  statuses: read
+  workflows: write

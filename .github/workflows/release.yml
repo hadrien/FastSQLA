@@ -16,13 +16,20 @@ jobs:
     outputs:
       released: ${{ steps.release.outputs.released }}
     permissions:
-      contents: write
+      contents: read
+      id-token: write
     steps:
+    - name: Authenticate to GitHub
+      id: octo-sts
+      uses: octo-sts/action@f603d3be9d8dd9871a265776e625a27b00effe05 # v1.1.1
+      with:
+        scope: hadrien/FastSQLA
+        identity: release
     - name: 📥 checkout
       uses: actions/checkout@v7
       with:
         fetch-depth: 0
-        token: ${{ secrets.GH_PERSONAL_ACCESS_TOKEN }}
+        token: ${{ steps.octo-sts.outputs.token }}
     - name: 🔧 setup uv
       uses: ./.github/uv
     - name: 📜 semantic release version & build
@@ -37,7 +44,7 @@ jobs:
           echo "released=true" >> "$GITHUB_OUTPUT"
         fi
       env:
-        GH_TOKEN: ${{ secrets.GH_PERSONAL_ACCESS_TOKEN }}
+        GH_TOKEN: ${{ steps.octo-sts.outputs.token }}
     - name: Upload distributions
       if: steps.release.outputs.released == 'true'
       uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
