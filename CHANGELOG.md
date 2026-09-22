@@ -1,7 +1,21 @@
 # CHANGELOG
 
 
+## v0.8.6 (2026-09-22)
+
+### Bug Fixes
+
+- Standardize package license metadata and documentation links
+  ([#176](https://github.com/hadrien/FastSQLA/pull/176),
+  [`153e921`](https://github.com/hadrien/FastSQLA/commit/153e92165aa7bc507b392f0b4c5310bdf4bde91b))
+
+
 ## v0.8.5 (2026-09-22)
+
+### Chores
+
+- **release**: V0.8.5
+  ([`ca3b7b6`](https://github.com/hadrien/FastSQLA/commit/ca3b7b6030b723d801341fdf3a2073385b329b12))
 
 ### Continuous Integration
 
