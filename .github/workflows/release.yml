@@ -40,7 +40,42 @@ jobs:
         if [[ "$next_version" == "$last_released_version" ]]; then
           echo "🙅🏽 Nothing to publish"
         else
-          uv run semantic-release --strict version
+          expected_head=$(git rev-parse HEAD)
+          uv run semantic-release --strict version \
+            --no-commit --no-tag --no-push --no-vcs-release
+
+          # GitHub signs this API commit; expectedHeadOid rejects concurrent main updates.
+          jq -n \
+            --arg repository "$GITHUB_REPOSITORY" \
+            --arg head "$expected_head" \
+            --arg version "$next_version" \
+            --rawfile project pyproject.toml \
+            --rawfile lock uv.lock \
+            --rawfile changelog docs/changelog.md '
+            {
+              query: "mutation($input: CreateCommitOnBranchInput!) { createCommitOnBranch(input: $input) { commit { oid signature { isValid } } } }",
+              variables: {input: {
+                branch: {repositoryNameWithOwner: $repository, branchName: "main"},
+                expectedHeadOid: $head,
+                message: {headline: ("chore(release): v" + $version)},
+                fileChanges: {additions: [
+                  {path: "pyproject.toml", contents: ($project | @base64)},
+                  {path: "uv.lock", contents: ($lock | @base64)},
+                  {path: "docs/changelog.md", contents: ($changelog | @base64)}
+                ]}
+              }}
+            }' > "$RUNNER_TEMP/release-commit.json"
+          gh api graphql --input "$RUNNER_TEMP/release-commit.json" \
+            > "$RUNNER_TEMP/release-commit-response.json"
+          release_commit=$(jq -er '
+            .data.createCommitOnBranch.commit |
+            select(.signature.isValid == true) | .oid |
+            select(test("^[0-9a-f]{40}$"))
+          ' "$RUNNER_TEMP/release-commit-response.json")
+          git fetch origin "$release_commit"
+          git reset --hard "$release_commit"
+          uv run semantic-release --strict version \
+            --skip-build --no-changelog --no-commit --tag --push --vcs-release
           echo "released=true" >> "$GITHUB_OUTPUT"
         fi
       env:
