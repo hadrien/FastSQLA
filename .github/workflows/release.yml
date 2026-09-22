@@ -5,32 +5,105 @@ on:
     branches:
       - main
 
+concurrency:
+  group: release
+  cancel-in-progress: false
+
 jobs:
 
-  Release-And-Publish:
+  Release:
     runs-on: ubuntu-latest
-    concurrency: release
+    outputs:
+      released: ${{ steps.release.outputs.released }}
     permissions:
-      contents: write
+      contents: read
       id-token: write
     steps:
+    - name: Authenticate to GitHub
+      id: octo-sts
+      uses: octo-sts/action@f603d3be9d8dd9871a265776e625a27b00effe05 # v1.1.1
+      with:
+        scope: hadrien/FastSQLA
+        identity: release
     - name: 📥 checkout
       uses: actions/checkout@v7
       with:
         fetch-depth: 0
-        token: ${{ secrets.GH_PERSONAL_ACCESS_TOKEN }}
+        token: ${{ steps.octo-sts.outputs.token }}
     - name: 🔧 setup uv
       uses: ./.github/uv
-    - name: 📜 semantic release version & publish on PyPI
+    - name: 📜 semantic release version & build
+      id: release
       run: |
         next_version=$(uv run semantic-release version --print)
         last_released_version=$(uv run semantic-release version --print-last-released)
         if [[ "$next_version" == "$last_released_version" ]]; then
           echo "🙅🏽 Nothing to publish"
         else
-          uv run semantic-release --strict version
+          expected_head=$(git rev-parse HEAD)
+          uv run semantic-release --strict version \
+            --no-commit --no-tag --no-push --no-vcs-release
+
+          # GitHub signs this API commit; expectedHeadOid rejects concurrent main updates.
+          jq -n \
+            --arg repository "$GITHUB_REPOSITORY" \
+            --arg head "$expected_head" \
+            --arg version "$next_version" \
+            --rawfile project pyproject.toml \
+            --rawfile lock uv.lock \
+            --rawfile changelog CHANGELOG.md '
+            {
+              query: "mutation($input: CreateCommitOnBranchInput!) { createCommitOnBranch(input: $input) { commit { oid signature { isValid } } } }",
+              variables: {input: {
+                branch: {repositoryNameWithOwner: $repository, branchName: "main"},
+                expectedHeadOid: $head,
+                message: {headline: ("chore(release): v" + $version)},
+                fileChanges: {additions: [
+                  {path: "pyproject.toml", contents: ($project | @base64)},
+                  {path: "uv.lock", contents: ($lock | @base64)},
+                  {path: "CHANGELOG.md", contents: ($changelog | @base64)}
+                ]}
+              }}
+            }' > "$RUNNER_TEMP/release-commit.json"
+          gh api graphql --input "$RUNNER_TEMP/release-commit.json" \
+            > "$RUNNER_TEMP/release-commit-response.json"
+          release_commit=$(jq -er '
+            .data.createCommitOnBranch.commit |
+            select(.signature.isValid == true) | .oid |
+            select(test("^[0-9a-f]{40}$"))
+          ' "$RUNNER_TEMP/release-commit-response.json")
+          git fetch origin "$release_commit"
+          git reset --hard "$release_commit"
+          uv run semantic-release --strict version \
+            --skip-build --no-changelog --no-commit --tag --push --vcs-release
+          echo "released=true" >> "$GITHUB_OUTPUT"
         fi
       env:
-        GH_TOKEN: ${{ secrets.GH_PERSONAL_ACCESS_TOKEN }}
-        TWINE_USERNAME: ${{ secrets.TWINE_USERNAME }}
-        TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
+        GH_TOKEN: ${{ steps.octo-sts.outputs.token }}
+    - name: Upload distributions
+      if: steps.release.outputs.released == 'true'
+      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+      with:
+        name: distributions
+        path: dist/
+        if-no-files-found: error
+
+  Publish:
+    needs: Release
+    if: needs.Release.outputs.released == 'true'
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/project/fastsqla/
+    permissions:
+      id-token: write
+    steps:
+    - name: Download distributions
+      uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5
+      with:
+        name: distributions
+        path: dist/
+    - name: Publish to PyPI
+      uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33 # release/v1
+      with:
+        skip-existing: true

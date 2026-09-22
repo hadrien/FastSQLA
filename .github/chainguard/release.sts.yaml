@@ -1,0 +1,11 @@
+issuer: https://token.actions.githubusercontent.com
+audience: octo-sts.dev
+subject: repo:hadrien/FastSQLA:ref:refs/heads/main
+claim_pattern:
+  repository_id: '820593126'
+  repository_owner_id: '75603'
+  workflow_ref: 'hadrien/FastSQLA/\.github/workflows/release\.yml@refs/heads/main'
+  event_name: push
+  ref: refs/heads/main
+permissions:
+  contents: write
