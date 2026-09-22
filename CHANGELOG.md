@@ -1,6 +1,15 @@
 # CHANGELOG
 
 
+## v0.8.7 (2026-09-22)
+
+### Continuous Integration
+
+- Authenticate Codecov uploads with GitHub OIDC
+  ([#178](https://github.com/hadrien/FastSQLA/pull/178),
+  [`d172037`](https://github.com/hadrien/FastSQLA/commit/d17203745615dfa4efeed49e42a7b092a29cc7ca))
+
+
 ## v0.8.6 (2026-09-22)
 
 ### Bug Fixes
@@ -8,6 +17,11 @@
 - Standardize package license metadata and documentation links
   ([#176](https://github.com/hadrien/FastSQLA/pull/176),
   [`153e921`](https://github.com/hadrien/FastSQLA/commit/153e92165aa7bc507b392f0b4c5310bdf4bde91b))
+
+### Chores
+
+- **release**: V0.8.6
+  ([`835bd17`](https://github.com/hadrien/FastSQLA/commit/835bd1773bb27fcbc3a01fa65247883167977c8b))
 
 
 ## v0.8.5 (2026-09-22)
