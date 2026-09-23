@@ -63,7 +63,7 @@ following [`SQLAlchemy`'s best practices](https://docs.sqlalchemy.org/en/20/orm/
             ...
     ```
 
-* Built-in pagination:
+* Built-in pagination with offset/limit:
 
     ```python
     ...
@@ -104,6 +104,44 @@ following [`SQLAlchemy`'s best practices](https://docs.sqlalchemy.org/en/20/orm/
       }
     }
     ```
+* Forward cursor pagination for "Load more" lists:
+
+    ```python
+    from fastsqla.cursor import Page, Paginate
+
+    @app.get("/heros")
+    async def get_heros(paginate: Paginate[Hero]) -> Page[HeroModel]:
+        return await paginate(select(Hero).order_by(Hero.id))
+    ```
+
+    <center>
+
+    👇 `/heros?limit=2&cursor=eyJ2IjoxLCJvcmRlciI6W1siaGVybyIsImlkIixmYWxzZSwiaW50Il1dLCJ2YWx1ZXMiOlsyXX0` 👇
+
+    </center>
+
+    ```json
+    {
+      "data": [
+        {
+          "name": "Superman",
+          "secret_identity": "Clark Kent",
+          "id": 3
+        },
+        {
+          "name": "Batman",
+          "secret_identity": "Bruce Wayne",
+          "id": 4
+        }
+      ],
+      "meta": {
+        "next_cursor": "eyJ2IjoxLCJvcmRlciI6W1siaGVybyIsImlkIixmYWxzZSwiaW50Il1dLCJ2YWx1ZXMiOls0XX0"
+      }
+    }
+    ```
+
+    Pass `meta.next_cursor` as `cursor` in the next query string. A `null` cursor means the
+    end of the results.
 
 * Pagination customization:
 

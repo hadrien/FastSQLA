@@ -2,7 +2,8 @@
 name: fastsqla-pagination
 description: >
   Paginate SQLAlchemy select queries in FastAPI endpoints using FastSQLA.
-  Covers the built-in Paginate dependency (offset/limit query params),
+  Covers fastsqla.Paginate (offset/limit) and fastsqla.cursor.Paginate
+  (forward-only cursor/limit),
   Page/Item/Collection response models, and the new_pagination() factory
   for custom page sizes, count queries, and result processing.
 ---
@@ -13,7 +14,21 @@ FastSQLA provides a `Paginate` dependency that adds `offset` and `limit` query p
 
 ## Response Models
 
-FastSQLA exports three generic response wrappers:
+FastSQLA exports these generic response wrappers:
+
+### `fastsqla.cursor.Page[T]` — forward-only cursor pagination
+
+Use `fastsqla.cursor.Paginate[T]` with non-null column ordering and a unique tie-breaker.
+Pagination uses `cursor` and `limit` query parameters on GET or POST endpoints by default.
+Pass `meta.next_cursor` as `cursor` until it is null; metadata contains no other fields.
+For custom sizes or mapping, assign `Paginate = fastsqla.cursor.new_pagination(...)` and
+annotate with `Paginate[T]`. The `row_mapper` must preserve row count.
+Pass `parameters_dependency` to supply a sync or async FastAPI dependency returning
+`(cursor, limit)`. A `None` limit uses the factory default; all limits must be between
+1 and the configured maximum. POST filter models need only declare their filter fields
+when pagination comes from the query string.
+Keep filters fixed and reapply authorization. Cursors expose values and read live data.
+See the [cursor guide](https://hadrien.github.io/FastSQLA/pagination/#forward-only-cursor-pagination) for supported queries.
 
 ### `Page[T]` — paginated list with metadata
 
