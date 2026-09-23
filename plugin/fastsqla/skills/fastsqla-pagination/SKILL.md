@@ -25,7 +25,7 @@ For custom sizes or mapping, assign `Paginate = fastsqla.cursor.new_pagination(.
 annotate with `Paginate[T]`. The `row_mapper` must preserve row count.
 Pass `parameters_dependency` an async FastAPI dependency returning
 `fastsqla.cursor.PaginationParameters`, for example
-`{"cursor": {"name": "after", "value": after}, "limit": {"name": "size", "value": size}}`.
+`{"cursor_name": "after", "cursor": after, "limit": size}`.
 The cursor name is the response metadata key, such as `meta.after`. A `None` limit uses the
 factory default; limits must be between 1 and the configured maximum. POST filter models
 need only declare their filter fields

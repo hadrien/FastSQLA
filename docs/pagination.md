@@ -138,10 +138,7 @@ async def get_parameters(
     after: str | None = Query(None),
     size: int | None = Query(None),
 ) -> PaginationParameters:
-    return {
-        "cursor": {"name": "after", "value": after},
-        "limit": {"name": "size", "value": size},
-    }
+    return {"cursor_name": "after", "cursor": after, "limit": size}
 
 Paginate = new_pagination(
     default_page_size=5,
@@ -151,7 +148,7 @@ Paginate = new_pagination(
 ```
 
 Use this `Paginate[Hero]` in the endpoint signature. The dependency must be async and
-return named cursor and limit values. A `None` limit uses the configured default;
+return a cursor name, cursor value, and limit. A `None` limit uses the configured default;
 limits outside `1..max_page_size` return HTTP 422. The cursor name becomes the response
 metadata key: pass `meta.after` as `?after=...` to continue. The final page contains
 `"meta": {"after": null}`.

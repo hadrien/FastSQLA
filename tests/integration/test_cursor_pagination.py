@@ -63,10 +63,7 @@ async def page(
     from fastsqla import cursor as pagination
 
     dependency = get_args(pagination.new_pagination(row_mapper=mapper))[1].dependency
-    parameters = {
-        "cursor": {"name": "next_cursor", "value": cursor},
-        "limit": {"name": "limit", "value": limit},
-    }
+    parameters = {"cursor_name": "next_cursor", "cursor": cursor, "limit": limit}
     paginate = await dependency(session=session, parameters=parameters)
     return await paginate(stmt)
 
@@ -402,10 +399,7 @@ async def test_post_filters_with_query_pagination(
     async def get_parameters(
         cursor: str | None = Query(None, alias="next_cursor"), limit: int | None = Query(None)
     ) -> cursor.PaginationParameters:
-        return {
-            "cursor": {"name": "next_cursor", "value": cursor},
-            "limit": {"name": "limit", "value": limit},
-        }
+        return {"cursor_name": "next_cursor", "cursor": cursor, "limit": limit}
 
     Paginate = cursor.new_pagination(
         default_page_size=1, max_page_size=2,
@@ -484,8 +478,7 @@ async def test_validates_custom_dependency_values_before_sql(
 
     async def get_parameters() -> dict:
         return {
-            "cursor": {"name": "next_cursor", "value": parameters[0]},
-            "limit": {"name": "limit", "value": parameters[1]},
+            "cursor_name": "next_cursor", "cursor": parameters[0], "limit": parameters[1]
         }
 
     Paginate = cursor.new_pagination(
@@ -499,7 +492,7 @@ async def test_validates_custom_dependency_values_before_sql(
     response = await client.get("/cursor")
     assert response.status_code == 422
     slot = "cursor" if location == "next_cursor" else location
-    assert response.json()["detail"][0]["loc"] == [slot, "value"]
+    assert response.json()["detail"][0]["loc"] == [slot]
     assert statements == []
 
 
@@ -541,8 +534,9 @@ async def test_async_extractor_with_body_subdependency(
         body: Annotated[dict, Depends(get_body)]
     ) -> cursor.PaginationParameters:
         return {
-            "cursor": {"name": "after", "value": body.get("after")},
-            "limit": {"name": "size", "value": body.get("size")},
+            "cursor_name": "after",
+            "cursor": body.get("after"),
+            "limit": body.get("size"),
         }
 
     Paginate = cursor.new_pagination(
@@ -578,10 +572,7 @@ async def test_custom_name_survives_response_validation_and_round_trip(
         cursor_value: str | None = Query(None, alias=cursor_name),
         limit: int | None = Query(None),
     ) -> cursor.PaginationParameters:
-        return {
-            "cursor": {"name": cursor_name, "value": cursor_value},
-            "limit": {"name": "limit", "value": limit},
-        }
+        return {"cursor_name": cursor_name, "cursor": cursor_value, "limit": limit}
 
     Paginate = cursor.new_pagination(
         default_page_size=2, parameters_dependency=get_parameters
@@ -634,10 +625,7 @@ async def test_custom_extractor_owns_input_name_and_factory_names_metadata(
     async def get_parameters(
         after: str | None = Query(None)
     ) -> cursor.PaginationParameters:
-        return {
-            "cursor": {"name": "after", "value": after},
-            "limit": {"name": "size", "value": 3},
-        }
+        return {"cursor_name": "after", "cursor": after, "limit": 3}
 
     Paginate = cursor.new_pagination(parameters_dependency=get_parameters)
 
@@ -660,10 +648,7 @@ async def test_rejects_sync_parameter_dependency():
     from fastsqla import cursor
 
     def get_parameters() -> cursor.PaginationParameters:
-        return {
-            "cursor": {"name": "after", "value": None},
-            "limit": {"name": "size", "value": None},
-        }
+        return {"cursor_name": "after", "cursor": None, "limit": None}
 
     with raises(TypeError, match="parameters_dependency must be async"):
         cursor.new_pagination(parameters_dependency=get_parameters)
@@ -676,10 +661,7 @@ async def test_accepts_async_callable_parameter_dependency(
 
     class Parameters:
         async def __call__(self) -> cursor.PaginationParameters:
-            return {
-                "cursor": {"name": "after", "value": None},
-                "limit": {"name": "size", "value": 2},
-            }
+            return {"cursor_name": "after", "cursor": None, "limit": 2}
 
     Paginate = cursor.new_pagination(parameters_dependency=Parameters())
 
@@ -697,11 +679,19 @@ async def test_accepts_async_callable_parameter_dependency(
     "parameters",
     [
         (None, 2),
-        {"cursor": {"name": "", "value": None}, "limit": {"name": "size", "value": 2}},
-        {"cursor": {"name": "after", "value": None}, "limit": {"name": "after", "value": 2}},
-        {"cursor": {"name": " after ", "value": None}, "limit": {"name": "size", "value": 2}},
+        {"cursor_name": "", "cursor": None, "limit": 2},
+        {"cursor": None, "limit": 2},
+        {"cursor_name": " after ", "cursor": None, "limit": 2},
+        {"cursor_name": "after", "cursor": None},
+        {
+            "cursor": {"name": "after", "value": None},
+            "limit": {"name": "size", "value": 2},
+        },
     ],
-    ids=["tuple", "empty-name", "duplicate-name", "surrounding-whitespace"],
+    ids=[
+        "tuple", "empty-name", "missing-name", "surrounding-whitespace",
+        "missing-limit", "legacy-nested",
+    ],
 )
 async def test_rejects_invalid_custom_parameter_shape_before_sql(
     app: FastAPI, client: AsyncClient, item: type[Any], statements: list[str],

@@ -18,7 +18,7 @@ from pydantic import (
     RootModel,
     TypeAdapter,
     ValidationError,
-    model_validator,
+    field_validator,
 )
 from sqlalchemy import Select
 from sqlalchemy.dialects import mysql
@@ -30,8 +30,6 @@ import fastsqla
 
 __all__ = [
     "Meta",
-    "NamedCursor",
-    "NamedLimit",
     "Page",
     "Paginate",
     "PaginateType",
@@ -60,19 +58,10 @@ class Page[T](fastsqla.Collection[T]):
 type PaginateType[T] = Callable[[Select], Awaitable[Page[T]]]
 
 
-class NamedCursor(TypedDict):
-    name: str
-    value: str | None
-
-
-class NamedLimit(TypedDict):
-    name: str
-    value: int | None
-
-
 class PaginationParameters(TypedDict):
-    cursor: NamedCursor
-    limit: NamedLimit
+    cursor_name: str
+    cursor: str | None
+    limit: int | None
 
 
 type ParametersDependency = Callable[..., Awaitable[PaginationParameters]]
@@ -269,8 +258,8 @@ def new_pagination[T](
     Args:
         default_page_size: Default limit when the client omits it.
         max_page_size: Maximum accepted limit.
-        parameters_dependency: Async FastAPI dependency returning named cursor
-            and limit values. A `None` limit uses `default_page_size`.
+        parameters_dependency: Async FastAPI dependency returning a cursor name,
+            cursor value, and limit. A `None` limit uses `default_page_size`.
         row_mapper: Maps each original result row to exactly one response item.
 
     Returns:
@@ -294,41 +283,25 @@ def new_pagination[T](
         )
     ):
         raise TypeError("parameters_dependency must be async")
-    class CursorParameter(BaseModel):
-        model_config = ConfigDict(strict=True)
-
-        name: str = Field(min_length=1)
-        value: str | None = Field(None, min_length=1)
-
-    class LimitParameter(BaseModel):
-        model_config = ConfigDict(strict=True)
-
-        name: str = Field(min_length=1)
-        value: int | None = Field(None, ge=1, le=max_page_size)
-
     class Parameters(BaseModel):
-        model_config = ConfigDict(strict=True)
+        model_config = ConfigDict(strict=True, extra="forbid")
 
-        cursor: CursorParameter
-        limit: LimitParameter
+        cursor_name: str = Field(min_length=1)
+        cursor: str | None = Field(min_length=1)
+        limit: int | None = Field(ge=1, le=max_page_size)
 
-        @model_validator(mode="after")
-        def distinct_names(self):
-            names = (self.cursor.name, self.limit.name)
-            if any(name != name.strip() for name in names):
-                raise ValueError("Parameter names cannot have surrounding whitespace")
-            if self.cursor.name == self.limit.name:
-                raise ValueError("Cursor and limit parameter names must differ")
-            return self
+        @field_validator("cursor_name")
+        @classmethod
+        def valid_cursor_name(cls, name: str) -> str:
+            if name != name.strip():
+                raise ValueError("Cursor name cannot have surrounding whitespace")
+            return name
 
     async def query_parameters(
         cursor: str | None = Query(None, min_length=1, alias="next_cursor"),
         limit: int = Query(default_page_size, ge=1, le=max_page_size),
     ) -> PaginationParameters:
-        return {
-            "cursor": {"name": "next_cursor", "value": cursor},
-            "limit": {"name": "limit", "value": limit},
-        }
+        return {"cursor_name": "next_cursor", "cursor": cursor, "limit": limit}
 
     if parameters_dependency is None:
         parameters_dependency = query_parameters
@@ -343,9 +316,9 @@ def new_pagination[T](
             raise RequestValidationError(
                 error.errors(include_url=False, include_input=False)
             ) from error
-        cursor_name = validated.cursor.name
-        cursor = validated.cursor.value
-        limit = validated.limit.value or default_page_size
+        cursor_name = validated.cursor_name
+        cursor = validated.cursor
+        limit = validated.limit if validated.limit is not None else default_page_size
 
         async def paginate(stmt: Select) -> Page[T]:
             order = _order(stmt)
