@@ -63,8 +63,7 @@ following [`SQLAlchemy`'s best practices](https://docs.sqlalchemy.org/en/20/orm/
             ...
     ```
 
-* Built-in pagination with offset/limit and
-    [forward cursors](https://hadrien.github.io/FastSQLA/pagination/#forward-only-cursor-pagination):
+* Built-in pagination with offset/limit and forward cursors:
 
     ```python
     ...
