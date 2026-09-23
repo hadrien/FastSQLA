@@ -88,17 +88,6 @@ Request `/heroes?limit=10` for the first page. The response contains `data` and
 `meta.next_cursor`. Pass that cursor as the next request's `next_cursor` query parameter.
 When `next_cursor` is `null`, there are no more results.
 
-To use `after` for both the query parameter and the metadata key:
-
-```python
-from fastsqla.cursor import new_pagination
-
-Paginate = new_pagination(cursor_name="after")
-```
-
-Use `Paginate[Hero]` in the endpoint signature and pass `meta.after` as `?after=...` on
-subsequent requests. The final page contains `"meta": {"after": null}`.
-
 ### Filters in a JSON body
 
 Query pagination also works on POST endpoints. Keep filters in the request model and
@@ -148,22 +137,24 @@ from fastsqla.cursor import new_pagination
 async def get_parameters(
     cursor: str | None = Query(None, alias="after"),
     limit: int | None = Query(None, alias="size"),
-) -> tuple[str | None, int | None]:
-    return cursor, limit
+) -> dict:
+    return {
+        "cursor": {"name": "after", "value": cursor},
+        "limit": {"name": "size", "value": limit},
+    }
 
 Paginate = new_pagination(
     default_page_size=10,
     max_page_size=100,
-    cursor_name="after",
     parameters_dependency=get_parameters,
 )
 ```
 
 Use this `Paginate[Hero]` in the endpoint signature. The dependency can be sync or async
-and returns `(cursor, limit)`. A `None` limit uses the configured default; limits outside
-`1..max_page_size` return HTTP 422. The dependency declares its own input names;
-`cursor_name="after"` sets the response key to `meta.after`. FastAPI documents the custom
-dependency's parameters.
+and returns named cursor and limit values. A `None` limit uses the configured default;
+limits outside `1..max_page_size` return HTTP 422. The cursor name becomes the response
+metadata key: pass `meta.after` as `?after=...` to continue. The final page contains
+`"meta": {"after": null}`. FastAPI documents the dependency's input parameters.
 
 ### Choosing a query
 

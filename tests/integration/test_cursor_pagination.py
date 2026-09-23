@@ -63,7 +63,11 @@ async def page(
     from fastsqla import cursor as pagination
 
     dependency = get_args(pagination.new_pagination(row_mapper=mapper))[1].dependency
-    paginate = await dependency(session=session, parameters=(cursor, limit))
+    parameters = {
+        "cursor": {"name": "next_cursor", "value": cursor},
+        "limit": {"name": "limit", "value": limit},
+    }
+    paginate = await dependency(session=session, parameters=parameters)
     return await paginate(stmt)
 
 
@@ -397,8 +401,11 @@ async def test_post_filters_with_query_pagination(
 
     async def get_parameters(
         cursor: str | None = Query(None, alias="next_cursor"), limit: int | None = Query(None)
-    ) -> tuple[str | None, int | None]:
-        return cursor, limit
+    ) -> dict:
+        return {
+            "cursor": {"name": "next_cursor", "value": cursor},
+            "limit": {"name": "limit", "value": limit},
+        }
 
     Paginate = cursor.new_pagination(
         default_page_size=1, max_page_size=2,
@@ -475,8 +482,11 @@ async def test_validates_custom_dependency_values_before_sql(
 ):
     from fastsqla import cursor
 
-    async def get_parameters() -> tuple:
-        return parameters
+    async def get_parameters() -> dict:
+        return {
+            "cursor": {"name": "next_cursor", "value": parameters[0]},
+            "limit": {"name": "limit", "value": parameters[1]},
+        }
 
     Paginate = cursor.new_pagination(
         default_page_size=1, max_page_size=2, parameters_dependency=get_parameters
@@ -488,7 +498,8 @@ async def test_validates_custom_dependency_values_before_sql(
 
     response = await client.get("/cursor")
     assert response.status_code == 422
-    assert response.json()["detail"][0]["loc"] == [location]
+    slot = "cursor" if location == "next_cursor" else location
+    assert response.json()["detail"][0]["loc"] == [slot, "value"]
     assert statements == []
 
 
@@ -522,8 +533,11 @@ async def test_sync_extractor_with_body_subdependency(
     async def get_body(body: Annotated[dict, Body()]) -> dict:
         return body
 
-    def get_parameters(body: Annotated[dict, Depends(get_body)]) -> tuple[str | None, int | None]:
-        return body.get("after"), body.get("size")
+    def get_parameters(body: Annotated[dict, Depends(get_body)]) -> dict:
+        return {
+            "cursor": {"name": "after", "value": body.get("after")},
+            "limit": {"name": "size", "value": body.get("size")},
+        }
 
     Paginate = cursor.new_pagination(
         default_page_size=1, max_page_size=2, parameters_dependency=get_parameters
@@ -539,11 +553,12 @@ async def test_sync_extractor_with_body_subdependency(
     first = await client.post("/search", json={"min_cohort": 2, "size": None})
     assert first.status_code == 200
     assert first.json()["data"] == ["21"]
+    assert set(first.json()["meta"]) == {"after"}
     second = await client.post("/search", json={
-        "min_cohort": 2, "size": 2, "after": first.json()["meta"]["next_cursor"]
+        "min_cohort": 2, "size": 2, "after": first.json()["meta"]["after"]
     })
     assert second.status_code == 200
-    assert second.json() == {"data": ["22", "31"], "meta": {"next_cursor": None}}
+    assert second.json() == {"data": ["22", "31"], "meta": {"after": None}}
 
 
 @mark.parametrize("cursor_name", ["after", "next-page", "cursor"])
@@ -553,7 +568,18 @@ async def test_custom_name_survives_response_validation_and_round_trip(
 ):
     from fastsqla import cursor
 
-    Paginate = cursor.new_pagination(default_page_size=2, cursor_name=cursor_name)
+    async def get_parameters(
+        cursor_value: str | None = Query(None, alias=cursor_name),
+        limit: int | None = Query(None),
+    ) -> dict:
+        return {
+            "cursor": {"name": cursor_name, "value": cursor_value},
+            "limit": {"name": "limit", "value": limit},
+        }
+
+    Paginate = cursor.new_pagination(
+        default_page_size=2, parameters_dependency=get_parameters
+    )
 
     @app.get("/named")
     async def endpoint(paginate: Paginate[str]) -> cursor.Page[str]:
@@ -599,12 +625,13 @@ async def test_custom_extractor_owns_input_name_and_factory_names_metadata(
 ):
     from fastsqla import cursor
 
-    async def get_parameters(token: str | None = Query(None)) -> tuple[str | None, int]:
-        return token, 3
+    async def get_parameters(after: str | None = Query(None)) -> dict:
+        return {
+            "cursor": {"name": "after", "value": after},
+            "limit": {"name": "size", "value": 3},
+        }
 
-    Paginate = cursor.new_pagination(
-        cursor_name="after", parameters_dependency=get_parameters
-    )
+    Paginate = cursor.new_pagination(parameters_dependency=get_parameters)
 
     @app.post("/search")
     async def endpoint(paginate: Paginate[str]) -> cursor.Page[str]:
@@ -614,19 +641,41 @@ async def test_custom_extractor_owns_input_name_and_factory_names_metadata(
     assert first.status_code == 200
     assert first.json()["data"] == ["11", "12", "21"]
     assert set(first.json()["meta"]) == {"after"}
-    second = await client.post("/search", params={"token": first.json()["meta"]["after"]})
+    second = await client.post("/search", params={"after": first.json()["meta"]["after"]})
     assert second.status_code == 200
     assert second.json() == {"data": ["22", "31"], "meta": {"after": None}}
     parameters = app.openapi()["paths"]["/search"]["post"]["parameters"]
-    assert [p["name"] for p in parameters] == ["token"]
+    assert [p["name"] for p in parameters] == ["after"]
 
 
-@mark.parametrize("cursor_name", [None, 1, "", "  ", "limit"])
-def test_rejects_invalid_cursor_name(cursor_name: Any):
+@mark.parametrize(
+    "parameters",
+    [
+        (None, 2),
+        {"cursor": {"name": "", "value": None}, "limit": {"name": "size", "value": 2}},
+        {"cursor": {"name": "after", "value": None}, "limit": {"name": "after", "value": 2}},
+        {"cursor": {"name": " after ", "value": None}, "limit": {"name": "size", "value": 2}},
+    ],
+    ids=["tuple", "empty-name", "duplicate-name", "surrounding-whitespace"],
+)
+async def test_rejects_invalid_custom_parameter_shape_before_sql(
+    app: FastAPI, client: AsyncClient, item: type[Any], statements: list[str],
+    parameters: Any,
+):
     from fastsqla import cursor
 
-    with raises(ValueError, match="cursor_name"):
-        cursor.new_pagination(cursor_name=cursor_name)
+    async def get_parameters() -> dict:
+        return parameters
+
+    Paginate = cursor.new_pagination(parameters_dependency=get_parameters)
+
+    @app.get("/cursor")
+    async def endpoint(paginate: Paginate[str]) -> cursor.Page[str]:
+        return await paginate(select(item.name).order_by(item.cohort, item.id))
+
+    response = await client.get("/cursor")
+    assert response.status_code == 422
+    assert statements == []
 
 
 @mark.parametrize("meta", [{}, {"after": "a", "next_cursor": "b"}, {"after": 1}])

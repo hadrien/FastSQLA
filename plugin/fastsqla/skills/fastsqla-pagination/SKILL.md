@@ -22,12 +22,12 @@ Use `fastsqla.cursor.Paginate[T]` with non-null column ordering and a unique tie
 Pagination uses `next_cursor` and `limit` query parameters on GET or POST by default.
 Pass `meta.next_cursor` as `next_cursor` until it is null; metadata contains no other fields.
 For custom sizes or mapping, assign `Paginate = fastsqla.cursor.new_pagination(...)` and
-annotate with `Paginate[T]`. Set `cursor_name="after"` to use `after` for both the default
-query parameter and metadata key. The `row_mapper` must preserve row count.
+annotate with `Paginate[T]`. The `row_mapper` must preserve row count.
 Pass `parameters_dependency` to supply a sync or async FastAPI dependency returning
-`(cursor, limit)`. Custom dependencies own input names; `cursor_name` sets the metadata
-key. A `None` limit uses the factory default; all limits must be between
-1 and the configured maximum. POST filter models need only declare their filter fields
+`{"cursor": {"name": "after", "value": after}, "limit": {"name": "size", "value": size}}`.
+The cursor name is the response metadata key, such as `meta.after`. A `None` limit uses the
+factory default; limits must be between 1 and the configured maximum. POST filter models
+need only declare their filter fields
 when pagination comes from the query string.
 Keep filters fixed and reapply authorization. Cursors expose values and read live data.
 See the [cursor guide](https://hadrien.github.io/FastSQLA/pagination/#forward-only-cursor-pagination) for supported queries.

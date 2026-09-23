@@ -4,7 +4,7 @@ from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from datetime import date, datetime
 from decimal import Decimal
-from typing import Annotated, Any
+from typing import Annotated, Any, TypedDict
 from uuid import UUID
 
 import sqlalchemy as sa
@@ -17,6 +17,7 @@ from pydantic import (
     RootModel,
     TypeAdapter,
     ValidationError,
+    model_validator,
 )
 from sqlalchemy import Select
 from sqlalchemy.dialects import mysql
@@ -46,7 +47,23 @@ class Page[T](fastsqla.Collection[T]):
 
 
 type PaginateType[T] = Callable[[Select], Awaitable[Page[T]]]
-type _Parameters = tuple[str | None, int | None]
+
+
+class _NamedCursor(TypedDict):
+    name: str
+    value: str | None
+
+
+class _NamedLimit(TypedDict):
+    name: str
+    value: int | None
+
+
+class _Parameters(TypedDict):
+    cursor: _NamedCursor
+    limit: _NamedLimit
+
+
 type _Value = int | str | UUID | datetime | date | Decimal
 
 
@@ -227,7 +244,6 @@ def new_pagination[T](
     default_page_size: int = 10,
     max_page_size: int = 100,
     *,
-    cursor_name: str = "next_cursor",
     parameters_dependency: Callable[..., _Parameters | Awaitable[_Parameters]] | None = None,
     row_mapper: Callable[[sa.Row], T] = lambda row: row[0],
 ) -> Any:
@@ -239,10 +255,8 @@ def new_pagination[T](
     Args:
         default_page_size: Default limit when the client omits it.
         max_page_size: Maximum accepted limit.
-        cursor_name: Cursor query parameter and response metadata key. Custom
-            parameter dependencies declare their own input names.
-        parameters_dependency: Sync or async FastAPI dependency returning
-            `(cursor, limit)`. A `None` limit uses `default_page_size`.
+        parameters_dependency: Sync or async FastAPI dependency returning named
+            cursor and limit values. A `None` limit uses `default_page_size`.
         row_mapper: Maps each original result row to exactly one response item.
 
     Returns:
@@ -257,20 +271,41 @@ def new_pagination[T](
         or not 1 <= default_page_size <= max_page_size
     ):
         raise ValueError("Require 1 <= default_page_size <= max_page_size")
-    if not isinstance(cursor_name, str) or not cursor_name.strip() or cursor_name == "limit":
-        raise ValueError("cursor_name must be a nonempty string other than limit")
+    class CursorParameter(BaseModel):
+        model_config = ConfigDict(strict=True)
+
+        name: str = Field(min_length=1)
+        value: str | None = Field(None, min_length=1)
+
+    class LimitParameter(BaseModel):
+        model_config = ConfigDict(strict=True)
+
+        name: str = Field(min_length=1)
+        value: int | None = Field(None, ge=1, le=max_page_size)
 
     class Parameters(BaseModel):
         model_config = ConfigDict(strict=True)
 
-        cursor: str | None = Field(None, min_length=1, alias=cursor_name)
-        limit: int = Field(default_page_size, ge=1, le=max_page_size)
+        cursor: CursorParameter
+        limit: LimitParameter
+
+        @model_validator(mode="after")
+        def distinct_names(self):
+            names = (self.cursor.name, self.limit.name)
+            if any(name != name.strip() for name in names):
+                raise ValueError("Parameter names cannot have surrounding whitespace")
+            if self.cursor.name == self.limit.name:
+                raise ValueError("Cursor and limit parameter names must differ")
+            return self
 
     async def query_parameters(
-        cursor: str | None = Query(None, min_length=1, alias=cursor_name),
+        cursor: str | None = Query(None, min_length=1, alias="next_cursor"),
         limit: int = Query(default_page_size, ge=1, le=max_page_size),
     ) -> _Parameters:
-        return cursor, limit
+        return {
+            "cursor": {"name": "next_cursor", "value": cursor},
+            "limit": {"name": "limit", "value": limit},
+        }
 
     if parameters_dependency is None:
         parameters_dependency = query_parameters
@@ -279,16 +314,15 @@ def new_pagination[T](
         session: fastsqla.Session,
         parameters: Annotated[_Parameters, fastsqla.Depends(parameters_dependency)],
     ) -> PaginateType[T]:
-        cursor, limit = parameters
         try:
-            validated = Parameters.model_validate({
-                cursor_name: cursor, "limit": default_page_size if limit is None else limit
-            })
+            validated = Parameters.model_validate(parameters)
         except ValidationError as error:
             raise RequestValidationError(
                 error.errors(include_url=False, include_input=False)
             ) from error
-        cursor, limit = validated.cursor, validated.limit
+        cursor_name = validated.cursor.name
+        cursor = validated.cursor.value
+        limit = validated.limit.value or default_page_size
 
         async def paginate(stmt: Select) -> Page[T]:
             order = _order(stmt)
