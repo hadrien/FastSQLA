@@ -98,7 +98,7 @@ from typing import Literal
 from fastsqla.cursor import Page, new_pagination
 from pydantic import BaseModel, ConfigDict, Field
 
-Paginate = new_pagination(default_page_size=10, max_page_size=1000)
+Paginate = new_pagination(default_page_size=5, max_page_size=50)
 
 class HeroSearch(BaseModel):
     model_config = ConfigDict(extra="forbid")
@@ -144,8 +144,8 @@ async def get_parameters(
     }
 
 Paginate = new_pagination(
-    default_page_size=10,
-    max_page_size=1000,
+    default_page_size=5,
+    max_page_size=50,
     parameters_dependency=get_parameters,
 )
 ```
