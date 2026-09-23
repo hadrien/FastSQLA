@@ -103,6 +103,7 @@ async def search_heroes(body: HeroSearch, session: Session) -> CursorPage[HeroMo
   descending, and mixed directions are supported.
 - Unsupported: expressions, nullable ordering, outer joins, grouping/distinct/unions,
   existing limits/offsets, and deduplication.
+- SQLite decimal ordering is unsupported: stored values can lose precision during reading.
 - Default mapping: `row[0]`. For projections, use `row_mapper=lambda row: row._mapping`.
   Map each SQL row to one item; ordering columns need not appear in the response.
 - Invalid cursors return HTTP 422. FastSQLA imposes no cursor-length cap.

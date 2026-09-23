@@ -1,4 +1,5 @@
 import base64
+import binascii
 import functools
 import json
 import math
@@ -7,6 +8,7 @@ import re
 import warnings
 from collections.abc import AsyncGenerator, Awaitable, Callable, Iterable
 from contextlib import _AsyncGeneratorContextManager, asynccontextmanager
+from dataclasses import dataclass
 from datetime import date, datetime
 from decimal import Decimal
 from typing import Annotated, TypedDict, TypeVar
@@ -15,8 +17,9 @@ from uuid import UUID
 import sqlalchemy as sa
 from fastapi import Depends as BaseDepends
 from fastapi import FastAPI, HTTPException, Query
-from pydantic import BaseModel, Field, TypeAdapter
+from pydantic import BaseModel, ConfigDict, Field, TypeAdapter, ValidationError
 from sqlalchemy import Result, Select, func, select
+from sqlalchemy.dialects import mysql
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
     AsyncSession,
@@ -519,12 +522,28 @@ class CursorPage[T](Collection[T]):
 
 
 type CursorPaginateType[T] = Callable[[Select], Awaitable[CursorPage[T]]]
-type _CursorOrder = list[tuple[sa.Column, bool]]
 type _CursorValue = int | str | UUID | datetime | date | Decimal
 
 
-def _cursor_order(stmt: Select) -> _CursorOrder:
-    # SQLAlchemy statement introspection is isolated here for compatibility testing.
+@dataclass(frozen=True)
+class _OrderTerm:
+    column: sa.Column
+    descending: bool
+
+
+type _CursorOrder = list[_OrderTerm]
+
+
+class _CursorPayload(BaseModel):
+    model_config = ConfigDict(extra="forbid", strict=True)
+
+    v: int = Field(ge=1, le=1)
+    order: list[tuple[str, str, bool, str]]
+    values: list[int | str]
+
+
+def _validate_cursor_query(stmt: Select):
+    # SQLAlchemy statement introspection stays in the query/order inspection helpers.
     if not isinstance(stmt, Select) or any(
         getattr(stmt, name) is not None
         for name in ("_limit_clause", "_offset_clause", "_fetch_clause")
@@ -537,18 +556,23 @@ def _cursor_order(stmt: Select) -> _CursorOrder:
         for col in stmt.selected_columns
     ):
         raise ValueError("Cursor pagination requires entity or column selections")
-    sources = stmt.get_final_froms()
     if any(
         isinstance(node, Join) and (node.isouter or node.full)
-        for source in sources
+        for source in stmt.get_final_froms()
         for node in visitors.iterate(source)
     ):
         raise ValueError("Cursor pagination does not support outer joins")
+
+
+def _cursor_order(stmt: Select) -> _CursorOrder:
+    _validate_cursor_query(stmt)
+    sources = stmt.get_final_froms()
     order = []
     for expression in stmt._order_by_clauses:
         descending = False
         if isinstance(expression, UnaryExpression) and expression.modifier in (
-            operators.asc_op, operators.desc_op
+            operators.asc_op,
+            operators.desc_op,
         ):
             descending = expression.modifier is operators.desc_op
             expression = expression.element
@@ -564,73 +588,119 @@ def _cursor_order(stmt: Select) -> _CursorOrder:
             (sa.Integer, sa.String, sa.Uuid, sa.DateTime, sa.Date, sa.Numeric),
         ) or expression.type.python_type not in (int, str, UUID, datetime, date, Decimal):
             raise ValueError("Unsupported cursor column type")
-        order.append((expression, descending))
+        order.append(_OrderTerm(expression, descending))
     if not order:
         raise ValueError("Cursor pagination requires an explicit unique ordering")
     return order
 
 
-def _cursor_schema(order: _CursorOrder) -> list[str]:
+def _cursor_schema(order: _CursorOrder) -> list[tuple[str, str, bool, str]]:
     return [
-        json.dumps([col.table.fullname, col.name, desc, col.type.python_type.__name__])
-        for col, desc in order
+        (
+            term.column.table.fullname,
+            term.column.name,
+            term.descending,
+            term.column.type.python_type.__name__,
+        )
+        for term in order
     ]
 
 
 def _encode_cursor(order: _CursorOrder, values: tuple[_CursorValue, ...]) -> str:
-    key_types = tuple(column.type.python_type for column, _ in order)
+    key_types = tuple(term.column.type.python_type for term in order)
     adapter = TypeAdapter(tuple[key_types])
     encoded = adapter.dump_python(adapter.validate_python(values, strict=True), mode="json")
-    payload = {"v": 1, "order": _cursor_schema(order), "values": encoded}
-    return base64.urlsafe_b64encode(json.dumps(payload).encode()).decode().rstrip("=")
+    payload = _CursorPayload(v=1, order=_cursor_schema(order), values=encoded)
+    return base64.urlsafe_b64encode(payload.model_dump_json().encode()).decode().rstrip("=")
+
+
+def _decode_cursor_payload(cursor: str) -> _CursorPayload:
+    if not re.fullmatch(r"[A-Za-z0-9_-]+", cursor):
+        raise HTTPException(status_code=422, detail="Invalid cursor")
+    padded = cursor + "=" * (-len(cursor) % 4)
+    try:
+        decoded = base64.b64decode(padded, altchars=b"-_", validate=True)
+    except binascii.Error as error:
+        raise HTTPException(status_code=422, detail="Invalid cursor") from error
+    try:
+        return _CursorPayload.model_validate_json(decoded)
+    except ValidationError as error:
+        raise HTTPException(status_code=422, detail="Invalid cursor") from error
+
+
+def _integer_bounds(column_type: sa.Integer, dialect: str) -> tuple[int, int]:
+    if dialect == "sqlite":
+        return -(2**63), 2**63
+    widths = (
+        (mysql.TINYINT, 8),
+        (mysql.MEDIUMINT, 24),
+        (sa.SmallInteger, 16),
+        (sa.BigInteger, 64),
+    )
+    bits = next((width for kind, width in widths if isinstance(column_type, kind)), 32)
+    if getattr(column_type, "unsigned", False):
+        return 0, 2**bits
+    return -(2 ** (bits - 1)), 2 ** (bits - 1)
+
+
+def _validate_cursor_value(column: sa.Column, value: _CursorValue, dialect: str):
+    if isinstance(value, int):
+        lower, upper = _integer_bounds(column.type, dialect)
+        if not lower <= value < upper:
+            raise ValueError("Integer key out of range")
+    if isinstance(value, Decimal) and (
+        value.as_tuple().exponent < -16383
+        or value.adjusted() >= (column.type.precision or 131072) - (column.type.scale or 0)
+    ):
+        raise ValueError("Decimal key out of range")
+    if dialect != "postgresql":
+        return
+    if isinstance(value, str) and "\0" in value:
+        raise ValueError("Text key contains NUL")
+    if isinstance(value, datetime):
+        aware = value.utcoffset() is not None
+        if aware != column.type.timezone:
+            raise ValueError("Datetime key timezone does not match the column")
 
 
 def _decode_cursor(cursor: str, order: _CursorOrder, dialect: str) -> list[_CursorValue]:
-    try:
-        if not re.fullmatch(r"[A-Za-z0-9_-]+", cursor):
-            raise ValueError("Invalid encoding")
-        padded = cursor + "=" * (-len(cursor) % 4)
-        payload = json.loads(base64.b64decode(padded, altchars=b"-_", validate=True))
-        if (
-            not isinstance(payload, dict)
-            or set(payload) != {"v", "order", "values"}
-            or type(payload["v"]) is not int
-            or payload["v"] != 1
-            or payload["order"] != _cursor_schema(order)
-            or not isinstance(payload["values"], list)
-            or len(payload["values"]) != len(order)
-        ):
-            raise ValueError("Invalid payload")
-        values = []
-        for (column, _), value in zip(order, payload["values"], strict=True):
-            value_type = column.type.python_type
-            if type(value) is not (int if value_type is int else str):
-                raise ValueError("Invalid key type")
-            if value_type is int:
-                bits = 16 if isinstance(column.type, sa.SmallInteger) else 32
-                if dialect == "sqlite" or isinstance(column.type, sa.BigInteger):
-                    bits = 64
-                if not -(2 ** (bits - 1)) <= value < 2 ** (bits - 1):
-                    raise ValueError("Integer key out of range")
+    payload = _decode_cursor_payload(cursor)
+    if payload.order != _cursor_schema(order) or len(payload.values) != len(order):
+        raise HTTPException(status_code=422, detail="Invalid cursor")
+    values = []
+    for term, value in zip(order, payload.values, strict=True):
+        value_type = term.column.type.python_type
+        encoded_type = int if value_type is int else str
+        if type(value) is not encoded_type:
+            raise HTTPException(status_code=422, detail="Invalid cursor")
+        try:
             parsed = TypeAdapter(value_type).validate_json(json.dumps(value), strict=True)
-            if value_type is Decimal and (
-                parsed.as_tuple().exponent < -16383
-                or parsed.adjusted()
-                >= (column.type.precision or 131072) - (column.type.scale or 0)
-            ):
-                raise ValueError("Decimal key out of range")
-            if dialect == "postgresql" and (
-                (value_type is str and "\0" in parsed)
-                or (
-                    value_type is datetime
-                    and (parsed.utcoffset() is not None) != column.type.timezone
-                )
-            ):
-                raise ValueError("Key cannot be represented by the database column")
-            values.append(parsed)
-        return values
-    except (ValueError, TypeError, RecursionError) as error:
-        raise HTTPException(status_code=422, detail="Invalid cursor") from error
+        except ValidationError as error:
+            raise HTTPException(status_code=422, detail="Invalid cursor") from error
+        try:
+            _validate_cursor_value(term.column, parsed, dialect)
+        except ValueError as error:
+            raise HTTPException(status_code=422, detail="Invalid cursor") from error
+        values.append(parsed)
+    return values
+
+
+def _cursor_condition(
+    order: _CursorOrder, values: list[_CursorValue], dialect: str
+) -> sa.ColumnElement[bool]:
+    first = order[0]
+    same_direction = all(term.descending == first.descending for term in order)
+    if same_direction and dialect in ("postgresql", "sqlite", "mysql"):
+        keys = sa.tuple_(*(term.column for term in order))
+        return keys < tuple(values) if first.descending else keys > tuple(values)
+    terms, prefix = [], []
+    for term, value in zip(order, values, strict=True):
+        column = term.column
+        comparison = column < value if term.descending else column > value
+        terms.append(sa.and_(*prefix, comparison))
+        prefix.append(column == value)
+    bound = first.column <= values[0] if first.descending else first.column >= values[0]
+    return sa.and_(bound, sa.or_(*terms))
 
 
 def new_cursor_pagination[T](
@@ -663,33 +733,25 @@ def new_cursor_pagination[T](
     ) -> CursorPaginateType[T]:
         async def paginate(stmt: Select) -> CursorPage[T]:
             order = _cursor_order(stmt)
-            columns = [column for column, _ in order]
+            dialect = session.get_bind(clause=stmt).dialect.name
+            if dialect == "sqlite" and any(
+                term.column.type.python_type is Decimal for term in order
+            ):
+                raise ValueError("SQLite decimal ordering cannot preserve cursor precision")
+            columns = [term.column for term in order]
             if cursor is not None:
-                dialect = session.get_bind(clause=stmt).dialect.name
-                values = tuple(_decode_cursor(cursor, order, dialect))
-                same_direction = len({desc for _, desc in order}) == 1
-                if same_direction and dialect in ("postgresql", "sqlite", "mysql"):
-                    keys = sa.tuple_(*columns)
-                    condition = keys < values if order[0][1] else keys > values
-                else:
-                    terms, prefix = [], []
-                    for (column, desc), value in zip(order, values, strict=True):
-                        comparison = column < value if desc else column > value
-                        terms.append(sa.and_(*prefix, comparison))
-                        prefix.append(column == value)
-                    bound = columns[0] <= values[0] if order[0][1] else columns[0] >= values[0]
-                    condition = sa.and_(bound, sa.or_(*terms))
-                stmt = stmt.where(condition)
+                values = _decode_cursor(cursor, order, dialect)
+                stmt = stmt.where(_cursor_condition(order, values, dialect))
             stmt = stmt.add_columns(*(col.label(None) for col in columns)).limit(limit + 1)
             result = await session.execute(stmt)
             width = len(result.keys()) - len(columns)
             frozen = result.freeze()
             rows = frozen().all()
-            next_cursor = (
-                _encode_cursor(order, rows[limit - 1][-len(columns) :])
-                if len(rows) > limit
-                else None
-            )
+            next_cursor = None
+            if len(rows) > limit:
+                boundary = rows[limit - 1]
+                cursor_values = boundary[-len(columns) :]
+                next_cursor = _encode_cursor(order, cursor_values)
             original = frozen().columns(*range(width)).all()
             data = [row_mapper(row) for row in original[:limit]]
             return CursorPage(data=data, meta=CursorMeta(next_cursor=next_cursor))

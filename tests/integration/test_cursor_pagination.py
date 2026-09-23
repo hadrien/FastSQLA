@@ -74,7 +74,7 @@ async def page(
         param("cohort -id", "12 11 22 21 31", id="mixed"),
         param("-cohort id", "31 21 22 11 12", id="reverse-mixed"),
         *(param(f"{key} cohort id", "11 12 21 22 31", id=key)
-          for key in ("day", "timestamp", "token", "amount")),
+          for key in ("day", "timestamp", "token")),
     ]
 )
 async def test_traverses_ties_and_typed_keys_with_changing_limit(
@@ -137,8 +137,8 @@ async def test_projection_hides_cursor_columns_and_runs_one_query(
 
 
 @mark.parametrize(
-    "cursor", ["", "not-a-cursor", "e30", "a+b"],
-    ids=["empty", "malformed", "invalid-payload", "invalid-alphabet"]
+    "cursor", ["", "not-a-cursor", "e30", "a+b", "a"],
+    ids=["empty", "malformed", "invalid-payload", "invalid-alphabet", "invalid-padding"]
 )
 async def test_rejects_bad_cursors_before_sql(
     item: type[Any], session: AsyncSession, statements: list[str], cursor: str
@@ -161,16 +161,19 @@ async def test_rejects_bad_cursors_before_sql(
         ("timestamp", "postgresql", {"values": ["2026-01-01T00:00:00Z", 1]}),
         ("amount", "postgresql", {"values": ["1e999999", 1]}),
         ("amount", "postgresql", {"values": ["1e-20000", 1]}),
+        ("amount", "postgresql", {"values": ["NaN", 1]}),
+        ("day", "sqlite", {"values": ["invalid-date", 1]}),
+        ("token", "sqlite", {"values": ["invalid-uuid", 1]}),
     ]
 )
 async def test_rejects_invalid_payload(
     item: type[Any], session: AsyncSession, key: str, dialect: str, changes: dict
 ):
-    from fastsqla import _cursor_order, _decode_cursor
+    from fastsqla import _cursor_order, _decode_cursor, _encode_cursor
 
     stmt = select(item).order_by(getattr(item, key), item.id)
-    first = await page(session, stmt)
-    token = first.meta.next_cursor
+    row = (await session.scalars(stmt)).first()
+    token = _encode_cursor(_cursor_order(stmt), (getattr(row, key), row.id))
     payload = json.loads(base64.urlsafe_b64decode(token + "=" * (-len(token) % 4)))
     encoded = json.dumps(payload | changes).encode()
     token = base64.urlsafe_b64encode(encoded).decode().rstrip("=")
@@ -243,3 +246,92 @@ def test_invalid_factory_bounds(default: int, maximum: int):
 
     with raises(ValueError):
         new_cursor_pagination(default, maximum)
+
+
+async def test_rejects_sqlite_decimal_ordering_before_sql(
+    item: type[Any], session: AsyncSession, statements: list[str]
+):
+    record = await session.get(item, (1, 1))
+    record.amount = Decimal("0.101")
+    await session.commit()
+    statements.clear()
+    with raises(ValueError, match="SQLite decimal ordering"):
+        await page(session, select(item).order_by(item.amount, item.cohort, item.id))
+    assert statements == []
+
+
+@mark.parametrize(
+    "kind,bits",
+    [
+        ("TINYINT", 8),
+        ("SMALLINT", 16),
+        ("MEDIUMINT", 24),
+        ("INTEGER", 32),
+        ("BIGINT", 64),
+    ],
+)
+@mark.parametrize("unsigned", [False, True], ids=["signed", "unsigned"])
+@mark.parametrize("boundary", [0, 1], ids=["lower", "upper"])
+def test_mysql_integer_cursor_round_trip(kind: str, bits: int, unsigned: bool, boundary: int):
+    from sqlalchemy import Column, MetaData, Table
+    from sqlalchemy.dialects import mysql
+
+    from fastsqla import _cursor_order, _decode_cursor, _encode_cursor
+
+    table = Table(
+        "integer_key",
+        MetaData(),
+        Column("id", getattr(mysql, kind)(unsigned=unsigned), primary_key=True)
+    )
+    bounds = (0, 2**bits - 1) if unsigned else (-(2 ** (bits - 1)), 2 ** (bits - 1) - 1)
+    value = bounds[boundary]
+    order = _cursor_order(select(table).order_by(table.c.id))
+    token = _encode_cursor(order, (value,))
+    assert _decode_cursor(token, order, "mysql") == [value]
+
+
+@mark.parametrize("value", [-1, 2**32])
+def test_rejects_values_outside_mysql_unsigned_range(value: int):
+    from sqlalchemy import Column, MetaData, Table
+    from sqlalchemy.dialects import mysql
+
+    from fastsqla import _cursor_order, _decode_cursor, _encode_cursor
+
+    table = Table(
+        "unsigned_key",
+        MetaData(),
+        Column("id", mysql.INTEGER(unsigned=True), primary_key=True)
+    )
+    order = _cursor_order(select(table).order_by(table.c.id))
+    token = _encode_cursor(order, (value,))
+    with raises(HTTPException) as error:
+        _decode_cursor(token, order, "mysql")
+    assert error.value.status_code == 422
+
+
+@mark.parametrize(
+    "value", [Decimal("0.00"), Decimal("-99999999.99"), Decimal("99999999.99")]
+)
+def test_postgresql_decimal_cursor_round_trip(value: Decimal):
+    from sqlalchemy import Column, MetaData, Table
+
+    from fastsqla import _cursor_order, _decode_cursor, _encode_cursor
+
+    table = Table("decimal_key", MetaData(), Column("id", Numeric(10, 2), primary_key=True))
+    order = _cursor_order(select(table).order_by(table.c.id))
+    token = _encode_cursor(order, (value,))
+    assert _decode_cursor(token, order, "postgresql") == [value]
+
+
+@mark.parametrize("aware", [False, True], ids=["naive", "aware"])
+def test_postgresql_timestamp_cursor_round_trip(aware: bool):
+    from sqlalchemy import Column, DateTime, MetaData, Table
+
+    from fastsqla import _cursor_order, _decode_cursor, _encode_cursor
+
+    table = Table("timestamp_key", MetaData(),
+                  Column("id", DateTime(timezone=aware), primary_key=True))
+    value = datetime(2026, 1, 1, tzinfo=UTC if aware else None)
+    order = _cursor_order(select(table).order_by(table.c.id))
+    token = _encode_cursor(order, (value,))
+    assert _decode_cursor(token, order, "postgresql") == [value]
