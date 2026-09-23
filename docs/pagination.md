@@ -123,7 +123,8 @@ Send this body to `POST /heroes/search?limit=10`:
 ```
 
 To continue, add the returned cursor to the query string. Keep the filters and ordering
-unchanged; omit the cursor to start a different search. Invalid cursors return HTTP 422.
+unchanged; omit the cursor to start a different search. Invalid cursors return
+`HTTP 422 Unprocessable Content`.
 
 ### Custom parameter dependency
 
@@ -149,9 +150,9 @@ Paginate = new_pagination(
 
 Use this `Paginate[Hero]` in the endpoint signature. The dependency must be async and
 return a cursor name, cursor value, and limit. A `None` limit uses the configured default;
-limits outside `1..max_page_size` return HTTP 422. The cursor name becomes the response
-metadata key: pass `meta.after` as `?after=...` to continue. The final page contains
-`"meta": {"after": null}`.
+limits outside `1..max_page_size` return `HTTP 422 Unprocessable Content`. The cursor
+name becomes the response metadata key: pass `meta.after` as `?after=...` to continue.
+The final page contains `"meta": {"after": null}`.
 
 ### Choosing a query
 
