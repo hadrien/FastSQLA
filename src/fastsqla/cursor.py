@@ -242,7 +242,7 @@ def _condition(
 
 def new_pagination[T](
     default_page_size: int = 10,
-    max_page_size: int = 100,
+    max_page_size: int = 1000,
     *,
     parameters_dependency: Callable[..., _Parameters | Awaitable[_Parameters]] | None = None,
     row_mapper: Callable[[sa.Row], T] = lambda row: row[0],

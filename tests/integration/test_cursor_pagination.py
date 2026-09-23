@@ -522,7 +522,11 @@ async def test_default_query_schema_and_omitted_parameters(
     limit = next(p for p in operation["parameters"] if p["name"] == "limit")
     assert limit["schema"]["default"] == 10
     assert limit["schema"]["minimum"] == 1
-    assert limit["schema"]["maximum"] == 100
+    assert limit["schema"]["maximum"] == 1000
+    maximum = await client.get("/cursor", params={"limit": 1000})
+    assert maximum.status_code == 200
+    above_maximum = await client.get("/cursor", params={"limit": 1001})
+    assert above_maximum.status_code == 422
 
 
 async def test_sync_extractor_with_body_subdependency(

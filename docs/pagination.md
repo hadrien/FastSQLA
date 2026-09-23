@@ -81,10 +81,10 @@ async def list_heroes(paginate: Paginate[Hero]) -> Page[HeroModel]: # (1)!
 ```
 
 1.  `Paginate` adds optional `next_cursor` and `limit` query parameters. The default page
-    size is 10, with a maximum of 100.
+    size is 10, with a maximum of 1000.
 2.  Order by a unique, non-null column so each item has a definite position.
 
-Request `/heroes?limit=10` for the first page. The response contains `data` and
+Request `/heroes` for the first page. The response contains `data` and
 `meta.next_cursor`. Pass that cursor as the next request's `next_cursor` query parameter.
 When `next_cursor` is `null`, there are no more results.
 
@@ -98,7 +98,7 @@ from typing import Literal
 from fastsqla.cursor import Page, new_pagination
 from pydantic import BaseModel, ConfigDict, Field
 
-Paginate = new_pagination(default_page_size=10, max_page_size=100)
+Paginate = new_pagination(default_page_size=10, max_page_size=1000)
 
 class HeroSearch(BaseModel):
     model_config = ConfigDict(extra="forbid")
@@ -145,7 +145,7 @@ async def get_parameters(
 
 Paginate = new_pagination(
     default_page_size=10,
-    max_page_size=100,
+    max_page_size=1000,
     parameters_dependency=get_parameters,
 )
 ```
