@@ -116,7 +116,7 @@ following [`SQLAlchemy`'s best practices](https://docs.sqlalchemy.org/en/20/orm/
 
     <center>
 
-    👇 `/heros?limit=2` 👇
+    👇 `/heros?limit=2&cursor=eyJ2IjoxLCJvcmRlciI6W1siaGVybyIsImlkIixmYWxzZSwiaW50Il1dLCJ2YWx1ZXMiOlsyXX0` 👇
 
     </center>
 
@@ -126,16 +126,16 @@ following [`SQLAlchemy`'s best practices](https://docs.sqlalchemy.org/en/20/orm/
         {
           "name": "Superman",
           "secret_identity": "Clark Kent",
-          "id": 1
+          "id": 3
         },
         {
           "name": "Batman",
           "secret_identity": "Bruce Wayne",
-          "id": 2
+          "id": 4
         }
       ],
       "meta": {
-        "next_cursor": "eyJ2IjoxLCJvcmRlciI6W1siaGVybyIsImlkIixmYWxzZSwiaW50Il1dLCJ2YWx1ZXMiOlsyXX0"
+        "next_cursor": "eyJ2IjoxLCJvcmRlciI6W1siaGVybyIsImlkIixmYWxzZSwiaW50Il1dLCJ2YWx1ZXMiOls0XX0"
       }
     }
     ```
