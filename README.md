@@ -116,7 +116,7 @@ following [`SQLAlchemy`'s best practices](https://docs.sqlalchemy.org/en/20/orm/
 
     <center>
 
-    👇 `/heros?limit=2&cursor=eyJ2IjoxLCJvcmRlciI6W1siaGVybyIsImlkIixmYWxzZSwiaW50Il1dLCJ2YWx1ZXMiOlsyXX0` 👇
+    👇 `/heros?limit=2&next_cursor=eyJ2IjoxLCJvcmRlciI6W1siaGVybyIsImlkIixmYWxzZSwiaW50Il1dLCJ2YWx1ZXMiOlsyXX0` 👇
 
     </center>
 
@@ -140,8 +140,8 @@ following [`SQLAlchemy`'s best practices](https://docs.sqlalchemy.org/en/20/orm/
     }
     ```
 
-    Pass `meta.next_cursor` as `cursor` in the next query string. A `null` cursor means the
-    end of the results.
+    Pass `meta.next_cursor` as `next_cursor` in the next query string. A `null` cursor
+    means the end of the results.
 
 * Pagination customization:
 

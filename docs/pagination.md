@@ -80,13 +80,24 @@ async def list_heroes(paginate: Paginate[Hero]) -> Page[HeroModel]: # (1)!
     return await paginate(select(Hero).order_by(Hero.id)) # (2)!
 ```
 
-1.  `Paginate` adds optional `cursor` and `limit` query parameters. The default page size
-    is 10, with a maximum of 100.
+1.  `Paginate` adds optional `next_cursor` and `limit` query parameters. The default page
+    size is 10, with a maximum of 100.
 2.  Order by a unique, non-null column so each item has a definite position.
 
 Request `/heroes?limit=10` for the first page. The response contains `data` and
-`meta.next_cursor`. Pass that cursor as the next request's `cursor` query parameter.
+`meta.next_cursor`. Pass that cursor as the next request's `next_cursor` query parameter.
 When `next_cursor` is `null`, there are no more results.
+
+To use `after` for both the query parameter and the metadata key:
+
+```python
+from fastsqla.cursor import new_pagination
+
+Paginate = new_pagination(cursor_name="after")
+```
+
+Use `Paginate[Hero]` in the endpoint signature and pass `meta.after` as `?after=...` on
+subsequent requests. The final page contains `"meta": {"after": null}`.
 
 ### Filters in a JSON body
 
@@ -143,13 +154,16 @@ async def get_parameters(
 Paginate = new_pagination(
     default_page_size=10,
     max_page_size=100,
+    cursor_name="after",
     parameters_dependency=get_parameters,
 )
 ```
 
 Use this `Paginate[Hero]` in the endpoint signature. The dependency can be sync or async
 and returns `(cursor, limit)`. A `None` limit uses the configured default; limits outside
-`1..max_page_size` return HTTP 422. FastAPI documents the custom dependency's parameters.
+`1..max_page_size` return HTTP 422. The dependency declares its own input names;
+`cursor_name="after"` sets the response key to `meta.after`. FastAPI documents the custom
+dependency's parameters.
 
 ### Choosing a query
 
