@@ -1,16 +1,25 @@
 import base64
+import inspect
 import json
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from datetime import date, datetime
 from decimal import Decimal
-from typing import Annotated, Any
+from typing import Annotated, Any, TypedDict
 from uuid import UUID
 
 import sqlalchemy as sa
 from fastapi import HTTPException, Query
 from fastapi.exceptions import RequestValidationError
-from pydantic import BaseModel, ConfigDict, Field, TypeAdapter, ValidationError
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    RootModel,
+    TypeAdapter,
+    ValidationError,
+    field_validator,
+)
 from sqlalchemy import Select
 from sqlalchemy.dialects import mysql
 from sqlalchemy.sql import operators, visitors
@@ -19,11 +28,25 @@ from sqlalchemy.sql.selectable import Join
 
 import fastsqla
 
-__all__ = ["Meta", "Page", "Paginate", "PaginateType", "new_pagination"]
+__all__ = [
+    "Meta",
+    "Page",
+    "Paginate",
+    "PaginateType",
+    "PaginationParameters",
+    "ParametersDependency",
+    "new_pagination",
+]
 
 
-class Meta(BaseModel):
-    next_cursor: str | None = Field(description="Next cursor, or null at the end.")
+class Meta(RootModel[dict[str, str | None]]):
+    root: dict[str, str | None] = Field(
+        min_length=1, max_length=1, description="One named cursor, or null at the end."
+    )
+
+    @property
+    def next_cursor(self) -> str | None:
+        return next(iter(self.root.values()))
 
 
 class Page[T](fastsqla.Collection[T]):
@@ -33,7 +56,17 @@ class Page[T](fastsqla.Collection[T]):
 
 
 type PaginateType[T] = Callable[[Select], Awaitable[Page[T]]]
-type _Parameters = tuple[str | None, int | None]
+
+
+class PaginationParameters(TypedDict):
+    cursor_name: str
+    cursor: str | None
+    limit: int | None
+
+
+type ParametersDependency = Callable[..., Awaitable[PaginationParameters]]
+
+
 type _Value = int | str | UUID | datetime | date | Decimal
 
 
@@ -212,9 +245,9 @@ def _condition(
 
 def new_pagination[T](
     default_page_size: int = 10,
-    max_page_size: int = 100,
+    max_page_size: int = 1000,
     *,
-    parameters_dependency: Callable[..., _Parameters | Awaitable[_Parameters]] | None = None,
+    parameters_dependency: ParametersDependency | None = None,
     row_mapper: Callable[[sa.Row], T] = lambda row: row[0],
 ) -> Any:
     """Create a generic pagination dependency: `Paginate = new_pagination(...)`.
@@ -225,14 +258,15 @@ def new_pagination[T](
     Args:
         default_page_size: Default limit when the client omits it.
         max_page_size: Maximum accepted limit.
-        parameters_dependency: Sync or async FastAPI dependency returning
-            `(cursor, limit)`. A `None` limit uses `default_page_size`.
+        parameters_dependency: Async FastAPI dependency returning a cursor name,
+            cursor value, and limit. A `None` limit uses `default_page_size`.
         row_mapper: Maps each original result row to exactly one response item.
 
     Returns:
         Generic annotated dependency with a one-row-to-one-item mapper.
 
     Raises:
+        TypeError: The parameter dependency is not async.
         ValueError: Page-size bounds or the supplied Select are unsupported.
     """
     if (
@@ -241,36 +275,50 @@ def new_pagination[T](
         or not 1 <= default_page_size <= max_page_size
     ):
         raise ValueError("Require 1 <= default_page_size <= max_page_size")
-
+    if parameters_dependency is not None and not (
+        callable(parameters_dependency)
+        and (
+            inspect.iscoroutinefunction(parameters_dependency)
+            or inspect.iscoroutinefunction(type(parameters_dependency).__call__)
+        )
+    ):
+        raise TypeError("parameters_dependency must be async")
     class Parameters(BaseModel):
-        model_config = ConfigDict(strict=True)
+        model_config = ConfigDict(strict=True, extra="forbid")
 
-        cursor: str | None = Field(None, min_length=1)
-        limit: int = Field(default_page_size, ge=1, le=max_page_size)
+        cursor_name: str = Field(min_length=1)
+        cursor: str | None = Field(min_length=1)
+        limit: int | None = Field(ge=1, le=max_page_size)
+
+        @field_validator("cursor_name")
+        @classmethod
+        def valid_cursor_name(cls, name: str) -> str:
+            if name != name.strip():
+                raise ValueError("Cursor name cannot have surrounding whitespace")
+            return name
 
     async def query_parameters(
-        cursor: str | None = Query(None, min_length=1),
+        cursor: str | None = Query(None, min_length=1, alias="next_cursor"),
         limit: int = Query(default_page_size, ge=1, le=max_page_size),
-    ) -> _Parameters:
-        return cursor, limit
+    ) -> PaginationParameters:
+        return {"cursor_name": "next_cursor", "cursor": cursor, "limit": limit}
 
     if parameters_dependency is None:
         parameters_dependency = query_parameters
 
     async def dependency(
         session: fastsqla.Session,
-        parameters: Annotated[_Parameters, fastsqla.Depends(parameters_dependency)],
+        parameters: Annotated[PaginationParameters, fastsqla.Depends(parameters_dependency)],
     ) -> PaginateType[T]:
-        cursor, limit = parameters
         try:
-            validated = Parameters(
-                cursor=cursor, limit=default_page_size if limit is None else limit
-            )
+            validated = Parameters.model_validate(parameters)
         except ValidationError as error:
             raise RequestValidationError(
                 error.errors(include_url=False, include_input=False)
             ) from error
-        cursor, limit = validated.cursor, validated.limit
+        cursor_name = validated.cursor_name
+        cursor = validated.cursor
+        limit = validated.limit if validated.limit is not None else default_page_size
 
         async def paginate(stmt: Select) -> Page[T]:
             order = _order(stmt)
@@ -295,7 +343,7 @@ def new_pagination[T](
                 next_cursor = _encode(order, cursor_values)
             original = frozen().columns(*range(width)).all()
             data = [row_mapper(row) for row in original[:limit]]
-            return Page(data=data, meta=Meta(next_cursor=next_cursor))
+            return Page(data=data, meta=Meta({cursor_name: next_cursor}))
 
         return paginate
 
@@ -303,4 +351,4 @@ def new_pagination[T](
 
 
 Paginate = new_pagination()
-"""Inject a forward paginator accepting cursor and limit query parameters."""
+"""Inject a forward paginator accepting next_cursor and limit query parameters."""

@@ -7,7 +7,7 @@ from uuid import UUID
 
 from fastapi import Body, Depends, FastAPI, HTTPException, Query
 from httpx import AsyncClient
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, ValidationError
 from pytest import fixture, mark, param, raises
 from sqlalchemy import Numeric, asc, desc, event, func, select
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession
@@ -63,7 +63,8 @@ async def page(
     from fastsqla import cursor as pagination
 
     dependency = get_args(pagination.new_pagination(row_mapper=mapper))[1].dependency
-    paginate = await dependency(session=session, parameters=(cursor, limit))
+    parameters = {"cursor_name": "next_cursor", "cursor": cursor, "limit": limit}
+    paginate = await dependency(session=session, parameters=parameters)
     return await paginate(stmt)
 
 
@@ -236,10 +237,10 @@ async def test_http_continuation(
     assert first.json()["data"] == expected[:2]
     cursor = first.json()["meta"]["next_cursor"]
     assert len(cursor) >= minimum_cursor_length
-    second = await client.get("/cursor", params={"limit": 3, "cursor": cursor})
+    second = await client.get("/cursor", params={"limit": 3, "next_cursor": cursor})
     assert second.status_code == 200
     assert second.json() == {"data": expected[2:], "meta": {"next_cursor": None}}
-    invalid = await client.get("/cursor", params={"cursor": "invalid"})
+    invalid = await client.get("/cursor", params={"next_cursor": "invalid"})
     assert invalid.status_code == 422
 
 
@@ -380,13 +381,13 @@ async def test_offset_and_cursor_dependencies_work_in_same_app(
     assert first.status_code == 200
     assert first.json()["data"] == ["11", "12"]
     second = await client.get(
-        "/cursor", params={"limit": 3, "cursor": first.json()["meta"]["next_cursor"]}
+        "/cursor", params={"limit": 3, "next_cursor": first.json()["meta"]["next_cursor"]}
     )
     assert second.status_code == 200
     assert second.json() == {"data": ["21", "22", "31"], "meta": {"next_cursor": None}}
     paths = app.openapi()["paths"]
     assert {p["name"] for p in paths["/offset"]["get"]["parameters"]} == {"offset", "limit"}
-    assert {p["name"] for p in paths["/cursor"]["get"]["parameters"]} == {"cursor", "limit"}
+    assert {p["name"] for p in paths["/cursor"]["get"]["parameters"]} == {"next_cursor", "limit"}
 
 
 @mark.parametrize("custom", [False, True], ids=["default-query", "custom-query"])
@@ -396,9 +397,9 @@ async def test_post_filters_with_query_pagination(
     from fastsqla import cursor
 
     async def get_parameters(
-        cursor: str | None = Query(None), limit: int | None = Query(None)
-    ) -> tuple[str | None, int | None]:
-        return cursor, limit
+        cursor: str | None = Query(None, alias="next_cursor"), limit: int | None = Query(None)
+    ) -> cursor.PaginationParameters:
+        return {"cursor_name": "next_cursor", "cursor": cursor, "limit": limit}
 
     Paginate = cursor.new_pagination(
         default_page_size=1, max_page_size=2,
@@ -419,13 +420,13 @@ async def test_post_filters_with_query_pagination(
     assert first.json()["data"] == ["21"]
     second = await client.post(
         "/search", json={"min_cohort": 2},
-        params={"limit": 2, "cursor": first.json()["meta"]["next_cursor"]}
+        params={"limit": 2, "next_cursor": first.json()["meta"]["next_cursor"]}
     )
     assert second.status_code == 200
     assert second.json() == {"data": ["22", "31"], "meta": {"next_cursor": None}}
     schema = app.openapi()
     operation = schema["paths"]["/search"]["post"]
-    assert {p["name"] for p in operation["parameters"]} == {"cursor", "limit"}
+    assert {p["name"] for p in operation["parameters"]} == {"next_cursor", "limit"}
     body_schema = operation["requestBody"]["content"]["application/json"]["schema"]
     assert body_schema == {"$ref": "#/components/schemas/Search"}
     assert set(schema["components"]["schemas"]["Search"]["properties"]) == {"min_cohort"}
@@ -437,7 +438,7 @@ async def test_post_filters_with_query_pagination(
         param({"limit": 0}, "limit", id="below-minimum"),
         param({"limit": 3}, "limit", id="above-custom-maximum"),
         param({"limit": "oops"}, "limit", id="non-numeric-limit"),
-        param({"cursor": ""}, "cursor", id="empty-cursor"),
+        param({"next_cursor": ""}, "next_cursor", id="empty-cursor"),
     ]
 )
 async def test_rejects_invalid_query_parameters_before_sql(
@@ -465,8 +466,8 @@ async def test_rejects_invalid_query_parameters_before_sql(
         param((None, 3), "limit", id="above-custom-maximum"),
         param((None, True), "limit", id="boolean-limit"),
         param((None, 1.5), "limit", id="fractional-limit"),
-        param(("", None), "cursor", id="empty-cursor"),
-        param((1, None), "cursor", id="numeric-cursor"),
+        param(("", None), "next_cursor", id="empty-cursor"),
+        param((1, None), "next_cursor", id="numeric-cursor"),
     ]
 )
 async def test_validates_custom_dependency_values_before_sql(
@@ -475,8 +476,10 @@ async def test_validates_custom_dependency_values_before_sql(
 ):
     from fastsqla import cursor
 
-    async def get_parameters() -> tuple:
-        return parameters
+    async def get_parameters() -> dict:
+        return {
+            "cursor_name": "next_cursor", "cursor": parameters[0], "limit": parameters[1]
+        }
 
     Paginate = cursor.new_pagination(
         default_page_size=1, max_page_size=2, parameters_dependency=get_parameters
@@ -488,7 +491,8 @@ async def test_validates_custom_dependency_values_before_sql(
 
     response = await client.get("/cursor")
     assert response.status_code == 422
-    assert response.json()["detail"][0]["loc"] == [location]
+    slot = "cursor" if location == "next_cursor" else location
+    assert response.json()["detail"][0]["loc"] == [slot]
     assert statements == []
 
 
@@ -511,10 +515,14 @@ async def test_default_query_schema_and_omitted_parameters(
     limit = next(p for p in operation["parameters"] if p["name"] == "limit")
     assert limit["schema"]["default"] == 10
     assert limit["schema"]["minimum"] == 1
-    assert limit["schema"]["maximum"] == 100
+    assert limit["schema"]["maximum"] == 1000
+    maximum = await client.get("/cursor", params={"limit": 1000})
+    assert maximum.status_code == 200
+    above_maximum = await client.get("/cursor", params={"limit": 1001})
+    assert above_maximum.status_code == 422
 
 
-async def test_sync_extractor_with_body_subdependency(
+async def test_async_extractor_with_body_subdependency(
     app: FastAPI, client: AsyncClient, item: type[Any]
 ):
     from fastsqla import cursor
@@ -522,8 +530,14 @@ async def test_sync_extractor_with_body_subdependency(
     async def get_body(body: Annotated[dict, Body()]) -> dict:
         return body
 
-    def get_parameters(body: Annotated[dict, Depends(get_body)]) -> tuple[str | None, int | None]:
-        return body.get("after"), body.get("size")
+    async def get_parameters(
+        body: Annotated[dict, Depends(get_body)]
+    ) -> cursor.PaginationParameters:
+        return {
+            "cursor_name": "after",
+            "cursor": body.get("after"),
+            "limit": body.get("size"),
+        }
 
     Paginate = cursor.new_pagination(
         default_page_size=1, max_page_size=2, parameters_dependency=get_parameters
@@ -539,8 +553,169 @@ async def test_sync_extractor_with_body_subdependency(
     first = await client.post("/search", json={"min_cohort": 2, "size": None})
     assert first.status_code == 200
     assert first.json()["data"] == ["21"]
+    assert set(first.json()["meta"]) == {"after"}
     second = await client.post("/search", json={
-        "min_cohort": 2, "size": 2, "after": first.json()["meta"]["next_cursor"]
+        "min_cohort": 2, "size": 2, "after": first.json()["meta"]["after"]
     })
     assert second.status_code == 200
-    assert second.json() == {"data": ["22", "31"], "meta": {"next_cursor": None}}
+    assert second.json() == {"data": ["22", "31"], "meta": {"after": None}}
+
+
+@mark.parametrize("cursor_name", ["after", "next-page", "cursor"])
+@mark.parametrize("return_dict", [False, True], ids=["model", "dict"])
+async def test_custom_name_survives_response_validation_and_round_trip(
+    app: FastAPI, client: AsyncClient, item: type[Any], cursor_name: str, return_dict: bool
+):
+    from fastsqla import cursor
+
+    async def get_parameters(
+        cursor_value: str | None = Query(None, alias=cursor_name),
+        limit: int | None = Query(None),
+    ) -> cursor.PaginationParameters:
+        return {"cursor_name": cursor_name, "cursor": cursor_value, "limit": limit}
+
+    Paginate = cursor.new_pagination(
+        default_page_size=2, parameters_dependency=get_parameters
+    )
+
+    @app.get("/named")
+    async def endpoint(paginate: Paginate[str]) -> cursor.Page[str]:
+        result = await paginate(select(item.name).order_by(item.cohort, item.id))
+        return result.model_dump() if return_dict else result
+
+    @app.get("/default")
+    async def default_endpoint(paginate: cursor.Paginate[str]) -> cursor.Page[str]:
+        return await paginate(select(item.name).order_by(item.cohort, item.id))
+
+    first = await client.get("/named")
+    assert first.status_code == 200
+    assert first.json()["data"] == ["11", "12"]
+    assert set(first.json()["meta"]) == {cursor_name}
+    parsed = cursor.Page[str].model_validate_json(first.content)
+    assert parsed.model_dump() == first.json()
+    assert parsed.meta.next_cursor == first.json()["meta"][cursor_name]
+    second = await client.get(
+        "/named", params={cursor_name: parsed.meta.next_cursor, "limit": 3}
+    )
+    assert second.status_code == 200
+    assert second.json() == {"data": ["21", "22", "31"], "meta": {cursor_name: None}}
+    default = await client.get("/default")
+    assert default.status_code == 200
+    assert default.json()["meta"] == {"next_cursor": None}
+    schema = app.openapi()
+    assert {p["name"] for p in schema["paths"]["/named"]["get"]["parameters"]} == {
+        cursor_name, "limit"
+    }
+    assert {p["name"] for p in schema["paths"]["/default"]["get"]["parameters"]} == {
+        "next_cursor", "limit"
+    }
+    meta_schema = schema["components"]["schemas"]["Meta"]
+    assert meta_schema["type"] == "object"
+    assert meta_schema["minProperties"] == meta_schema["maxProperties"] == 1
+    assert meta_schema["additionalProperties"] == {
+        "anyOf": [{"type": "string"}, {"type": "null"}]
+    }
+
+
+async def test_custom_extractor_owns_input_name_and_factory_names_metadata(
+    app: FastAPI, client: AsyncClient, item: type[Any]
+):
+    from fastsqla import cursor
+
+    async def get_parameters(
+        after: str | None = Query(None)
+    ) -> cursor.PaginationParameters:
+        return {"cursor_name": "after", "cursor": after, "limit": 3}
+
+    Paginate = cursor.new_pagination(parameters_dependency=get_parameters)
+
+    @app.post("/search")
+    async def endpoint(paginate: Paginate[str]) -> cursor.Page[str]:
+        return await paginate(select(item.name).order_by(item.cohort, item.id))
+
+    first = await client.post("/search")
+    assert first.status_code == 200
+    assert first.json()["data"] == ["11", "12", "21"]
+    assert set(first.json()["meta"]) == {"after"}
+    second = await client.post("/search", params={"after": first.json()["meta"]["after"]})
+    assert second.status_code == 200
+    assert second.json() == {"data": ["22", "31"], "meta": {"after": None}}
+    parameters = app.openapi()["paths"]["/search"]["post"]["parameters"]
+    assert [p["name"] for p in parameters] == ["after"]
+
+
+async def test_rejects_sync_parameter_dependency():
+    from fastsqla import cursor
+
+    def get_parameters() -> cursor.PaginationParameters:
+        return {"cursor_name": "after", "cursor": None, "limit": None}
+
+    with raises(TypeError, match="parameters_dependency must be async"):
+        cursor.new_pagination(parameters_dependency=get_parameters)
+
+
+async def test_accepts_async_callable_parameter_dependency(
+    app: FastAPI, client: AsyncClient, item: type[Any]
+):
+    from fastsqla import cursor
+
+    class Parameters:
+        async def __call__(self) -> cursor.PaginationParameters:
+            return {"cursor_name": "after", "cursor": None, "limit": 2}
+
+    Paginate = cursor.new_pagination(parameters_dependency=Parameters())
+
+    @app.get("/cursor")
+    async def endpoint(paginate: Paginate[str]) -> cursor.Page[str]:
+        return await paginate(select(item.name).order_by(item.cohort, item.id))
+
+    response = await client.get("/cursor")
+    assert response.status_code == 200
+    assert response.json()["data"] == ["11", "12"]
+    assert response.json()["meta"]["after"] is not None
+
+
+@mark.parametrize(
+    "parameters",
+    [
+        (None, 2),
+        {"cursor_name": "", "cursor": None, "limit": 2},
+        {"cursor": None, "limit": 2},
+        {"cursor_name": " after ", "cursor": None, "limit": 2},
+        {"cursor_name": "after", "cursor": None},
+        {
+            "cursor": {"name": "after", "value": None},
+            "limit": {"name": "size", "value": 2},
+        },
+    ],
+    ids=[
+        "tuple", "empty-name", "missing-name", "surrounding-whitespace",
+        "missing-limit", "legacy-nested",
+    ],
+)
+async def test_rejects_invalid_custom_parameter_shape_before_sql(
+    app: FastAPI, client: AsyncClient, item: type[Any], statements: list[str],
+    parameters: Any,
+):
+    from fastsqla import cursor
+
+    async def get_parameters() -> dict:
+        return parameters
+
+    Paginate = cursor.new_pagination(parameters_dependency=get_parameters)
+
+    @app.get("/cursor")
+    async def endpoint(paginate: Paginate[str]) -> cursor.Page[str]:
+        return await paginate(select(item.name).order_by(item.cohort, item.id))
+
+    response = await client.get("/cursor")
+    assert response.status_code == 422
+    assert statements == []
+
+
+@mark.parametrize("meta", [{}, {"after": "a", "next_cursor": "b"}, {"after": 1}])
+def test_metadata_requires_exactly_one_string_or_null_cursor(meta: dict):
+    from fastsqla import cursor
+
+    with raises(ValidationError):
+        cursor.Page[str](data=[], meta=meta)

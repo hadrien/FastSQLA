@@ -80,12 +80,12 @@ async def list_heroes(paginate: Paginate[Hero]) -> Page[HeroModel]: # (1)!
     return await paginate(select(Hero).order_by(Hero.id)) # (2)!
 ```
 
-1.  `Paginate` adds optional `cursor` and `limit` query parameters. The default page size
-    is 10, with a maximum of 100.
+1.  `Paginate` adds optional `next_cursor` and `limit` query parameters. The default page
+    size is 10, with a maximum of 1000.
 2.  Order by a unique, non-null column so each item has a definite position.
 
-Request `/heroes?limit=10` for the first page. The response contains `data` and
-`meta.next_cursor`. Pass that cursor as the next request's `cursor` query parameter.
+Request `/heroes` for the first page. The response contains `data` and
+`meta.next_cursor`. Pass that cursor as the next request's `next_cursor` query parameter.
 When `next_cursor` is `null`, there are no more results.
 
 ### Filters in a JSON body
@@ -98,7 +98,7 @@ from typing import Literal
 from fastsqla.cursor import Page, new_pagination
 from pydantic import BaseModel, ConfigDict, Field
 
-Paginate = new_pagination(default_page_size=10, max_page_size=100)
+Paginate = new_pagination(default_page_size=5, max_page_size=50)
 
 class HeroSearch(BaseModel):
     model_config = ConfigDict(extra="forbid")
@@ -123,7 +123,8 @@ Send this body to `POST /heroes/search?limit=10`:
 ```
 
 To continue, add the returned cursor to the query string. Keep the filters and ordering
-unchanged; omit the cursor to start a different search. Invalid cursors return HTTP 422.
+unchanged; omit the cursor to start a different search. Invalid cursors return
+`HTTP 422 Unprocessable Content`.
 
 ### Custom parameter dependency
 
@@ -132,24 +133,26 @@ use `after` and `size` as query parameter names:
 
 ```python
 from fastapi import Query
-from fastsqla.cursor import new_pagination
+from fastsqla.cursor import PaginationParameters, new_pagination
 
 async def get_parameters(
-    cursor: str | None = Query(None, alias="after"),
-    limit: int | None = Query(None, alias="size"),
-) -> tuple[str | None, int | None]:
-    return cursor, limit
+    after: str | None = Query(None),
+    size: int | None = Query(None),
+) -> PaginationParameters:
+    return {"cursor_name": "after", "cursor": after, "limit": size}
 
 Paginate = new_pagination(
-    default_page_size=10,
-    max_page_size=100,
+    default_page_size=5,
+    max_page_size=50,
     parameters_dependency=get_parameters,
 )
 ```
 
-Use this `Paginate[Hero]` in the endpoint signature. The dependency can be sync or async
-and returns `(cursor, limit)`. A `None` limit uses the configured default; limits outside
-`1..max_page_size` return HTTP 422. FastAPI documents the custom dependency's parameters.
+Use this `Paginate[Hero]` in the endpoint signature. The dependency must be async and
+return a cursor name, cursor value, and limit. A `None` limit uses the configured default;
+limits outside `1..max_page_size` return `HTTP 422 Unprocessable Content`. The cursor
+name becomes the response metadata key: pass `meta.after` as `?after=...` to continue.
+The final page contains `"meta": {"after": null}`.
 
 ### Choosing a query
 

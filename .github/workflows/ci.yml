@@ -4,7 +4,7 @@ on:
   push:
 
 jobs:
-  Compatibility:
+  Tests:
     permissions:
       contents: read
       id-token: write
@@ -29,19 +29,6 @@ jobs:
         with:
           use_oidc: true
           flags: ${{ matrix.tox_env }},python-${{ matrix.python }}
-
-  Tests:
-    needs: Compatibility
-    if: ${{ always() }}
-    strategy:
-      matrix:
-        tox_env: [fastapi-pre121, fastapi-post121, sqlmodel]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Require all compatibility tests to pass
-        env:
-          RESULT: ${{ needs.Compatibility.result }}
-        run: test "$RESULT" = success
 
   Ruff:
     runs-on: ubuntu-latest
