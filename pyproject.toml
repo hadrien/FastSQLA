@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "FastSQLA"
-version = "0.8.7"
+version = "0.8.8"
 description = "SQLAlchemy extension for FastAPI that supports asynchronous sessions and includes built-in pagination."
 readme = "README.md"
 license = "MIT"

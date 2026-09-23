@@ -1,7 +1,20 @@
 # CHANGELOG
 
 
+## v0.8.8 (2026-09-23)
+
+### Refactoring
+
+- Convert fastsqla module to a package ([#179](https://github.com/hadrien/FastSQLA/pull/179),
+  [`bb10f8c`](https://github.com/hadrien/FastSQLA/commit/bb10f8c8ab44fcd67b59e816ed407257d2cbbb5b))
+
+
 ## v0.8.7 (2026-09-22)
+
+### Chores
+
+- **release**: V0.8.7
+  ([`aeff20b`](https://github.com/hadrien/FastSQLA/commit/aeff20bbf553bde5849f4103171cd4cecdd6f9f0))
 
 ### Continuous Integration
 
