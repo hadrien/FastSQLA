@@ -1,7 +1,20 @@
 # CHANGELOG
 
 
+## v0.9.1 (2026-09-23)
+
+### Bug Fixes
+
+- Align cursor query and metadata names ([#180](https://github.com/hadrien/FastSQLA/pull/180),
+  [`42f260a`](https://github.com/hadrien/FastSQLA/commit/42f260a8d706221059c6b54b825ecc0e89753b60))
+
+
 ## v0.9.0 (2026-09-23)
+
+### Chores
+
+- **release**: V0.9.0
+  ([`56f57f1`](https://github.com/hadrien/FastSQLA/commit/56f57f100ac7d5573d990c41fb2e5689f7ae6479))
 
 ### Features
 
