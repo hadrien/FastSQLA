@@ -154,7 +154,7 @@ Use this `Paginate[Hero]` in the endpoint signature. The dependency can be sync 
 and returns named cursor and limit values. A `None` limit uses the configured default;
 limits outside `1..max_page_size` return HTTP 422. The cursor name becomes the response
 metadata key: pass `meta.after` as `?after=...` to continue. The final page contains
-`"meta": {"after": null}`. FastAPI documents the dependency's input parameters.
+`"meta": {"after": null}`.
 
 ### Choosing a query
 
