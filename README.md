@@ -107,10 +107,10 @@ following [`SQLAlchemy`'s best practices](https://docs.sqlalchemy.org/en/20/orm/
 * Forward cursor pagination for "Load more" lists:
 
     ```python
-    from fastsqla import CursorPage, CursorPaginate
+    from fastsqla.cursor import Page, Paginate
 
     @app.get("/heros")
-    async def get_heros(paginate: CursorPaginate[Hero]) -> CursorPage[HeroModel]:
+    async def get_heros(paginate: Paginate[Hero]) -> Page[HeroModel]:
         return await paginate(select(Hero).order_by(Hero.id))
     ```
 

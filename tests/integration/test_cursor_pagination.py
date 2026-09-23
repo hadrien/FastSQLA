@@ -59,9 +59,9 @@ async def page(
     session: AsyncSession, stmt: Any, limit: int = 2,
     cursor: str | None = None, mapper: Any = lambda row: row[0],
 ) -> Any:
-    from fastsqla import new_cursor_pagination
+    from fastsqla import cursor as pagination
 
-    dependency = new_cursor_pagination(row_mapper=mapper)
+    dependency = pagination.new_pagination(row_mapper=mapper)
     paginate = dependency(session=session, cursor=cursor, limit=limit)
     return await paginate(stmt)
 
@@ -171,16 +171,16 @@ async def test_rejects_bad_cursors_before_sql(
 async def test_rejects_invalid_payload(
     item: type[Any], session: AsyncSession, key: str, dialect: str, changes: dict
 ):
-    from fastsqla import _cursor_order, _decode_cursor, _encode_cursor
+    from fastsqla import cursor as pagination
 
     stmt = select(item).order_by(getattr(item, key), item.id)
     row = (await session.scalars(stmt)).first()
-    token = _encode_cursor(_cursor_order(stmt), (getattr(row, key), row.id))
+    token = pagination._encode(pagination._order(stmt), (getattr(row, key), row.id))
     payload = json.loads(base64.urlsafe_b64decode(token + "=" * (-len(token) % 4)))
     encoded = json.dumps(payload | changes).encode()
     token = base64.urlsafe_b64encode(encoded).decode().rstrip("=")
     with raises(HTTPException) as error:
-        _decode_cursor(token, _cursor_order(stmt), dialect)
+        pagination._decode(token, pagination._order(stmt), dialect)
     assert error.value.status_code == 422
 
 
@@ -218,7 +218,7 @@ async def test_http_continuation(
     app: FastAPI, client: AsyncClient, item: type[Any], session: AsyncSession,
     padding_size: int, minimum_cursor_length: int,
 ):
-    from fastsqla import CursorPage, CursorPaginate
+    from fastsqla import cursor as pagination
 
     rows = (await session.scalars(select(item).order_by(item.cohort, item.id))).all()
     expected = [row.name + "x" * padding_size for row in rows]
@@ -227,7 +227,7 @@ async def test_http_continuation(
     await session.commit()
 
     @app.get("/cursor")
-    async def endpoint(paginate: CursorPaginate[str]) -> CursorPage[str]:
+    async def endpoint(paginate: pagination.Paginate[str]) -> pagination.Page[str]:
         return await paginate(select(item.name).order_by(item.name, item.cohort, item.id))
 
     first = await client.get("/cursor", params={"limit": 2})
@@ -244,10 +244,10 @@ async def test_http_continuation(
 
 @mark.parametrize("default,maximum", [(0, 10), (11, 10), (1, 0), (True, 10)])
 def test_invalid_factory_bounds(default: int, maximum: int):
-    from fastsqla import new_cursor_pagination
+    from fastsqla import cursor as pagination
 
     with raises(ValueError):
-        new_cursor_pagination(default, maximum)
+        pagination.new_pagination(default, maximum)
 
 
 async def test_rejects_sqlite_decimal_ordering_before_sql(
@@ -278,7 +278,7 @@ def test_mysql_integer_cursor_round_trip(kind: str, bits: int, unsigned: bool, b
     from sqlalchemy import Column, MetaData, Table
     from sqlalchemy.dialects import mysql
 
-    from fastsqla import _cursor_order, _decode_cursor, _encode_cursor
+    from fastsqla import cursor as pagination
 
     table = Table(
         "integer_key",
@@ -287,9 +287,9 @@ def test_mysql_integer_cursor_round_trip(kind: str, bits: int, unsigned: bool, b
     )
     bounds = (0, 2**bits - 1) if unsigned else (-(2 ** (bits - 1)), 2 ** (bits - 1) - 1)
     value = bounds[boundary]
-    order = _cursor_order(select(table).order_by(table.c.id))
-    token = _encode_cursor(order, (value,))
-    assert _decode_cursor(token, order, "mysql") == [value]
+    order = pagination._order(select(table).order_by(table.c.id))
+    token = pagination._encode(order, (value,))
+    assert pagination._decode(token, order, "mysql") == [value]
 
 
 @mark.parametrize("value", [-1, 2**32])
@@ -297,17 +297,17 @@ def test_rejects_values_outside_mysql_unsigned_range(value: int):
     from sqlalchemy import Column, MetaData, Table
     from sqlalchemy.dialects import mysql
 
-    from fastsqla import _cursor_order, _decode_cursor, _encode_cursor
+    from fastsqla import cursor as pagination
 
     table = Table(
         "unsigned_key",
         MetaData(),
         Column("id", mysql.INTEGER(unsigned=True), primary_key=True)
     )
-    order = _cursor_order(select(table).order_by(table.c.id))
-    token = _encode_cursor(order, (value,))
+    order = pagination._order(select(table).order_by(table.c.id))
+    token = pagination._encode(order, (value,))
     with raises(HTTPException) as error:
-        _decode_cursor(token, order, "mysql")
+        pagination._decode(token, order, "mysql")
     assert error.value.status_code == 422
 
 
@@ -317,26 +317,26 @@ def test_rejects_values_outside_mysql_unsigned_range(value: int):
 def test_postgresql_decimal_cursor_round_trip(value: Decimal):
     from sqlalchemy import Column, MetaData, Table
 
-    from fastsqla import _cursor_order, _decode_cursor, _encode_cursor
+    from fastsqla import cursor as pagination
 
     table = Table("decimal_key", MetaData(), Column("id", Numeric(10, 2), primary_key=True))
-    order = _cursor_order(select(table).order_by(table.c.id))
-    token = _encode_cursor(order, (value,))
-    assert _decode_cursor(token, order, "postgresql") == [value]
+    order = pagination._order(select(table).order_by(table.c.id))
+    token = pagination._encode(order, (value,))
+    assert pagination._decode(token, order, "postgresql") == [value]
 
 
 @mark.parametrize("aware", [False, True], ids=["naive", "aware"])
 def test_postgresql_timestamp_cursor_round_trip(aware: bool):
     from sqlalchemy import Column, DateTime, MetaData, Table
 
-    from fastsqla import _cursor_order, _decode_cursor, _encode_cursor
+    from fastsqla import cursor as pagination
 
     table = Table("timestamp_key", MetaData(),
                   Column("id", DateTime(timezone=aware), primary_key=True))
     value = datetime(2026, 1, 1, tzinfo=UTC if aware else None)
-    order = _cursor_order(select(table).order_by(table.c.id))
-    token = _encode_cursor(order, (value,))
-    assert _decode_cursor(token, order, "postgresql") == [value]
+    order = pagination._order(select(table).order_by(table.c.id))
+    token = pagination._encode(order, (value,))
+    assert pagination._decode(token, order, "postgresql") == [value]
 
 
 @mark.parametrize("encoding", ["standard", "urlsafe"])
@@ -344,14 +344,45 @@ def test_postgresql_timestamp_cursor_round_trip(aware: bool):
 def test_accepts_equivalent_base64_encodings(encoding: str, padding: str):
     from sqlalchemy import Column, MetaData, String, Table
 
-    from fastsqla import _cursor_order, _decode_cursor, _encode_cursor
+    from fastsqla import cursor as pagination
 
     table = Table("text_key", MetaData(), Column("id", String, primary_key=True))
-    order = _cursor_order(select(table).order_by(table.c.id))
+    order = pagination._order(select(table).order_by(table.c.id))
     value = "\uffff" * 3
-    token = _encode_cursor(order, (value,))
+    token = pagination._encode(order, (value,))
     payload = base64.urlsafe_b64decode(token + "=" * (-len(token) % 4))
     encoder = {"standard": base64.b64encode, "urlsafe": base64.urlsafe_b64encode}[encoding]
     encoded = encoder(payload).decode().rstrip("=")
     cursor = encoded + padding * (-len(encoded) % 4)
-    assert _decode_cursor(cursor, order, "sqlite") == [value]
+    assert pagination._decode(cursor, order, "sqlite") == [value]
+
+
+async def test_offset_and_cursor_dependencies_work_in_same_app(
+    app: FastAPI, client: AsyncClient, item: type[Any]
+):
+    import fastsqla
+    from fastsqla import cursor
+
+    @app.get("/offset")
+    async def offset_endpoint(paginate: fastsqla.Paginate[str]) -> fastsqla.Page[str]:
+        return await paginate(select(item.name).order_by(item.cohort, item.id))
+
+    @app.get("/cursor")
+    async def cursor_endpoint(paginate: cursor.Paginate[str]) -> cursor.Page[str]:
+        return await paginate(select(item.name).order_by(item.cohort, item.id))
+
+    offset_page = await client.get("/offset", params={"offset": 1, "limit": 2})
+    assert offset_page.status_code == 200
+    assert offset_page.json()["data"] == ["12", "21"]
+    assert offset_page.json()["meta"]["offset"] == 1
+    first = await client.get("/cursor", params={"limit": 2})
+    assert first.status_code == 200
+    assert first.json()["data"] == ["11", "12"]
+    second = await client.get(
+        "/cursor", params={"limit": 3, "cursor": first.json()["meta"]["next_cursor"]}
+    )
+    assert second.status_code == 200
+    assert second.json() == {"data": ["21", "22", "31"], "meta": {"next_cursor": None}}
+    paths = app.openapi()["paths"]
+    assert {p["name"] for p in paths["/offset"]["get"]["parameters"]} == {"offset", "limit"}
+    assert {p["name"] for p in paths["/cursor"]["get"]["parameters"]} == {"cursor", "limit"}

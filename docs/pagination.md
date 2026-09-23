@@ -69,17 +69,18 @@ async def list_heros(paginate: Paginate, age:int | None = None):
 Use cursor pagination to load the next batch of results, such as a "Load more" list.
 Each response includes a cursor pointing after the last returned item.
 
-Using `Hero` and `HeroModel` from the example above:
+Import `Page` and `Paginate` from `fastsqla.cursor`. The top-level imports use offset/limit
+pagination. Using `Hero` and `HeroModel` from the example above:
 
 ```python { .annotate }
-from fastsqla import CursorPage, CursorPaginate
+from fastsqla.cursor import Page, Paginate
 
 @app.get("/heroes")
-async def list_heroes(paginate: CursorPaginate[Hero]) -> CursorPage[HeroModel]: # (1)!
+async def list_heroes(paginate: Paginate[Hero]) -> Page[HeroModel]: # (1)!
     return await paginate(select(Hero).order_by(Hero.id)) # (2)!
 ```
 
-1.  `CursorPaginate` adds optional `cursor` and `limit` query parameters. The default
+1.  `Paginate` adds optional `cursor` and `limit` query parameters. The default
     page size is 10, with a maximum of 100.
 2.  Order by a unique, non-null column so each item has a definite position.
 
@@ -94,10 +95,11 @@ call the dependency with those values:
 
 ```python { .annotate }
 from typing import Literal
-from fastsqla import CursorPage, Session, new_cursor_pagination
+from fastsqla import Session
+from fastsqla.cursor import Page, new_pagination
 from pydantic import BaseModel, ConfigDict, Field
 
-cursor_dependency = new_cursor_pagination(default_page_size=10, max_page_size=100)
+cursor_dependency = new_pagination(default_page_size=10, max_page_size=100)
 
 class HeroSearch(BaseModel):
     model_config = ConfigDict(extra="forbid")
@@ -107,7 +109,7 @@ class HeroSearch(BaseModel):
     order_by: Literal["age", "name"] = "age"
 
 @app.post("/heroes/search")
-async def search_heroes(body: HeroSearch, session: Session) -> CursorPage[HeroModel]:
+async def search_heroes(body: HeroSearch, session: Session) -> Page[HeroModel]:
     column = {"age": Hero.age, "name": Hero.name}[body.order_by]
     stmt = select(Hero).order_by(column, Hero.id) # (2)!
     if body.min_age is not None:
@@ -144,7 +146,7 @@ value during traversal can skip or repeat an item.
     loses the exact cursor position.
 
 For column selections, set `row_mapper=lambda row: row._mapping` on
-`new_cursor_pagination()`. The default mapper returns the first selected entity or value.
+`new_pagination()`. The default mapper returns the first selected entity or value.
 Each SQL row must produce one response item; filtering or deduplicating rows in the
 mapper breaks pagination.
 
