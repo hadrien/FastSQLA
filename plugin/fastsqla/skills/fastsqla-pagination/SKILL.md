@@ -30,7 +30,7 @@ factory default; limits must be between 1 and the configured maximum. POST filte
 need only declare their filter fields
 when pagination comes from the query string.
 Keep filters fixed and reapply authorization. Cursors expose values and read live data.
-See the [cursor guide](https://hadrien.github.io/FastSQLA/pagination/#forward-only-cursor-pagination) for supported queries.
+See the [cursor guide](https://hadrien.github.io/FastSQLA/pagination/index.md) for supported queries.
 
 ### `Page[T]` — paginated list with metadata
 
