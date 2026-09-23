@@ -19,13 +19,14 @@ FastSQLA exports these generic response wrappers:
 ### `fastsqla.cursor.Page[T]` — forward-only cursor pagination
 
 Use `fastsqla.cursor.Paginate[T]` with non-null column ordering and a unique tie-breaker.
-This dependency accepts POST only and reads `cursor` and `limit` from the flat JSON body.
-Send `{}` for defaults. Pass `meta.next_cursor` as `cursor` until it is null; metadata
-contains no other fields. For custom sizes or mapping, assign
-`Paginate = fastsqla.cursor.new_pagination(...)` and annotate with `Paginate[T]`.
-The `row_mapper` must preserve row count. Declare an endpoint-owned body model with
-pagination fields and filters to document the body in OpenAPI; keep its defaults and
-bounds aligned with the factory.
+Pagination uses `cursor` and `limit` query parameters on GET or POST endpoints by default.
+Pass `meta.next_cursor` as `cursor` until it is null; metadata contains no other fields.
+For custom sizes or mapping, assign `Paginate = fastsqla.cursor.new_pagination(...)` and
+annotate with `Paginate[T]`. The `row_mapper` must preserve row count.
+Pass `get_parameter_dependency` to supply a sync or async FastAPI dependency returning
+`(cursor, limit)`. A `None` limit uses the factory default; all limits must be between
+1 and the configured maximum. POST filter models need only declare their filter fields
+when pagination comes from the query string.
 Keep filters fixed and reapply authorization. Cursors expose values and read live data.
 See the [cursor guide](https://hadrien.github.io/FastSQLA/pagination/#forward-only-cursor-pagination) for supported queries.
 

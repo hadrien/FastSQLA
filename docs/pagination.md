@@ -75,26 +75,23 @@ pagination. Using `Hero` and `HeroModel` from the example above:
 ```python { .annotate }
 from fastsqla.cursor import Page, Paginate
 
-@app.post("/heroes/search")
+@app.get("/heroes")
 async def list_heroes(paginate: Paginate[Hero]) -> Page[HeroModel]: # (1)!
     return await paginate(select(Hero).order_by(Hero.id)) # (2)!
 ```
 
-1.  `Paginate` reads optional `cursor` and `limit` fields from the POST JSON body.
-    The default page size is 10, with a maximum of 100.
+1.  `Paginate` adds optional `cursor` and `limit` query parameters. The default page size
+    is 10, with a maximum of 100.
 2.  Order by a unique, non-null column so each item has a definite position.
 
-Send `{"limit": 10}` to `POST /heroes/search` for the first page, or `{}` to use defaults.
-The response contains `data` and `meta.next_cursor`. Pass that cursor in the next JSON
-body's `cursor` field. When `next_cursor` is `null`, there are no more results.
-
-Cursor pagination accepts POST requests only. Declare a request model as shown below
-to document the body in OpenAPI.
+Request `/heroes?limit=10` for the first page. The response contains `data` and
+`meta.next_cursor`. Pass that cursor as the next request's `cursor` query parameter.
+When `next_cursor` is `null`, there are no more results.
 
 ### Filters in a JSON body
 
-Put filters and pagination fields in your endpoint's request model. Use
-`new_pagination()` to configure the injectable `Paginate` type:
+Query pagination also works on POST endpoints. Keep filters in the request model and
+use `new_pagination()` to configure the injectable `Paginate` type:
 
 ```python { .annotate }
 from typing import Literal
@@ -105,33 +102,54 @@ Paginate = new_pagination(default_page_size=10, max_page_size=100)
 
 class HeroSearch(BaseModel):
     model_config = ConfigDict(extra="forbid")
-    cursor: str | None = Field(None, min_length=1)
-    limit: int = Field(10, ge=1, le=100) # (1)!
     min_age: int | None = Field(None, ge=0)
     order_by: Literal["age", "name"] = "age"
 
 @app.post("/heroes/search")
 async def search_heroes(body: HeroSearch, paginate: Paginate[Hero]) -> Page[HeroModel]:
     column = {"age": Hero.age, "name": Hero.name}[body.order_by]
-    stmt = select(Hero).order_by(column, Hero.id) # (2)!
+    stmt = select(Hero).order_by(column, Hero.id) # (1)!
     if body.min_age is not None:
         stmt = stmt.where(Hero.age >= body.min_age)
     return await paginate(stmt)
 ```
 
-1.  Keep defaults and bounds aligned with `new_pagination()`. The dependency validates
-    pagination fields independently and leaves filters to `HeroSearch`.
-2.  `Hero.id` breaks ties when several heroes have the same age or name.
+1.  `Hero.id` breaks ties when several heroes have the same age or name.
 
-Send this body to `POST /heroes/search`:
+Send this body to `POST /heroes/search?limit=10`:
 
 ```json
-{"min_age": 18, "order_by": "name", "limit": 10}
+{"min_age": 18, "order_by": "name"}
 ```
 
-To continue, add `cursor` using the returned `meta.next_cursor`. Keep the filters and
-ordering unchanged; omit the cursor to start a different search. Invalid cursors return
-HTTP 422.
+To continue, add the returned cursor to the query string. Keep the filters and ordering
+unchanged; omit the cursor to start a different search. Invalid cursors return HTTP 422.
+
+### Custom parameter dependency
+
+Supply a FastAPI dependency to choose where pagination parameters come from. For example,
+use `after` and `size` as query parameter names:
+
+```python
+from fastapi import Query
+from fastsqla.cursor import new_pagination
+
+async def get_parameters(
+    cursor: str | None = Query(None, alias="after"),
+    limit: int | None = Query(None, alias="size"),
+) -> tuple[str | None, int | None]:
+    return cursor, limit
+
+Paginate = new_pagination(
+    default_page_size=10,
+    max_page_size=100,
+    get_parameter_dependency=get_parameters,
+)
+```
+
+Use this `Paginate[Hero]` in the endpoint signature. The dependency can be sync or async
+and returns `(cursor, limit)`. A `None` limit uses the configured default; limits outside
+`1..max_page_size` return HTTP 422. FastAPI documents the custom dependency's parameters.
 
 ### Choosing a query
 

@@ -109,14 +109,14 @@ following [`SQLAlchemy`'s best practices](https://docs.sqlalchemy.org/en/20/orm/
     ```python
     from fastsqla.cursor import Page, Paginate
 
-    @app.post("/heros/search")
+    @app.get("/heros")
     async def get_heros(paginate: Paginate[Hero]) -> Page[HeroModel]:
         return await paginate(select(Hero).order_by(Hero.id))
     ```
 
     <center>
 
-    👇 `POST /heros/search` with body `{"limit": 2}` 👇
+    👇 `/heros?limit=2` 👇
 
     </center>
 
@@ -140,7 +140,7 @@ following [`SQLAlchemy`'s best practices](https://docs.sqlalchemy.org/en/20/orm/
     }
     ```
 
-    Pass `meta.next_cursor` as `cursor` in the next JSON body. A `null` cursor means the
+    Pass `meta.next_cursor` as `cursor` in the next query string. A `null` cursor means the
     end of the results.
 
 * Pagination customization:
