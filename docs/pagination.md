@@ -75,31 +75,33 @@ pagination. Using `Hero` and `HeroModel` from the example above:
 ```python { .annotate }
 from fastsqla.cursor import Page, Paginate
 
-@app.get("/heroes")
+@app.post("/heroes/search")
 async def list_heroes(paginate: Paginate[Hero]) -> Page[HeroModel]: # (1)!
     return await paginate(select(Hero).order_by(Hero.id)) # (2)!
 ```
 
-1.  `Paginate` adds optional `cursor` and `limit` query parameters. The default
-    page size is 10, with a maximum of 100.
+1.  `Paginate` reads optional `cursor` and `limit` fields from the POST JSON body.
+    The default page size is 10, with a maximum of 100.
 2.  Order by a unique, non-null column so each item has a definite position.
 
-Request `/heroes?limit=10` for the first page. The response contains `data` and
-`meta.next_cursor`. Pass that cursor as the next request's `cursor` parameter.
-When `next_cursor` is `null`, there are no more results.
+Send `{"limit": 10}` to `POST /heroes/search` for the first page, or `{}` to use defaults.
+The response contains `data` and `meta.next_cursor`. Pass that cursor in the next JSON
+body's `cursor` field. When `next_cursor` is `null`, there are no more results.
+
+Cursor pagination accepts POST requests only. Declare a request model as shown below
+to document the body in OpenAPI.
 
 ### Filters in a JSON body
 
-For a search endpoint, put the filters and pagination fields in a request model and
-call the dependency with those values:
+Put filters and pagination fields in your endpoint's request model. Use
+`new_pagination()` to configure the injectable `Paginate` type:
 
 ```python { .annotate }
 from typing import Literal
-from fastsqla import Session
 from fastsqla.cursor import Page, new_pagination
 from pydantic import BaseModel, ConfigDict, Field
 
-cursor_dependency = new_pagination(default_page_size=10, max_page_size=100)
+Paginate = new_pagination(default_page_size=10, max_page_size=100)
 
 class HeroSearch(BaseModel):
     model_config = ConfigDict(extra="forbid")
@@ -109,17 +111,16 @@ class HeroSearch(BaseModel):
     order_by: Literal["age", "name"] = "age"
 
 @app.post("/heroes/search")
-async def search_heroes(body: HeroSearch, session: Session) -> Page[HeroModel]:
+async def search_heroes(body: HeroSearch, paginate: Paginate[Hero]) -> Page[HeroModel]:
     column = {"age": Hero.age, "name": Hero.name}[body.order_by]
     stmt = select(Hero).order_by(column, Hero.id) # (2)!
     if body.min_age is not None:
         stmt = stmt.where(Hero.age >= body.min_age)
-    paginate = cursor_dependency(session=session, cursor=body.cursor, limit=body.limit)
     return await paginate(stmt)
 ```
 
-1.  Validate the body with the same page-size bounds as the dependency. FastAPI's query
-    parameter validation does not run when calling the dependency directly.
+1.  Keep defaults and bounds aligned with `new_pagination()`. The dependency validates
+    pagination fields independently and leaves filters to `HeroSearch`.
 2.  `Hero.id` breaks ties when several heroes have the same age or name.
 
 Send this body to `POST /heroes/search`:

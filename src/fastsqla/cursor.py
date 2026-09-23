@@ -4,11 +4,12 @@ from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from datetime import date, datetime
 from decimal import Decimal
-from typing import Annotated, TypeVar
+from typing import Annotated, Any
 from uuid import UUID
 
 import sqlalchemy as sa
-from fastapi import HTTPException, Query
+from fastapi import HTTPException, Request
+from fastapi.exceptions import RequestValidationError
 from pydantic import BaseModel, ConfigDict, Field, TypeAdapter, ValidationError
 from sqlalchemy import Select
 from sqlalchemy.dialects import mysql
@@ -19,8 +20,6 @@ from sqlalchemy.sql.selectable import Join
 import fastsqla
 
 __all__ = ["Meta", "Page", "Paginate", "PaginateType", "new_pagination"]
-
-T = TypeVar("T")
 
 
 class Meta(BaseModel):
@@ -215,13 +214,19 @@ def new_pagination[T](
     max_page_size: int = 100,
     *,
     row_mapper: Callable[[sa.Row], T] = lambda row: row[0],
-) -> Callable[..., PaginateType[T]]:
-    """Create a forward cursor dependency with a one-row-to-one-item mapper.
+) -> Any:
+    """Create a generic POST dependency: `Paginate = new_pagination(...)`.
+
+    Annotate the endpoint argument as `Paginate[T]`. Pagination fields come from
+    the flat JSON body; other fields are left to the endpoint's request model.
 
     Args:
         default_page_size: Default limit when the client omits it.
         max_page_size: Maximum accepted limit.
         row_mapper: Maps each original result row to exactly one response item.
+
+    Returns:
+        Generic annotated dependency with a one-row-to-one-item mapper.
 
     Raises:
         ValueError: Page-size bounds or the supplied Select are unsupported.
@@ -233,11 +238,28 @@ def new_pagination[T](
     ):
         raise ValueError("Require 1 <= default_page_size <= max_page_size")
 
-    def dependency(
-        session: fastsqla.Session,
-        cursor: str | None = Query(None, min_length=1),
-        limit: int = Query(default_page_size, ge=1, le=max_page_size),
-    ) -> PaginateType[T]:
+    class Parameters(BaseModel):
+        model_config = ConfigDict(strict=True)
+
+        cursor: str | None = Field(None, min_length=1)
+        limit: int = Field(default_page_size, ge=1, le=max_page_size)
+
+    async def dependency(request: Request, session: fastsqla.Session) -> PaginateType[T]:
+        if request.method != "POST":
+            raise HTTPException(
+                status_code=405, detail="Cursor pagination requires POST",
+                headers={"Allow": "POST"}
+            )
+        try:
+            parameters = Parameters.model_validate_json(await request.body())
+        except ValidationError as error:
+            errors = [
+                {**detail, "loc": ("body", *detail["loc"])}
+                for detail in error.errors(include_url=False, include_input=False)
+            ]
+            raise RequestValidationError(errors) from error
+        cursor, limit = parameters.cursor, parameters.limit
+
         async def paginate(stmt: Select) -> Page[T]:
             order = _order(stmt)
             dialect = session.get_bind(clause=stmt).dialect.name
@@ -265,8 +287,8 @@ def new_pagination[T](
 
         return paginate
 
-    return dependency
+    return Annotated[PaginateType[T], fastsqla.Depends(dependency)]
 
 
-Paginate = Annotated[PaginateType[T], fastsqla.Depends(new_pagination())]
-"""Inject a forward paginator accepting cursor and limit query parameters."""
+Paginate = new_pagination()
+"""Inject a forward paginator reading cursor and limit from a POST JSON body."""

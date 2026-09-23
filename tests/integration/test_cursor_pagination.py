@@ -2,11 +2,12 @@ import base64
 import json
 from datetime import UTC, date, datetime
 from decimal import Decimal
-from typing import Any
+from typing import Any, get_args
 from uuid import UUID
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from httpx import AsyncClient
+from pydantic import BaseModel, ConfigDict, Field
 from pytest import fixture, mark, param, raises
 from sqlalchemy import Numeric, asc, desc, event, func, select
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession
@@ -61,8 +62,13 @@ async def page(
 ) -> Any:
     from fastsqla import cursor as pagination
 
-    dependency = pagination.new_pagination(row_mapper=mapper)
-    paginate = dependency(session=session, cursor=cursor, limit=limit)
+    async def receive() -> dict:
+        body = json.dumps({"cursor": cursor, "limit": limit}).encode()
+        return {"type": "http.request", "body": body}
+
+    request = Request({"type": "http", "method": "POST"}, receive)
+    dependency = get_args(pagination.new_pagination(row_mapper=mapper))[1].dependency
+    paginate = await dependency(request=request, session=session)
     return await paginate(stmt)
 
 
@@ -137,9 +143,9 @@ async def test_projection_hides_cursor_columns_and_runs_one_query(
 
 
 @mark.parametrize(
-    "cursor", ["", "not-a-cursor", "e30", "a!b", "a", "é"],
+    "cursor", ["not-a-cursor", "e30", "a!b", "a", "é"],
     ids=[
-        "empty", "malformed", "invalid-payload", "invalid-alphabet", "invalid-padding", "non-ascii"
+        "malformed", "invalid-payload", "invalid-alphabet", "invalid-padding", "non-ascii"
     ]
 )
 async def test_rejects_bad_cursors_before_sql(
@@ -226,19 +232,19 @@ async def test_http_continuation(
         row.name = name
     await session.commit()
 
-    @app.get("/cursor")
+    @app.post("/cursor")
     async def endpoint(paginate: pagination.Paginate[str]) -> pagination.Page[str]:
         return await paginate(select(item.name).order_by(item.name, item.cohort, item.id))
 
-    first = await client.get("/cursor", params={"limit": 2})
+    first = await client.post("/cursor", json={"limit": 2})
     assert first.status_code == 200
     assert first.json()["data"] == expected[:2]
     cursor = first.json()["meta"]["next_cursor"]
     assert len(cursor) >= minimum_cursor_length
-    second = await client.get("/cursor", params={"limit": 3, "cursor": cursor})
+    second = await client.post("/cursor", json={"limit": 3, "cursor": cursor})
     assert second.status_code == 200
     assert second.json() == {"data": expected[2:], "meta": {"next_cursor": None}}
-    invalid = await client.get("/cursor", params={"cursor": "invalid"})
+    invalid = await client.post("/cursor", json={"cursor": "invalid"})
     assert invalid.status_code == 422
 
 
@@ -367,7 +373,7 @@ async def test_offset_and_cursor_dependencies_work_in_same_app(
     async def offset_endpoint(paginate: fastsqla.Paginate[str]) -> fastsqla.Page[str]:
         return await paginate(select(item.name).order_by(item.cohort, item.id))
 
-    @app.get("/cursor")
+    @app.post("/cursor")
     async def cursor_endpoint(paginate: cursor.Paginate[str]) -> cursor.Page[str]:
         return await paginate(select(item.name).order_by(item.cohort, item.id))
 
@@ -375,14 +381,119 @@ async def test_offset_and_cursor_dependencies_work_in_same_app(
     assert offset_page.status_code == 200
     assert offset_page.json()["data"] == ["12", "21"]
     assert offset_page.json()["meta"]["offset"] == 1
-    first = await client.get("/cursor", params={"limit": 2})
+    first = await client.post("/cursor", json={"limit": 2})
     assert first.status_code == 200
     assert first.json()["data"] == ["11", "12"]
-    second = await client.get(
-        "/cursor", params={"limit": 3, "cursor": first.json()["meta"]["next_cursor"]}
+    second = await client.post(
+        "/cursor", json={"limit": 3, "cursor": first.json()["meta"]["next_cursor"]}
     )
     assert second.status_code == 200
     assert second.json() == {"data": ["21", "22", "31"], "meta": {"next_cursor": None}}
     paths = app.openapi()["paths"]
     assert {p["name"] for p in paths["/offset"]["get"]["parameters"]} == {"offset", "limit"}
-    assert {p["name"] for p in paths["/cursor"]["get"]["parameters"]} == {"cursor", "limit"}
+    assert "parameters" not in paths["/cursor"]["post"]
+
+
+async def test_custom_dependency_shares_flat_body_with_filters(
+    app: FastAPI, client: AsyncClient, item: type[Any]
+):
+    from fastsqla import cursor
+
+    Paginate = cursor.new_pagination(default_page_size=1, max_page_size=2)
+
+    class Search(BaseModel):
+        model_config = ConfigDict(extra="forbid")
+        cursor: str | None = Field(None, min_length=1)
+        limit: int = Field(1, ge=1, le=2)
+        min_cohort: int
+
+    @app.post("/search")
+    async def endpoint(body: Search, paginate: Paginate[str]) -> cursor.Page[str]:
+        stmt = select(item.name).where(item.cohort >= body.min_cohort)
+        return await paginate(stmt.order_by(item.cohort, item.id))
+
+    first = await client.post("/search?limit=2&cursor=invalid", json={"min_cohort": 2})
+    assert first.status_code == 200
+    assert first.json()["data"] == ["21"]
+    second = await client.post("/search", json={
+        "min_cohort": 2, "limit": 2, "cursor": first.json()["meta"]["next_cursor"]
+    })
+    assert second.status_code == 200
+    assert second.json() == {"data": ["22", "31"], "meta": {"next_cursor": None}}
+    schema = app.openapi()
+    operation = schema["paths"]["/search"]["post"]
+    assert "parameters" not in operation
+    body_schema = operation["requestBody"]["content"]["application/json"]["schema"]
+    assert body_schema == {"$ref": "#/components/schemas/Search"}
+    assert set(schema["components"]["schemas"]["Search"]["properties"]) == {
+        "cursor", "limit", "min_cohort"
+    }
+
+
+@mark.parametrize(
+    "body,location",
+    [
+        param(b"", [], id="missing-body"),
+        param(b"{", [], id="invalid-json"),
+        param(b"\xff", [], id="invalid-utf8"),
+        param(b"null", [], id="null-body"),
+        param(b"[]", [], id="array-body"),
+        param(b'{"limit": 0}', ["limit"], id="below-minimum"),
+        param(b'{"limit": 3}', ["limit"], id="above-custom-maximum"),
+        param(b'{"limit": null}', ["limit"], id="null-limit"),
+        param(b'{"limit": true}', ["limit"], id="boolean-limit"),
+        param(b'{"limit": 1.5}', ["limit"], id="fractional-limit"),
+        param(b'{"cursor": ""}', ["cursor"], id="empty-cursor"),
+        param(b'{"cursor": 1}', ["cursor"], id="numeric-cursor"),
+    ]
+)
+async def test_rejects_invalid_body_before_sql(
+    app: FastAPI, client: AsyncClient, item: type[Any], statements: list[str],
+    body: bytes, location: list[str],
+):
+    from fastsqla import cursor
+
+    Paginate = cursor.new_pagination(default_page_size=1, max_page_size=2)
+
+    @app.post("/cursor")
+    async def endpoint(paginate: Paginate[str]) -> cursor.Page[str]:
+        return await paginate(select(item.name).order_by(item.cohort, item.id))
+
+    response = await client.post(
+        "/cursor", content=body, headers={"Content-Type": "application/json"}
+    )
+    assert response.status_code == 422
+    assert response.json()["detail"][0]["loc"] == ["body", *location]
+    assert statements == []
+
+
+async def test_default_dependency_accepts_empty_object(
+    app: FastAPI, client: AsyncClient, item: type[Any]
+):
+    from fastsqla import cursor
+
+    @app.post("/cursor")
+    async def endpoint(paginate: cursor.Paginate[str]) -> cursor.Page[str]:
+        return await paginate(select(item.name).order_by(item.cohort, item.id))
+
+    response = await client.post("/cursor", json={})
+    assert response.status_code == 200
+    assert response.json() == {
+        "data": ["11", "12", "21", "22", "31"], "meta": {"next_cursor": None}
+    }
+
+
+@mark.parametrize("method", ["GET", "PUT", "PATCH", "DELETE"])
+async def test_dependency_rejects_non_post_methods(
+    app: FastAPI, client: AsyncClient, item: type[Any], statements: list[str], method: str
+):
+    from fastsqla import cursor
+
+    @app.api_route("/cursor", methods=[method])
+    async def endpoint(paginate: cursor.Paginate[str]) -> cursor.Page[str]:
+        return await paginate(select(item.name).order_by(item.cohort, item.id))
+
+    response = await client.request(method, "/cursor", json={})
+    assert response.status_code == 405
+    assert response.headers["Allow"] == "POST"
+    assert statements == []
