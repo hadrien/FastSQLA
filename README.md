@@ -114,34 +114,9 @@ following [`SQLAlchemy`'s best practices](https://docs.sqlalchemy.org/en/20/orm/
         return await paginate(select(Hero).order_by(Hero.id))
     ```
 
-    <center>
-
-    👇 `/heros?limit=2&next_cursor=eyJ2IjoxLCJvcmRlciI6W1siaGVybyIsImlkIixmYWxzZSwiaW50Il1dLCJ2YWx1ZXMiOlsyXX0` 👇
-
-    </center>
-
-    ```json
-    {
-      "data": [
-        {
-          "name": "Superman",
-          "secret_identity": "Clark Kent",
-          "id": 3
-        },
-        {
-          "name": "Batman",
-          "secret_identity": "Bruce Wayne",
-          "id": 4
-        }
-      ],
-      "meta": {
-        "next_cursor": "eyJ2IjoxLCJvcmRlciI6W1siaGVybyIsImlkIixmYWxzZSwiaW50Il1dLCJ2YWx1ZXMiOls0XX0"
-      }
-    }
-    ```
-
-    Pass `meta.next_cursor` as `next_cursor` in the next query string. A `null` cursor
-    means the end of the results.
+    Request `/heros` for the first page. Pass the returned `meta.next_cursor` as
+    `next_cursor` in the next query string. A `null` cursor means the end of the results.
+    See the [pagination guide](https://hadrien.github.io/FastSQLA/pagination/) for details.
 
 * Pagination customization:
 
