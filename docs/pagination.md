@@ -143,7 +143,7 @@ async def get_parameters(
 Paginate = new_pagination(
     default_page_size=10,
     max_page_size=100,
-    get_parameter_dependency=get_parameters,
+    parameters_dependency=get_parameters,
 )
 ```
 

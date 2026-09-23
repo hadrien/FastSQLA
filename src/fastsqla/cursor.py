@@ -214,7 +214,7 @@ def new_pagination[T](
     default_page_size: int = 10,
     max_page_size: int = 100,
     *,
-    get_parameter_dependency: Callable[..., _Parameters | Awaitable[_Parameters]] | None = None,
+    parameters_dependency: Callable[..., _Parameters | Awaitable[_Parameters]] | None = None,
     row_mapper: Callable[[sa.Row], T] = lambda row: row[0],
 ) -> Any:
     """Create a generic pagination dependency: `Paginate = new_pagination(...)`.
@@ -225,7 +225,7 @@ def new_pagination[T](
     Args:
         default_page_size: Default limit when the client omits it.
         max_page_size: Maximum accepted limit.
-        get_parameter_dependency: Sync or async FastAPI dependency returning
+        parameters_dependency: Sync or async FastAPI dependency returning
             `(cursor, limit)`. A `None` limit uses `default_page_size`.
         row_mapper: Maps each original result row to exactly one response item.
 
@@ -254,12 +254,12 @@ def new_pagination[T](
     ) -> _Parameters:
         return cursor, limit
 
-    if get_parameter_dependency is None:
-        get_parameter_dependency = query_parameters
+    if parameters_dependency is None:
+        parameters_dependency = query_parameters
 
     async def dependency(
         session: fastsqla.Session,
-        parameters: Annotated[_Parameters, fastsqla.Depends(get_parameter_dependency)],
+        parameters: Annotated[_Parameters, fastsqla.Depends(parameters_dependency)],
     ) -> PaginateType[T]:
         cursor, limit = parameters
         try:

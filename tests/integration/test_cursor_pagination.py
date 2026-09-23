@@ -402,7 +402,7 @@ async def test_post_filters_with_query_pagination(
 
     Paginate = cursor.new_pagination(
         default_page_size=1, max_page_size=2,
-        get_parameter_dependency=get_parameters if custom else None
+        parameters_dependency=get_parameters if custom else None
     )
 
     class Search(BaseModel):
@@ -479,7 +479,7 @@ async def test_validates_custom_dependency_values_before_sql(
         return parameters
 
     Paginate = cursor.new_pagination(
-        default_page_size=1, max_page_size=2, get_parameter_dependency=get_parameters
+        default_page_size=1, max_page_size=2, parameters_dependency=get_parameters
     )
 
     @app.get("/cursor")
@@ -526,7 +526,7 @@ async def test_sync_extractor_with_body_subdependency(
         return body.get("after"), body.get("size")
 
     Paginate = cursor.new_pagination(
-        default_page_size=1, max_page_size=2, get_parameter_dependency=get_parameters
+        default_page_size=1, max_page_size=2, parameters_dependency=get_parameters
     )
 
     @app.post("/search")
