@@ -1,7 +1,20 @@
 # CHANGELOG
 
 
+## v0.9.0 (2026-09-23)
+
+### Features
+
+- Add forward pagination in fastsqla.cursor ([#164](https://github.com/hadrien/FastSQLA/pull/164),
+  [`3870fd7`](https://github.com/hadrien/FastSQLA/commit/3870fd7222bcaab3fa28783296e1ad6b887f32f6))
+
+
 ## v0.8.8 (2026-09-23)
+
+### Chores
+
+- **release**: V0.8.8
+  ([`baf4f15`](https://github.com/hadrien/FastSQLA/commit/baf4f1518c632b7d2599e003aa5035806101d096))
 
 ### Refactoring
 
