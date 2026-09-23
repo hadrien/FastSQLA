@@ -1,4 +1,5 @@
 import base64
+import inspect
 import json
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
@@ -27,7 +28,17 @@ from sqlalchemy.sql.selectable import Join
 
 import fastsqla
 
-__all__ = ["Meta", "Page", "Paginate", "PaginateType", "new_pagination"]
+__all__ = [
+    "Meta",
+    "NamedCursor",
+    "NamedLimit",
+    "Page",
+    "Paginate",
+    "PaginateType",
+    "PaginationParameters",
+    "ParametersDependency",
+    "new_pagination",
+]
 
 
 class Meta(RootModel[dict[str, str | None]]):
@@ -49,19 +60,22 @@ class Page[T](fastsqla.Collection[T]):
 type PaginateType[T] = Callable[[Select], Awaitable[Page[T]]]
 
 
-class _NamedCursor(TypedDict):
+class NamedCursor(TypedDict):
     name: str
     value: str | None
 
 
-class _NamedLimit(TypedDict):
+class NamedLimit(TypedDict):
     name: str
     value: int | None
 
 
-class _Parameters(TypedDict):
-    cursor: _NamedCursor
-    limit: _NamedLimit
+class PaginationParameters(TypedDict):
+    cursor: NamedCursor
+    limit: NamedLimit
+
+
+type ParametersDependency = Callable[..., Awaitable[PaginationParameters]]
 
 
 type _Value = int | str | UUID | datetime | date | Decimal
@@ -244,7 +258,7 @@ def new_pagination[T](
     default_page_size: int = 10,
     max_page_size: int = 1000,
     *,
-    parameters_dependency: Callable[..., _Parameters | Awaitable[_Parameters]] | None = None,
+    parameters_dependency: ParametersDependency | None = None,
     row_mapper: Callable[[sa.Row], T] = lambda row: row[0],
 ) -> Any:
     """Create a generic pagination dependency: `Paginate = new_pagination(...)`.
@@ -255,14 +269,15 @@ def new_pagination[T](
     Args:
         default_page_size: Default limit when the client omits it.
         max_page_size: Maximum accepted limit.
-        parameters_dependency: Sync or async FastAPI dependency returning named
-            cursor and limit values. A `None` limit uses `default_page_size`.
+        parameters_dependency: Async FastAPI dependency returning named cursor
+            and limit values. A `None` limit uses `default_page_size`.
         row_mapper: Maps each original result row to exactly one response item.
 
     Returns:
         Generic annotated dependency with a one-row-to-one-item mapper.
 
     Raises:
+        TypeError: The parameter dependency is not async.
         ValueError: Page-size bounds or the supplied Select are unsupported.
     """
     if (
@@ -271,6 +286,14 @@ def new_pagination[T](
         or not 1 <= default_page_size <= max_page_size
     ):
         raise ValueError("Require 1 <= default_page_size <= max_page_size")
+    if parameters_dependency is not None and not (
+        callable(parameters_dependency)
+        and (
+            inspect.iscoroutinefunction(parameters_dependency)
+            or inspect.iscoroutinefunction(type(parameters_dependency).__call__)
+        )
+    ):
+        raise TypeError("parameters_dependency must be async")
     class CursorParameter(BaseModel):
         model_config = ConfigDict(strict=True)
 
@@ -301,7 +324,7 @@ def new_pagination[T](
     async def query_parameters(
         cursor: str | None = Query(None, min_length=1, alias="next_cursor"),
         limit: int = Query(default_page_size, ge=1, le=max_page_size),
-    ) -> _Parameters:
+    ) -> PaginationParameters:
         return {
             "cursor": {"name": "next_cursor", "value": cursor},
             "limit": {"name": "limit", "value": limit},
@@ -312,7 +335,7 @@ def new_pagination[T](
 
     async def dependency(
         session: fastsqla.Session,
-        parameters: Annotated[_Parameters, fastsqla.Depends(parameters_dependency)],
+        parameters: Annotated[PaginationParameters, fastsqla.Depends(parameters_dependency)],
     ) -> PaginateType[T]:
         try:
             validated = Parameters.model_validate(parameters)

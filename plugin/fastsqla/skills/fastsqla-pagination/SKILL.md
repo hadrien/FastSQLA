@@ -23,7 +23,8 @@ Pagination uses `next_cursor` and `limit` query parameters on GET or POST by def
 Pass `meta.next_cursor` as `next_cursor` until it is null; metadata contains no other fields.
 For custom sizes or mapping, assign `Paginate = fastsqla.cursor.new_pagination(...)` and
 annotate with `Paginate[T]`. The `row_mapper` must preserve row count.
-Pass `parameters_dependency` to supply a sync or async FastAPI dependency returning
+Pass `parameters_dependency` an async FastAPI dependency returning
+`fastsqla.cursor.PaginationParameters`, for example
 `{"cursor": {"name": "after", "value": after}, "limit": {"name": "size", "value": size}}`.
 The cursor name is the response metadata key, such as `meta.after`. A `None` limit uses the
 factory default; limits must be between 1 and the configured maximum. POST filter models

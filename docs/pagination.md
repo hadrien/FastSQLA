@@ -132,15 +132,15 @@ use `after` and `size` as query parameter names:
 
 ```python
 from fastapi import Query
-from fastsqla.cursor import new_pagination
+from fastsqla.cursor import PaginationParameters, new_pagination
 
 async def get_parameters(
-    cursor: str | None = Query(None, alias="after"),
-    limit: int | None = Query(None, alias="size"),
-) -> dict:
+    after: str | None = Query(None),
+    size: int | None = Query(None),
+) -> PaginationParameters:
     return {
-        "cursor": {"name": "after", "value": cursor},
-        "limit": {"name": "size", "value": limit},
+        "cursor": {"name": "after", "value": after},
+        "limit": {"name": "size", "value": size},
     }
 
 Paginate = new_pagination(
@@ -150,8 +150,8 @@ Paginate = new_pagination(
 )
 ```
 
-Use this `Paginate[Hero]` in the endpoint signature. The dependency can be sync or async
-and returns named cursor and limit values. A `None` limit uses the configured default;
+Use this `Paginate[Hero]` in the endpoint signature. The dependency must be async and
+return named cursor and limit values. A `None` limit uses the configured default;
 limits outside `1..max_page_size` return HTTP 422. The cursor name becomes the response
 metadata key: pass `meta.after` as `?after=...` to continue. The final page contains
 `"meta": {"after": null}`.

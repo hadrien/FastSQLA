@@ -401,7 +401,7 @@ async def test_post_filters_with_query_pagination(
 
     async def get_parameters(
         cursor: str | None = Query(None, alias="next_cursor"), limit: int | None = Query(None)
-    ) -> dict:
+    ) -> cursor.PaginationParameters:
         return {
             "cursor": {"name": "next_cursor", "value": cursor},
             "limit": {"name": "limit", "value": limit},
@@ -529,7 +529,7 @@ async def test_default_query_schema_and_omitted_parameters(
     assert above_maximum.status_code == 422
 
 
-async def test_sync_extractor_with_body_subdependency(
+async def test_async_extractor_with_body_subdependency(
     app: FastAPI, client: AsyncClient, item: type[Any]
 ):
     from fastsqla import cursor
@@ -537,7 +537,9 @@ async def test_sync_extractor_with_body_subdependency(
     async def get_body(body: Annotated[dict, Body()]) -> dict:
         return body
 
-    def get_parameters(body: Annotated[dict, Depends(get_body)]) -> dict:
+    async def get_parameters(
+        body: Annotated[dict, Depends(get_body)]
+    ) -> cursor.PaginationParameters:
         return {
             "cursor": {"name": "after", "value": body.get("after")},
             "limit": {"name": "size", "value": body.get("size")},
@@ -575,7 +577,7 @@ async def test_custom_name_survives_response_validation_and_round_trip(
     async def get_parameters(
         cursor_value: str | None = Query(None, alias=cursor_name),
         limit: int | None = Query(None),
-    ) -> dict:
+    ) -> cursor.PaginationParameters:
         return {
             "cursor": {"name": cursor_name, "value": cursor_value},
             "limit": {"name": "limit", "value": limit},
@@ -629,7 +631,9 @@ async def test_custom_extractor_owns_input_name_and_factory_names_metadata(
 ):
     from fastsqla import cursor
 
-    async def get_parameters(after: str | None = Query(None)) -> dict:
+    async def get_parameters(
+        after: str | None = Query(None)
+    ) -> cursor.PaginationParameters:
         return {
             "cursor": {"name": "after", "value": after},
             "limit": {"name": "size", "value": 3},
@@ -650,6 +654,43 @@ async def test_custom_extractor_owns_input_name_and_factory_names_metadata(
     assert second.json() == {"data": ["22", "31"], "meta": {"after": None}}
     parameters = app.openapi()["paths"]["/search"]["post"]["parameters"]
     assert [p["name"] for p in parameters] == ["after"]
+
+
+async def test_rejects_sync_parameter_dependency():
+    from fastsqla import cursor
+
+    def get_parameters() -> cursor.PaginationParameters:
+        return {
+            "cursor": {"name": "after", "value": None},
+            "limit": {"name": "size", "value": None},
+        }
+
+    with raises(TypeError, match="parameters_dependency must be async"):
+        cursor.new_pagination(parameters_dependency=get_parameters)
+
+
+async def test_accepts_async_callable_parameter_dependency(
+    app: FastAPI, client: AsyncClient, item: type[Any]
+):
+    from fastsqla import cursor
+
+    class Parameters:
+        async def __call__(self) -> cursor.PaginationParameters:
+            return {
+                "cursor": {"name": "after", "value": None},
+                "limit": {"name": "size", "value": 2},
+            }
+
+    Paginate = cursor.new_pagination(parameters_dependency=Parameters())
+
+    @app.get("/cursor")
+    async def endpoint(paginate: Paginate[str]) -> cursor.Page[str]:
+        return await paginate(select(item.name).order_by(item.cohort, item.id))
+
+    response = await client.get("/cursor")
+    assert response.status_code == 200
+    assert response.json()["data"] == ["11", "12"]
+    assert response.json()["meta"]["after"] is not None
 
 
 @mark.parametrize(
