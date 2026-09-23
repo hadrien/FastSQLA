@@ -66,11 +66,33 @@ async def list_heros(paginate: Paginate, age:int | None = None):
 
 ## Forward-only cursor pagination
 
-- `CursorPaginate[T]`: `cursor` and `limit` query parameters.
-- `CursorPage[T]`: `data` and `meta.next_cursor`; `null` marks the end.
-- For JSON input, use `new_cursor_pagination()` as below (`Hero` and `HeroModel` from above).
+Use cursor pagination to load the next batch of results, such as a "Load more" list.
+Each response includes a cursor pointing after the last returned item.
 
-```python
+Using `Hero` and `HeroModel` from the example above:
+
+```python { .annotate }
+from fastsqla import CursorPage, CursorPaginate
+
+@app.get("/heroes")
+async def list_heroes(paginate: CursorPaginate[Hero]) -> CursorPage[HeroModel]: # (1)!
+    return await paginate(select(Hero).order_by(Hero.id)) # (2)!
+```
+
+1.  `CursorPaginate` adds optional `cursor` and `limit` query parameters. The default
+    page size is 10, with a maximum of 100.
+2.  Order by a unique, non-null column so each item has a definite position.
+
+Request `/heroes?limit=10` for the first page. The response contains `data` and
+`meta.next_cursor`. Pass that cursor as the next request's `cursor` parameter.
+When `next_cursor` is `null`, there are no more results.
+
+### Filters in a JSON body
+
+For a search endpoint, put the filters and pagination fields in a request model and
+call the dependency with those values:
+
+```python { .annotate }
 from typing import Literal
 from fastsqla import CursorPage, Session, new_cursor_pagination
 from pydantic import BaseModel, ConfigDict, Field
@@ -80,35 +102,54 @@ cursor_dependency = new_cursor_pagination(default_page_size=10, max_page_size=10
 class HeroSearch(BaseModel):
     model_config = ConfigDict(extra="forbid")
     cursor: str | None = Field(None, min_length=1)
-    limit: int = Field(10, ge=1, le=100)
+    limit: int = Field(10, ge=1, le=100) # (1)!
     min_age: int | None = Field(None, ge=0)
     order_by: Literal["age", "name"] = "age"
 
 @app.post("/heroes/search")
 async def search_heroes(body: HeroSearch, session: Session) -> CursorPage[HeroModel]:
     column = {"age": Hero.age, "name": Hero.name}[body.order_by]
-    stmt = select(Hero).order_by(column, Hero.id)
+    stmt = select(Hero).order_by(column, Hero.id) # (2)!
     if body.min_age is not None:
         stmt = stmt.where(Hero.age >= body.min_age)
     paginate = cursor_dependency(session=session, cursor=body.cursor, limit=body.limit)
     return await paginate(stmt)
 ```
 
-- POST body: `{"min_age": 18, "order_by": "name", "limit": 10, "cursor": null}`.
-- Omit `cursor` for page one; send `meta.next_cursor` to continue. Keep filters and ordering
-  fixed; reapply authorization each request.
-- Direct calls require explicit `session`, `cursor`, and `limit`. Validate body values and
-  keep page-size limits aligned with the factory.
-- Order by non-null columns with a unique tie-breaker, including across joins. Ascending,
-  descending, and mixed directions are supported.
-- Unsupported: expressions, nullable ordering, outer joins, grouping/distinct/unions,
-  existing limits/offsets, and deduplication.
-- SQLite decimal ordering is unsupported: stored values can lose precision during reading.
-- Default mapping: `row[0]`. For projections, use `row_mapper=lambda row: row._mapping`.
-  Map each SQL row to one item; ordering columns need not appear in the response.
-- Invalid cursors return HTTP 422. FastSQLA imposes no cursor-length cap.
-- Cursors expose ordering values. Changing those values during traversal can skip or
-  repeat items; prefer immutable columns and matching indexes.
+1.  Validate the body with the same page-size bounds as the dependency. FastAPI's query
+    parameter validation does not run when calling the dependency directly.
+2.  `Hero.id` breaks ties when several heroes have the same age or name.
+
+Send this body to `POST /heroes/search`:
+
+```json
+{"min_age": 18, "order_by": "name", "limit": 10}
+```
+
+To continue, add `cursor` using the returned `meta.next_cursor`. Keep the filters and
+ordering unchanged; omit the cursor to start a different search. Invalid cursors return
+HTTP 422.
+
+### Choosing a query
+
+Order by non-null columns with a unique tie-breaker for the whole result set. Ascending,
+descending, and mixed directions are supported. Prefer immutable keys: changing a sort
+value during traversal can skip or repeat an item.
+
+!!! note "Supported queries"
+
+    Use entity or column selections without outer joins, grouping, `DISTINCT`, unions,
+    or existing limits/offsets. Ordering expressions, nullable keys, and SQLite decimal
+    ordering are unsupported. SQLite can round decimal values when reading them, which
+    loses the exact cursor position.
+
+For column selections, set `row_mapper=lambda row: row._mapping` on
+`new_cursor_pagination()`. The default mapper returns the first selected entity or value.
+Each SQL row must produce one response item; filtering or deduplicating rows in the
+mapper breaks pagination.
+
+Cursors contain readable ordering values. Apply authorization on every request and keep
+sensitive fields out of the ordering keys.
 
 ## `SQLModel` example
 
