@@ -1,10 +1,8 @@
 import base64
-import binascii
 import functools
 import json
 import math
 import os
-import re
 import warnings
 from collections.abc import AsyncGenerator, Awaitable, Callable, Iterable
 from contextlib import _AsyncGeneratorContextManager, asynccontextmanager
@@ -542,8 +540,7 @@ class _CursorPayload(BaseModel):
     values: list[int | str]
 
 
-def _validate_cursor_query(stmt: Select):
-    # SQLAlchemy statement introspection stays in the query/order inspection helpers.
+def _cursor_sources(stmt: Select) -> list[sa.FromClause]:
     if not isinstance(stmt, Select) or any(
         getattr(stmt, name) is not None
         for name in ("_limit_clause", "_offset_clause", "_fetch_clause")
@@ -556,17 +553,18 @@ def _validate_cursor_query(stmt: Select):
         for col in stmt.selected_columns
     ):
         raise ValueError("Cursor pagination requires entity or column selections")
+    sources = stmt.get_final_froms()
     if any(
         isinstance(node, Join) and (node.isouter or node.full)
-        for source in stmt.get_final_froms()
+        for source in sources
         for node in visitors.iterate(source)
     ):
         raise ValueError("Cursor pagination does not support outer joins")
+    return sources
 
 
 def _cursor_order(stmt: Select) -> _CursorOrder:
-    _validate_cursor_query(stmt)
-    sources = stmt.get_final_froms()
+    sources = _cursor_sources(stmt)
     order = []
     for expression in stmt._order_by_clauses:
         descending = False
@@ -615,16 +613,11 @@ def _encode_cursor(order: _CursorOrder, values: tuple[_CursorValue, ...]) -> str
 
 
 def _decode_cursor_payload(cursor: str) -> _CursorPayload:
-    if not re.fullmatch(r"[A-Za-z0-9_-]+", cursor):
-        raise HTTPException(status_code=422, detail="Invalid cursor")
     padded = cursor + "=" * (-len(cursor) % 4)
     try:
         decoded = base64.b64decode(padded, altchars=b"-_", validate=True)
-    except binascii.Error as error:
-        raise HTTPException(status_code=422, detail="Invalid cursor") from error
-    try:
         return _CursorPayload.model_validate_json(decoded)
-    except ValidationError as error:
+    except ValueError as error:
         raise HTTPException(status_code=422, detail="Invalid cursor") from error
 
 

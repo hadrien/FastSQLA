@@ -137,8 +137,10 @@ async def test_projection_hides_cursor_columns_and_runs_one_query(
 
 
 @mark.parametrize(
-    "cursor", ["", "not-a-cursor", "e30", "a+b", "a"],
-    ids=["empty", "malformed", "invalid-payload", "invalid-alphabet", "invalid-padding"]
+    "cursor", ["", "not-a-cursor", "e30", "a!b", "a", "é"],
+    ids=[
+        "empty", "malformed", "invalid-payload", "invalid-alphabet", "invalid-padding", "non-ascii"
+    ]
 )
 async def test_rejects_bad_cursors_before_sql(
     item: type[Any], session: AsyncSession, statements: list[str], cursor: str
@@ -335,3 +337,21 @@ def test_postgresql_timestamp_cursor_round_trip(aware: bool):
     order = _cursor_order(select(table).order_by(table.c.id))
     token = _encode_cursor(order, (value,))
     assert _decode_cursor(token, order, "postgresql") == [value]
+
+
+@mark.parametrize("encoding", ["standard", "urlsafe"])
+@mark.parametrize("padding", ["", "="], ids=["unpadded", "padded"])
+def test_accepts_equivalent_base64_encodings(encoding: str, padding: str):
+    from sqlalchemy import Column, MetaData, String, Table
+
+    from fastsqla import _cursor_order, _decode_cursor, _encode_cursor
+
+    table = Table("text_key", MetaData(), Column("id", String, primary_key=True))
+    order = _cursor_order(select(table).order_by(table.c.id))
+    value = "\uffff" * 3
+    token = _encode_cursor(order, (value,))
+    payload = base64.urlsafe_b64decode(token + "=" * (-len(token) % 4))
+    encoder = {"standard": base64.b64encode, "urlsafe": base64.urlsafe_b64encode}[encoding]
+    encoded = encoder(payload).decode().rstrip("=")
+    cursor = encoded + padding * (-len(encoded) % 4)
+    assert _decode_cursor(cursor, order, "sqlite") == [value]
