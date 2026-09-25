@@ -1,12 +1,26 @@
 # CHANGELOG
 
 
+## v0.9.2 (2026-09-25)
+
+### Build System
+
+- **deps**: Bump sqlmodel from 0.0.42 to 0.0.45
+  ([#181](https://github.com/hadrien/FastSQLA/pull/181),
+  [`8b2e71a`](https://github.com/hadrien/FastSQLA/commit/8b2e71a2f6ad8605c9a36e9c9ecdae3fa6334ab2))
+
+
 ## v0.9.1 (2026-09-23)
 
 ### Bug Fixes
 
 - Align cursor query and metadata names ([#180](https://github.com/hadrien/FastSQLA/pull/180),
   [`42f260a`](https://github.com/hadrien/FastSQLA/commit/42f260a8d706221059c6b54b825ecc0e89753b60))
+
+### Chores
+
+- **release**: V0.9.1
+  ([`a6626f5`](https://github.com/hadrien/FastSQLA/commit/a6626f5ecc26126998e38bd8941763ea60219501))
 
 
 ## v0.9.0 (2026-09-23)
