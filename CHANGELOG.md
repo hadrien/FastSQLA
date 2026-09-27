@@ -1,7 +1,21 @@
 # CHANGELOG
 
 
+## v0.9.5 (2026-09-27)
+
+### Continuous Integration
+
+- **deps**: Bump actions/download-artifact from 5.0.0 to 8.0.1
+  ([#183](https://github.com/hadrien/FastSQLA/pull/183),
+  [`3614396`](https://github.com/hadrien/FastSQLA/commit/3614396898b3e265f1484e6cd34d3a8bde95693b))
+
+
 ## v0.9.4 (2026-09-27)
+
+### Chores
+
+- **release**: V0.9.4
+  ([`6f3fe6e`](https://github.com/hadrien/FastSQLA/commit/6f3fe6e4582b78c65c1eceeea579280fd7afc906))
 
 ### Continuous Integration
 
