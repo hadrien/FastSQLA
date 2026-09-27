@@ -1,7 +1,21 @@
 # CHANGELOG
 
 
+## v0.9.4 (2026-09-27)
+
+### Continuous Integration
+
+- **deps**: Bump actions/upload-artifact from 4.6.2 to 7.0.1
+  ([#184](https://github.com/hadrien/FastSQLA/pull/184),
+  [`e8eaabe`](https://github.com/hadrien/FastSQLA/commit/e8eaabe6d85076a45e762f72a6f3df87c0f0c69b))
+
+
 ## v0.9.3 (2026-09-27)
+
+### Chores
+
+- **release**: V0.9.3
+  ([`df07152`](https://github.com/hadrien/FastSQLA/commit/df071524d261f7d11d4b528bcef4773f4c482ff8))
 
 ### Continuous Integration
 
