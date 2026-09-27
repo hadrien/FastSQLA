@@ -1,6 +1,15 @@
 # CHANGELOG
 
 
+## v0.9.3 (2026-09-27)
+
+### Continuous Integration
+
+- **deps**: Bump codecov/codecov-action from 7.1.0 to 7.1.1
+  ([#182](https://github.com/hadrien/FastSQLA/pull/182),
+  [`f8c5b33`](https://github.com/hadrien/FastSQLA/commit/f8c5b33c260e81ab1458fa42f44b27f20477e2ea))
+
+
 ## v0.9.2 (2026-09-25)
 
 ### Build System
@@ -8,6 +17,11 @@
 - **deps**: Bump sqlmodel from 0.0.42 to 0.0.45
   ([#181](https://github.com/hadrien/FastSQLA/pull/181),
   [`8b2e71a`](https://github.com/hadrien/FastSQLA/commit/8b2e71a2f6ad8605c9a36e9c9ecdae3fa6334ab2))
+
+### Chores
+
+- **release**: V0.9.2
+  ([`dac1593`](https://github.com/hadrien/FastSQLA/commit/dac1593ec9e60728d566d0e435e11685fb72aa89))
 
 
 ## v0.9.1 (2026-09-23)
