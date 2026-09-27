@@ -25,7 +25,7 @@ jobs:
         run: tox -e '${{ matrix.tox_env }}' -x 'tool.tox.env_run_base.base_python=python${{ matrix.python }}'
       - name: "🐔 codecov: upload test coverage"
         continue-on-error: true
-        uses: codecov/codecov-action@v7.1.0
+        uses: codecov/codecov-action@v7.1.1
         with:
           use_oidc: true
           flags: ${{ matrix.tox_env }},python-${{ matrix.python }}
