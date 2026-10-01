@@ -1,6 +1,29 @@
 # CHANGELOG
 
 
+## v0.9.7 (2026-10-01)
+
+### Build System
+
+- **deps**: Bump the uv group across 1 directory with 2 updates
+  ([#189](https://github.com/hadrien/FastSQLA/pull/189),
+  [`48b781d`](https://github.com/hadrien/FastSQLA/commit/48b781dee6e31f535b68d92a6b720e2be330ac58))
+
+### Chores
+
+- **deps-dev**: Bump coverage from 7.16.1 to 7.16.2
+  ([#188](https://github.com/hadrien/FastSQLA/pull/188),
+  [`305ed44`](https://github.com/hadrien/FastSQLA/commit/305ed445ffddd73ce8f696060a54758490d0200f))
+
+- **deps-dev**: Bump python-semantic-release from 10.6.2 to 10.7.0
+  ([#187](https://github.com/hadrien/FastSQLA/pull/187),
+  [`e26f958`](https://github.com/hadrien/FastSQLA/commit/e26f95892c42735c2be612b191b8c2a1080363c2))
+
+- **deps-dev**: Bump ruff from 0.16.8 to 0.16.9
+  ([#185](https://github.com/hadrien/FastSQLA/pull/185),
+  [`4ee650e`](https://github.com/hadrien/FastSQLA/commit/4ee650eeff93a48ceebf1db2cece7b3ab3f12ed7))
+
+
 ## v0.9.6 (2026-09-28)
 
 ### Build System
@@ -8,6 +31,11 @@
 - **deps**: Bump sqlmodel from 0.0.45 to 0.0.47
   ([#186](https://github.com/hadrien/FastSQLA/pull/186),
   [`f18272f`](https://github.com/hadrien/FastSQLA/commit/f18272f6074745b0909feb86a83da3fb085ccb13))
+
+### Chores
+
+- **release**: V0.9.6
+  ([`083251e`](https://github.com/hadrien/FastSQLA/commit/083251e7a68c93debb4b0ed4ca5b227c1c632bd3))
 
 
 ## v0.9.5 (2026-09-27)
