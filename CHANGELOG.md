@@ -1,6 +1,21 @@
 # CHANGELOG
 
 
+## v0.9.11 (2026-10-13)
+
+### Build System
+
+- **deps**: Bump sqlmodel from 0.0.47 to 0.0.48
+  ([#197](https://github.com/hadrien/FastSQLA/pull/197),
+  [`1f8a7d7`](https://github.com/hadrien/FastSQLA/commit/1f8a7d7913633442fa164c5fd440cbbff10efbf5))
+
+### Chores
+
+- **deps-dev**: Bump faker from 40.40.0 to 40.41.0
+  ([#196](https://github.com/hadrien/FastSQLA/pull/196),
+  [`d3310e8`](https://github.com/hadrien/FastSQLA/commit/d3310e81d70ee6a1831286a5d5ae14ad1cba13de))
+
+
 ## v0.9.10 (2026-10-13)
 
 ### Build System
@@ -14,6 +29,9 @@
 - **deps-dev**: Bump mkdocs-llmstxt from 0.5.0 to 0.5.1
   ([#194](https://github.com/hadrien/FastSQLA/pull/194),
   [`ef94fb9`](https://github.com/hadrien/FastSQLA/commit/ef94fb97db691f59dacf9a4dd42898bad93ae0b1))
+
+- **release**: V0.9.10
+  ([`bbca365`](https://github.com/hadrien/FastSQLA/commit/bbca365734482104bb061cddd1466659c36b2068))
 
 
 ## v0.9.9 (2026-10-08)
