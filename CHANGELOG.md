@@ -1,6 +1,15 @@
 # CHANGELOG
 
 
+## v0.9.12 (2026-10-16)
+
+### Build System
+
+- **deps**: Bump fastapi from 0.142.4 to 0.143.0
+  ([#198](https://github.com/hadrien/FastSQLA/pull/198),
+  [`a81532f`](https://github.com/hadrien/FastSQLA/commit/a81532ff2cb273724ac2751ad544a5fb8dd56c94))
+
+
 ## v0.9.11 (2026-10-13)
 
 ### Build System
@@ -14,6 +23,9 @@
 - **deps-dev**: Bump faker from 40.40.0 to 40.41.0
   ([#196](https://github.com/hadrien/FastSQLA/pull/196),
   [`d3310e8`](https://github.com/hadrien/FastSQLA/commit/d3310e81d70ee6a1831286a5d5ae14ad1cba13de))
+
+- **release**: V0.9.11
+  ([`34674a0`](https://github.com/hadrien/FastSQLA/commit/34674a0bbea6f7da9d955c2d797d10bcaa904306))
 
 
 ## v0.9.10 (2026-10-13)
