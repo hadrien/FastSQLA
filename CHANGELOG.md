@@ -1,6 +1,15 @@
 # CHANGELOG
 
 
+## v0.9.13 (2026-10-18)
+
+### Continuous Integration
+
+- **deps**: Bump actions/upload-artifact from 7.0.1 to 7.0.2
+  ([#200](https://github.com/hadrien/FastSQLA/pull/200),
+  [`9a890df`](https://github.com/hadrien/FastSQLA/commit/9a890df798091d5f22741bd52a42e5c047f84e48))
+
+
 ## v0.9.12 (2026-10-16)
 
 ### Build System
@@ -8,6 +17,11 @@
 - **deps**: Bump fastapi from 0.142.4 to 0.143.0
   ([#198](https://github.com/hadrien/FastSQLA/pull/198),
   [`a81532f`](https://github.com/hadrien/FastSQLA/commit/a81532ff2cb273724ac2751ad544a5fb8dd56c94))
+
+### Chores
+
+- **release**: V0.9.12
+  ([`768fc37`](https://github.com/hadrien/FastSQLA/commit/768fc373b03deb8a3790b697df30125692cc2bbb))
 
 
 ## v0.9.11 (2026-10-13)
