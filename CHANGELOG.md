@@ -1,12 +1,26 @@
 # CHANGELOG
 
 
+## v0.9.19 (2026-10-25)
+
+### Continuous Integration
+
+- **deps**: Bump pypa/gh-action-pypi-publish from 1.14.2 to 1.14.3
+  ([#208](https://github.com/hadrien/FastSQLA/pull/208),
+  [`c8a7d48`](https://github.com/hadrien/FastSQLA/commit/c8a7d481139f77437f395e183434bda39ffa2c0a))
+
+
 ## v0.9.18 (2026-10-22)
 
 ### Build System
 
 - **deps**: Bump certifi ([#207](https://github.com/hadrien/FastSQLA/pull/207),
   [`5c6bb77`](https://github.com/hadrien/FastSQLA/commit/5c6bb77a995dcefdaa0a0a1e0d36a47430f7ccb1))
+
+### Chores
+
+- **release**: V0.9.18
+  ([`7b0da5a`](https://github.com/hadrien/FastSQLA/commit/7b0da5afa9fc1d0219edf2a5e8ee336a634ae2a6))
 
 
 ## v0.9.17 (2026-10-22)
