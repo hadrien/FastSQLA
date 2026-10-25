@@ -1,7 +1,20 @@
 # CHANGELOG
 
 
+## v0.9.20 (2026-10-25)
+
+### Build System
+
+- **deps**: Bump gitpython ([#209](https://github.com/hadrien/FastSQLA/pull/209),
+  [`e98b247`](https://github.com/hadrien/FastSQLA/commit/e98b247b0d2957d7e1513b991d28964ead2149cd))
+
+
 ## v0.9.19 (2026-10-25)
+
+### Chores
+
+- **release**: V0.9.19
+  ([`7a8b8a2`](https://github.com/hadrien/FastSQLA/commit/7a8b8a291b7a7f47484c8b94f613e3766c888aa5))
 
 ### Continuous Integration
 
