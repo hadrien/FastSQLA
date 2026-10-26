@@ -1,12 +1,26 @@
 # CHANGELOG
 
 
+## v0.9.21 (2026-10-26)
+
+### Build System
+
+- **deps**: Bump fastapi from 0.143.5 to 0.146.0
+  ([#210](https://github.com/hadrien/FastSQLA/pull/210),
+  [`13279b4`](https://github.com/hadrien/FastSQLA/commit/13279b41befd2fb34a32d18447b4f5c6df20347d))
+
+
 ## v0.9.20 (2026-10-25)
 
 ### Build System
 
 - **deps**: Bump gitpython ([#209](https://github.com/hadrien/FastSQLA/pull/209),
   [`e98b247`](https://github.com/hadrien/FastSQLA/commit/e98b247b0d2957d7e1513b991d28964ead2149cd))
+
+### Chores
+
+- **release**: V0.9.20
+  ([`9e3303e`](https://github.com/hadrien/FastSQLA/commit/9e3303ebac1f397d60dd31996f153d7f7bf1f722))
 
 
 ## v0.9.19 (2026-10-25)
