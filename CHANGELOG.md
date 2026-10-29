@@ -1,6 +1,25 @@
 # CHANGELOG
 
 
+## v0.9.24 (2026-10-29)
+
+### Build System
+
+- **deps**: Bump fastapi from 0.156.8 to 0.159.1
+  ([#218](https://github.com/hadrien/FastSQLA/pull/218),
+  [`13f22b8`](https://github.com/hadrien/FastSQLA/commit/13f22b8660d14ea4c7c751390e2d499fb3abdb34))
+
+### Chores
+
+- **deps-dev**: Bump mkdocs-glightbox from 0.5.2 to 0.5.3
+  ([#216](https://github.com/hadrien/FastSQLA/pull/216),
+  [`28c2be3`](https://github.com/hadrien/FastSQLA/commit/28c2be33536c6a8eed8e9826a8117da5c268669a))
+
+- **deps-dev**: Bump pytest-asyncio from 1.4.0 to 1.4.1
+  ([#217](https://github.com/hadrien/FastSQLA/pull/217),
+  [`0a07bb9`](https://github.com/hadrien/FastSQLA/commit/0a07bb98ef3118c368d72207ee54f18a33f4dd32))
+
+
 ## v0.9.23 (2026-10-28)
 
 ### Build System
@@ -18,6 +37,9 @@
 - **deps-dev**: Bump setuptools from 84.2.0 to 84.2.1
   ([#214](https://github.com/hadrien/FastSQLA/pull/214),
   [`dff6449`](https://github.com/hadrien/FastSQLA/commit/dff6449c58454c9a8033e846ec9277ccd02b903f))
+
+- **release**: V0.9.23
+  ([`cdb9b66`](https://github.com/hadrien/FastSQLA/commit/cdb9b6670c240370a93309f1298ddf19582ff46d))
 
 
 ## v0.9.22 (2026-10-27)
