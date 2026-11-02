@@ -1,6 +1,21 @@
 # CHANGELOG
 
 
+## v0.9.26 (2026-11-02)
+
+### Build System
+
+- **deps**: Bump fastapi from 0.161.1 to 0.162.0
+  ([#222](https://github.com/hadrien/FastSQLA/pull/222),
+  [`60d59c5`](https://github.com/hadrien/FastSQLA/commit/60d59c52383808915fa87f7a2deb12653eeee2f3))
+
+### Chores
+
+- **deps-dev**: Bump ruff from 0.17.2 to 0.17.3
+  ([#219](https://github.com/hadrien/FastSQLA/pull/219),
+  [`868903f`](https://github.com/hadrien/FastSQLA/commit/868903f07d644dd18731e1818da2207091b3f1cc))
+
+
 ## v0.9.25 (2026-10-30)
 
 ### Build System
@@ -14,6 +29,9 @@
 - **deps-dev**: Bump coverage from 7.16.2 to 7.17.0
   ([#220](https://github.com/hadrien/FastSQLA/pull/220),
   [`be45753`](https://github.com/hadrien/FastSQLA/commit/be4575356dd420e6e3cdbdd9fa34847aa579e760))
+
+- **release**: V0.9.25
+  ([`46644c6`](https://github.com/hadrien/FastSQLA/commit/46644c631e57ff7f804e60c25f2d2d77828defe4))
 
 
 ## v0.9.24 (2026-10-29)
