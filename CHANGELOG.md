@@ -1,6 +1,45 @@
 # CHANGELOG
 
 
+## v0.9.27 (2026-11-11)
+
+### Build System
+
+- **deps**: Bump fastapi from 0.162.0 to 0.162.2
+  ([#230](https://github.com/hadrien/FastSQLA/pull/230),
+  [`73e9da1`](https://github.com/hadrien/FastSQLA/commit/73e9da1eb97d615942011098dde31c4ee4def784))
+
+### Chores
+
+- **deps-dev**: Bump coverage from 7.17.0 to 7.17.2
+  ([#226](https://github.com/hadrien/FastSQLA/pull/226),
+  [`69dd257`](https://github.com/hadrien/FastSQLA/commit/69dd257e749c984afe4a241c1046355b83a335cc))
+
+- **deps-dev**: Bump faker from 40.43.0 to 40.44.0
+  ([#225](https://github.com/hadrien/FastSQLA/pull/225),
+  [`92fcb93`](https://github.com/hadrien/FastSQLA/commit/92fcb93e46638c07b69639e73decae720f2f642f))
+
+- **deps-dev**: Bump mkdocs-material from 9.7.7 to 9.8.0
+  ([#223](https://github.com/hadrien/FastSQLA/pull/223),
+  [`ae45b20`](https://github.com/hadrien/FastSQLA/commit/ae45b20d843ee59a215b8d64b127d48d1a673acf))
+
+- **deps-dev**: Bump mkdocs-material from 9.8.0 to 9.8.1
+  ([#229](https://github.com/hadrien/FastSQLA/pull/229),
+  [`a73e6bd`](https://github.com/hadrien/FastSQLA/commit/a73e6bd5b6644f272fbfaa94a2a91edbe6625ea4))
+
+- **deps-dev**: Bump pytest from 9.1.1 to 9.2.0
+  ([#224](https://github.com/hadrien/FastSQLA/pull/224),
+  [`c053971`](https://github.com/hadrien/FastSQLA/commit/c0539718b9c0b225455bc623ca78d18974bac16e))
+
+- **deps-dev**: Bump pytest-asyncio from 1.4.1 to 1.4.1.post1
+  ([#228](https://github.com/hadrien/FastSQLA/pull/228),
+  [`d161b7b`](https://github.com/hadrien/FastSQLA/commit/d161b7bc3f69854c9352439abe5060204ae8fa5f))
+
+- **deps-dev**: Bump ruff from 0.17.3 to 0.17.4
+  ([#227](https://github.com/hadrien/FastSQLA/pull/227),
+  [`c174b25`](https://github.com/hadrien/FastSQLA/commit/c174b2557879f1d7010c2841ca5e14ab94fdb0bb))
+
+
 ## v0.9.26 (2026-11-02)
 
 ### Build System
@@ -14,6 +53,9 @@
 - **deps-dev**: Bump ruff from 0.17.2 to 0.17.3
   ([#219](https://github.com/hadrien/FastSQLA/pull/219),
   [`868903f`](https://github.com/hadrien/FastSQLA/commit/868903f07d644dd18731e1818da2207091b3f1cc))
+
+- **release**: V0.9.26
+  ([`3b9c2a6`](https://github.com/hadrien/FastSQLA/commit/3b9c2a696cd6815381a2036fbcb6d36e0e3ae795))
 
 
 ## v0.9.25 (2026-10-30)
