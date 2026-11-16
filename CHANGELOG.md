@@ -1,6 +1,24 @@
 # CHANGELOG
 
 
+## v0.9.31 (2026-11-16)
+
+### Build System
+
+- **deps**: Bump opentelemetry-api ([#236](https://github.com/hadrien/FastSQLA/pull/236),
+  [`d1d9cc5`](https://github.com/hadrien/FastSQLA/commit/d1d9cc5418dfc3138790bc2a5adc2687e7fae5cd))
+
+### Chores
+
+- **deps-dev**: Bump coverage from 7.17.2 to 7.17.3
+  ([#234](https://github.com/hadrien/FastSQLA/pull/234),
+  [`e5db6ee`](https://github.com/hadrien/FastSQLA/commit/e5db6ee0ff2f699b0a854f13c48828e5b70b1973))
+
+- **deps-dev**: Bump ruff from 0.17.4 to 0.17.5
+  ([#233](https://github.com/hadrien/FastSQLA/pull/233),
+  [`8d8c497`](https://github.com/hadrien/FastSQLA/commit/8d8c4971748c834f0b3b60db0f6ccb299830ea0b))
+
+
 ## v0.9.30 (2026-11-16)
 
 ### Build System
@@ -8,6 +26,11 @@
 - **deps**: Bump sqlmodel from 0.0.48 to 0.0.49
   ([#235](https://github.com/hadrien/FastSQLA/pull/235),
   [`2196be1`](https://github.com/hadrien/FastSQLA/commit/2196be1454ccce24b7e8855b5fe4a39413ba6b27))
+
+### Chores
+
+- **release**: V0.9.30
+  ([`52a32b3`](https://github.com/hadrien/FastSQLA/commit/52a32b37aff6381c93c0e9c0c26bf09a18136087))
 
 
 ## v0.9.29 (2026-11-16)
