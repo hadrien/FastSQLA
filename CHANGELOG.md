@@ -1,6 +1,15 @@
 # CHANGELOG
 
 
+## v0.9.30 (2026-11-16)
+
+### Build System
+
+- **deps**: Bump sqlmodel from 0.0.48 to 0.0.49
+  ([#235](https://github.com/hadrien/FastSQLA/pull/235),
+  [`2196be1`](https://github.com/hadrien/FastSQLA/commit/2196be1454ccce24b7e8855b5fe4a39413ba6b27))
+
+
 ## v0.9.29 (2026-11-16)
 
 ### Build System
@@ -8,6 +17,11 @@
 - **deps**: Bump fastapi from 0.162.2 to 0.162.5
   ([#232](https://github.com/hadrien/FastSQLA/pull/232),
   [`e382fa6`](https://github.com/hadrien/FastSQLA/commit/e382fa62c7f6cca241f2ac8c3d3fd457c8d621b2))
+
+### Chores
+
+- **release**: V0.9.29
+  ([`ffd5f87`](https://github.com/hadrien/FastSQLA/commit/ffd5f87cfaf3352127908c90d2ceee3351dd5753))
 
 
 ## v0.9.28 (2026-11-13)
