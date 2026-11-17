@@ -419,7 +419,7 @@ wheels = [
 
 [[package]]
 name = "fastsqla"
-version = "0.9.31"
+version = "0.9.32"
 source = { editable = "." }
 dependencies = [
     { name = "fastapi" },
