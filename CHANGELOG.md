@@ -1,6 +1,29 @@
 # CHANGELOG
 
 
+## v0.9.35 (2026-11-24)
+
+### Build System
+
+- **deps**: Bump fastapi from 0.163.1 to 0.163.2
+  ([#246](https://github.com/hadrien/FastSQLA/pull/246),
+  [`bb24e26`](https://github.com/hadrien/FastSQLA/commit/bb24e26462a29712b62153a0ca09bcb1c8ca0115))
+
+### Chores
+
+- **deps-dev**: Bump coverage from 7.17.3 to 7.17.4
+  ([#245](https://github.com/hadrien/FastSQLA/pull/245),
+  [`bb9c9dc`](https://github.com/hadrien/FastSQLA/commit/bb9c9dc9ac30c5e61217b281be1334b5fcf341fb))
+
+- **deps-dev**: Bump mkdocs-material from 9.8.1 to 9.8.2
+  ([#244](https://github.com/hadrien/FastSQLA/pull/244),
+  [`91d6530`](https://github.com/hadrien/FastSQLA/commit/91d6530ed4615fbd538f34f08de00fda6ddf0264))
+
+- **deps-dev**: Bump ruff from 0.17.5 to 0.17.6
+  ([#243](https://github.com/hadrien/FastSQLA/pull/243),
+  [`b045773`](https://github.com/hadrien/FastSQLA/commit/b045773dd03f59c5b13cc4983aee76d415db90e6))
+
+
 ## v0.9.34 (2026-11-23)
 
 ### Build System
@@ -18,6 +41,9 @@
 - **deps-dev**: Bump pytest-asyncio from 1.4.1.post1 to 1.5.0
   ([#241](https://github.com/hadrien/FastSQLA/pull/241),
   [`5c95172`](https://github.com/hadrien/FastSQLA/commit/5c951724fd50dc66d4e33319a864a36f83f78372))
+
+- **release**: V0.9.34
+  ([`42d18d9`](https://github.com/hadrien/FastSQLA/commit/42d18d9c274982848e307489e5e0e523436d3fb0))
 
 
 ## v0.9.33 (2026-11-17)
